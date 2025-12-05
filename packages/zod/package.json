@@ -1,0 +1,22 @@
+{
+    "name": "@devio/zod-utils",
+    "version": "1.0.0",
+    "description": "Zod validation Utils for devio",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsup src/* --dts"
+    },
+    "source": "src/index.ts",
+    "dependencies": {
+        "zod": "^4.1.13"
+    },
+    "devDependencies": {
+        "@devio/typescript-config": "workspace:*",
+        "tsup": "^8.5.1"
+    }
+}
