@@ -1,0 +1,33 @@
+################################################################################
+# Redis Configuration
+################################################################################
+# Default: localhost
+REDIS_HOST=redis
+
+# Default: 6379
+REDIS_PORT=
+
+# Redis password.
+REDIS_PASSWORD=
+
+
+################################################################################
+# PostgreSQL Configuration
+################################################################################
+# Default: localhost
+POSTGRES_HOST=db
+
+# Default: 5432
+POSTGRES_PORT=
+
+# Default: postgres
+POSTGRES_DB=judge0
+
+# Default: postgres
+POSTGRES_USER=judge0
+
+# postgres password
+POSTGRES_PASSWORD=
+
+
+
