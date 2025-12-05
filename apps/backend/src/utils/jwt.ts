@@ -9,8 +9,6 @@ import {
     JWT_RESET_PASSWORD_EXPIRATION_MINUTES
 } from '../config/constants'
 
-
-
 interface generateRefreshTokenResult {
     token: string;
     jti: string;
