@@ -6,6 +6,7 @@ import compression from 'compression';
 import { errorHandler } from './middlewares';
 import { CLIENT_URL } from './config/constants';
 import routes from './routes';
+import { setupSwaggerDocs } from './docs/swagger';
 
 
 const app: express.Application = express();
@@ -24,6 +25,9 @@ app.use(cors({
 
 // Routes
 app.use('/api', routes);
+
+// Swagger Documentation
+setupSwaggerDocs(app);
 
 // Error Handling Middleware
 app.use(errorHandler);
