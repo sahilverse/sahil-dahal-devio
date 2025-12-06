@@ -53,6 +53,8 @@ export class JwtManager {
         const payload = jwt.verify(token, JWT_REFRESH_SECRET) as JwtPayload;
 
         if (!payload.jti) throw new Error('Refresh token missing jti');
+        if (!payload.sub) throw new Error('Refresh token missing sub');
+
         return payload;
     }
 
@@ -63,7 +65,7 @@ export class JwtManager {
         return token;
     }
 
-    static async verifyResetPasswordSessionToken(token: string): Promise<string> {
+    static verifyResetPasswordSessionToken(token: string): string {
         const decoded = jwt.verify(token, JWT_ACCESS_SECRET) as JwtPayload;
         if (decoded.purpose !== 'reset_password_session') throw new Error('Invalid token purpose');
         return decoded.email;
