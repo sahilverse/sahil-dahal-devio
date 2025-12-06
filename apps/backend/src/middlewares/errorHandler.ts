@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError, ResponseHandler, logger } from "../utils";
+import { StatusCodes } from "http-status-codes";
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
     logger.error(err);
@@ -9,5 +10,5 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
         return ResponseHandler.sendError(res, err.statusCode, message);
     }
 
-    ResponseHandler.sendError(res, 500, "Internal Server Error");
+    ResponseHandler.sendError(res, StatusCodes.INTERNAL_SERVER_ERROR, "Internal Server Error");
 };
