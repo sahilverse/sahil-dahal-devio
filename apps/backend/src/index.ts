@@ -37,6 +37,8 @@ async function shutdown() {
     try {
         server.close(async () => {
             await prisma.$disconnect();
+            logger.info("Disconnected from the database");
+
             await RedisManager.disconnect();
 
             logger.info("Server closed");
