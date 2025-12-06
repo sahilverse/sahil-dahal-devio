@@ -1,12 +1,15 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { prisma } from "../../config";
-import type { User, Role } from "../../generated/prisma/client";
+import type { User, Role, PrismaClient } from "../../generated/prisma/client";
 import type { CreateUserPayload } from "./user.types";
+import { TYPES } from "../../types";
 
 @injectable()
 export class UserRepository {
+    constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
+
     async createUser(payload: CreateUserPayload): Promise<Omit<User, "password">> {
-        return await prisma.user.create({
+        return await this.prisma.user.create({
             data: {
                 firstName: payload.firstName,
                 lastName: payload.lastName,
@@ -18,32 +21,32 @@ export class UserRepository {
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { email },
         });
     }
 
     async findByUsername(username: string): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { username },
         });
     }
 
     async findById(id: string): Promise<User | null> {
-        return await prisma.user.findUnique({
+        return await this.prisma.user.findUnique({
             where: { id },
         });
     }
 
     async updatePassword(userId: string, password: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: { password },
         });
     }
 
     async deactivateUser(userId: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 isActive: false
@@ -52,7 +55,7 @@ export class UserRepository {
     }
 
     async activateUser(userId: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 isActive: true
@@ -61,7 +64,7 @@ export class UserRepository {
     }
 
     async updateEmailVerified(userId: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 emailVerified: new Date()
@@ -70,7 +73,7 @@ export class UserRepository {
     }
 
     async updateProfilePicture(userId: string, imageUrl: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 image: imageUrl
@@ -79,7 +82,7 @@ export class UserRepository {
     }
 
     async deleteProfilePicture(userId: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 image: null
@@ -88,7 +91,7 @@ export class UserRepository {
     }
 
     async setLastLogin(userId: string): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 lastLogin: new Date()
@@ -97,7 +100,7 @@ export class UserRepository {
     }
 
     async updateUserRole(userId: string, role: Role): Promise<void> {
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: userId },
             data: {
                 role
