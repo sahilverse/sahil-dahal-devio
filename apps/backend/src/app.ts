@@ -22,7 +22,7 @@ app.use(cors({
     credentials: true
 }))
 
-
+// Routes
 app.use('/api', routes);
 
 // Error Handling Middleware
