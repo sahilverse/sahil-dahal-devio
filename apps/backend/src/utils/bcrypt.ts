@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { SALT_ROUNDS } from '../config/constants';
 
-class BcryptUtils {
+export class BcryptUtils {
     private static readonly saltRounds = SALT_ROUNDS;
 
     static async hashPassword(password: string): Promise<string> {
@@ -12,5 +12,3 @@ class BcryptUtils {
         return await bcrypt.compare(password, hash);
     }
 }
-
-export default BcryptUtils;
