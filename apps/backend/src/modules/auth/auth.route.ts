@@ -6,7 +6,6 @@ import { validateRequest } from '../../middlewares';
 import { registerSchema, loginSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
-
 const authController = container.get<AuthController>(TYPES.AuthController);
 
 /**
