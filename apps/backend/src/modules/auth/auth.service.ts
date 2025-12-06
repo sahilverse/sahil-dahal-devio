@@ -5,7 +5,7 @@ import type { CreateUserPayload } from "../user";
 import { REFRESH_TOKEN_PREFIX, JWT_REFRESH_EXPIRATION_DAYS } from "../../config/constants";
 import { UserRepository } from "../user";
 import { AuthRepository } from "./auth.repository";
-import { BcryptUtils, logger } from "../../utils";
+import { BcryptUtils } from "../../utils";
 import type { User } from "../../generated/prisma/client";
 import { ApiError } from "../../utils";
 import { removePasswordFromUser } from "../../utils";
@@ -29,13 +29,11 @@ export class AuthService {
         const { firstName, lastName, username, email, password } = payload;
 
         const existingUserByEmail = await this.userRepository.findByEmail(email);
-
         if (existingUserByEmail) {
             throw new ApiError("Email already in use", StatusCodes.BAD_REQUEST);
         }
 
         const existingUserByUsername = await this.userRepository.findByUsername(username);
-
         if (existingUserByUsername) {
             throw new ApiError("Username already in use", StatusCodes.BAD_REQUEST);
         }
@@ -70,14 +68,14 @@ export class AuthService {
         }
 
         if (!user.isActive) {
-            this.userRepository.activateUser(user.id);
+            await this.userRepository.activateUser(user.id);
         }
-
 
         const accessToken = JwtManager.generateAccessToken(user.id);
         const { token: refreshToken, jti } = JwtManager.generateRefreshToken(user.id);
 
         await this.setRefreshToken(jti);
+        await this.userRepository.setLastLogin(user.id);
 
         return {
             user: removePasswordFromUser(user),
