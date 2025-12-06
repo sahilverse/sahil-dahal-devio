@@ -1,13 +1,15 @@
 import Redis from "ioredis";
 import { REDIS_URL } from "../config/constants";
+import { injectable } from "inversify";
 import { logger } from "../utils";
 
+@injectable()
 export class RedisManager {
-    private static pubClient: Redis | null = null;
-    private static subClient: Redis | null = null;
-    private static isInitialized = false;
+    private pubClient!: Redis;
+    private subClient!: Redis;
+    private isInitialized = false;
 
-    static async init(): Promise<void> {
+    async init(): Promise<void> {
         if (this.isInitialized) return;
         this.isInitialized = true;
 
@@ -26,19 +28,19 @@ export class RedisManager {
         logger.info("Connected to Redis");
     }
 
-    static getPub(): Redis {
+    getPub(): Redis {
         if (!this.pubClient)
-            throw new Error("Call RedisManager.init() first.");
+            throw new Error("Redis not initialized. Call init() first.");
         return this.pubClient;
     }
 
-    static getSub(): Redis {
+    getSub(): Redis {
         if (!this.subClient)
-            throw new Error("Call RedisManager.init() first.");
+            throw new Error("Redis not initialized. Call init() first.");
         return this.subClient;
     }
 
-    static async disconnect(): Promise<void> {
+    async disconnect(): Promise<void> {
         if (this.pubClient) await this.pubClient.quit();
         if (this.subClient) await this.subClient.quit();
         logger.info("Disconnected from Redis");

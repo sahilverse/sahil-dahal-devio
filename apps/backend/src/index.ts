@@ -5,14 +5,18 @@ import { PORT } from './config/constants';
 import { createServer } from 'http';
 import { logger } from './utils';
 import { prisma } from './config'
+import { container } from './config';
+import { TYPES } from './types';
 import { RedisManager } from './config';
 
 const server = createServer(app);
+const redisManager = container.get<RedisManager>(TYPES.RedisManager);
 
 
 async function startServer() {
     try {
-        await RedisManager.init();
+        await redisManager.init();
+
         await prisma.$connect();
         logger.info("Connected to the database");
 
@@ -35,12 +39,12 @@ async function startServer() {
 async function shutdown() {
     logger.info("Shutting down...");
     try {
+        await prisma.$disconnect();
+        logger.info("Disconnected from the database");
+
+        await redisManager.disconnect();
+
         server.close(async () => {
-            await prisma.$disconnect();
-            logger.info("Disconnected from the database");
-
-            await RedisManager.disconnect();
-
             logger.info("Server closed");
             process.exit(0);
         });
