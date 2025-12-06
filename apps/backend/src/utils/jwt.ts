@@ -57,7 +57,7 @@ export class JwtManager {
     }
 
     static generateResetPasswordSessionToken(email: string): string {
-        const token = jwt.sign({ email, purpose: 'reset_password_Session' }, JWT_ACCESS_SECRET, {
+        const token = jwt.sign({ email, purpose: 'reset_password_session' }, JWT_ACCESS_SECRET, {
             expiresIn: `${JWT_ACCESS_EXPIRATION_MINUTES}m`,
         });
         return token;
