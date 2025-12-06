@@ -1,5 +1,6 @@
 export const PORT = process.env.PORT || 8000;
 export const SALT_ROUNDS = 12;
+export const LOG_LEVEL = process.env.LOG_LEVEL || "info";
 
 export const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 export const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
