@@ -13,8 +13,6 @@ const server = createServer(app);
 async function startServer() {
     try {
         await RedisManager.init();
-        logger.info("Connected to Redis");
-
         await prisma.$connect();
         logger.info("Connected to the database");
 
