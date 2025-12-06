@@ -7,8 +7,6 @@ import { asyncHandler } from "../../utils";
 import { JWT_REFRESH_EXPIRATION_DAYS } from "../../config/constants";
 import { StatusCodes } from "http-status-codes";
 
-
-
 @injectable()
 export class AuthController {
     constructor(@inject(TYPES.AuthService) private authService: AuthService) { }
