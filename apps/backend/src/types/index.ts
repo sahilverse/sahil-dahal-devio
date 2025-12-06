@@ -1,7 +1,12 @@
 export const TYPES = {
-    AuthService: Symbol.for("AuthService"),
-    UserService: Symbol.for("UserService"),
     RedisManager: Symbol.for("RedisManager"),
-    UserRepository: Symbol.for("UserRepository"),
+    PrismaClient: Symbol.for("PrismaClient"),
+
+    AuthRepository: Symbol.for("AuthRepository"),
+    AuthService: Symbol.for("AuthService"),
     AuthController: Symbol.for("AuthController"),
+
+    UserRepository: Symbol.for("UserRepository"),
+    UserService: Symbol.for("UserService"),
+    UserController: Symbol.for("UserController"),
 };

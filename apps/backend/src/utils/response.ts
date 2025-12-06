@@ -1,10 +1,11 @@
 import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { ZodSafeParseResult } from 'zod';
+import { success, ZodSafeParseResult } from 'zod';
 
 export class ResponseHandler {
     static sendResponse(res: Response, statusCode: StatusCodes, message?: string, result?: any) {
         return res.status(statusCode).json({
+            success: true,
             statusCode,
             message,
             result
@@ -13,6 +14,7 @@ export class ResponseHandler {
 
     static sendError(res: Response, statusCode: StatusCodes, message?: string | Record<string, string>) {
         return res.status(statusCode).json({
+            success: false,
             statusCode,
             errorMessage: message
         });

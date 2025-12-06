@@ -1,5 +1,4 @@
 import { injectable, inject } from "inversify";
-import { prisma } from "../../config";
 import type { User, Role, PrismaClient } from "../../generated/prisma/client";
 import type { CreateUserPayload } from "./user.types";
 import { TYPES } from "../../types";
@@ -8,7 +7,7 @@ import { TYPES } from "../../types";
 export class UserRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
-    async createUser(payload: CreateUserPayload): Promise<Omit<User, "password">> {
+    async createUser(payload: CreateUserPayload): Promise<User> {
         return await this.prisma.user.create({
             data: {
                 firstName: payload.firstName,
@@ -17,7 +16,7 @@ export class UserRepository {
                 email: payload.email,
                 password: payload.password,
             },
-        }) as Omit<User, "password">;
+        });
     }
 
     async findByEmail(email: string): Promise<User | null> {

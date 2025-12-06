@@ -1,14 +1,27 @@
 import { Request, Response, NextFunction } from "express";
-import { ApiError, ResponseHandler, logger } from "../utils";
+import { ApiError, ResponseHandler } from "../utils";
 import { StatusCodes } from "http-status-codes";
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    logger.error(err);
+    let message: string | Record<string, string> = "Internal Server Error";
+    let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
 
     if (err instanceof ApiError) {
-        const message = err.isOperational ? err.message : "Internal Server Error";
-        return ResponseHandler.sendError(res, err.statusCode, message);
+        statusCode = err.statusCode;
+
+        if (err.isOperational) {
+            try {
+                const parsed = JSON.parse(err.message);
+                if (parsed && typeof parsed === "object") {
+                    message = parsed as Record<string, string>;
+                } else {
+                    message = err.message;
+                }
+            } catch {
+                message = err.message;
+            }
+        }
     }
 
-    ResponseHandler.sendError(res, StatusCodes.INTERNAL_SERVER_ERROR, "Internal Server Error");
+    return ResponseHandler.sendError(res, statusCode, message);
 };

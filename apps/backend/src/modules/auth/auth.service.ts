@@ -4,6 +4,15 @@ import { RedisManager } from "../../config";
 import type { CreateUserPayload } from "../user";
 import { REFRESH_TOKEN_PREFIX, JWT_REFRESH_EXPIRATION_DAYS } from "../../config/constants";
 import { UserRepository } from "../user";
+import { AuthRepository } from "./auth.repository";
+import { BcryptUtils } from "../../utils";
+import type { User } from "../../generated/prisma/client";
+import { ApiError } from "../../utils";
+import { removePasswordFromUser } from "../../utils";
+import type { LoginInput as LoginPayload } from '@devio/zod-utils';
+import { StatusCodes } from "http-status-codes";
+import { JwtManager } from "../../utils";
+import { LoginServiceResponse } from "./auth.types";
 
 
 @injectable()
@@ -12,17 +21,73 @@ export class AuthService {
 
     constructor(
         @inject(TYPES.RedisManager) private redisManager: RedisManager,
-        @inject(TYPES.UserRepository) private userRepository: UserRepository
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.AuthRepository) private authRepository: AuthRepository,
     ) {
         this.redisClient = this.redisManager.getPub();
     }
 
 
-    async registerUser(payload: CreateUserPayload): Promise<void> {
+    async registerUser(payload: CreateUserPayload): Promise<Omit<User, "password">> {
         const { firstName, lastName, username, email, password } = payload;
+
+        const existingUserByEmail = await this.userRepository.findByEmail(email);
+
+        if (existingUserByEmail) {
+            throw new ApiError("Email already in use", StatusCodes.BAD_REQUEST);
+        }
+
+        const existingUserByUsername = await this.userRepository.findByUsername(username);
+
+        if (existingUserByUsername) {
+            throw new ApiError("Username already in use", StatusCodes.BAD_REQUEST);
+        }
+
+        const hashedPassword = await BcryptUtils.hashPassword(password);
+
+        const user = await this.userRepository.createUser({
+            firstName,
+            lastName,
+            username,
+            email,
+            password: hashedPassword,
+        });
+
+        return removePasswordFromUser(user);
 
     }
 
+    async loginUser(payload: LoginPayload): Promise<LoginServiceResponse> {
+        const { identifier, password } = payload;
+
+        const user = await this.userRepository.findByEmail(identifier) || await this.userRepository.findByUsername(identifier);
+
+        if (!user) {
+            throw new ApiError({ "identifier": "User not found" }, StatusCodes.UNAUTHORIZED);
+        }
+
+        const isPasswordValid = await BcryptUtils.comparePassword(password, user.password!);
+
+        if (!isPasswordValid) {
+            throw new ApiError({ "password": "Incorrect Password" }, StatusCodes.UNAUTHORIZED);
+        }
+
+        if (!user.isActive) {
+            this.userRepository.activateUser(user.id);
+        }
+
+
+        const accessToken = JwtManager.generateAccessToken(user.id);
+        const { token: refreshToken, jti } = JwtManager.generateRefreshToken(user.id);
+
+        await this.setRefreshToken(jti);
+
+        return {
+            user: removePasswordFromUser(user),
+            accessToken,
+            refreshToken
+        };
+    }
 
 
     private async setRefreshToken(jti: string): Promise<void> {

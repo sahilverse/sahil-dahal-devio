@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { errorHandler } from './middlewares';
 import { CLIENT_URL } from './config/constants';
+import routes from './routes';
 
 
 const app: express.Application = express();
@@ -21,8 +22,8 @@ app.use(cors({
     credentials: true
 }))
 
-// TODO: Add Routes
 
+app.use('/api', routes);
 
 // Error Handling Middleware
 app.use(errorHandler);
