@@ -14,3 +14,5 @@ export const JWT_REFRESH_EXPIRATION_DAYS = Number(process.env.JWT_REFRESH_EXPIRA
 
 export const JWT_RESET_PASSWORD_SECRET = process.env.JWT_RESET_PASSWORD_SECRET!;
 export const JWT_RESET_PASSWORD_EXPIRATION_MINUTES = Number(process.env.JWT_RESET_PASSWORD_EXPIRATION_MINUTES) || 5;
+
+export const REFRESH_TOKEN_PREFIX = "refresh_jti:";
