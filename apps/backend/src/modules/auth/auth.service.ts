@@ -25,12 +25,12 @@ export class AuthService {
 
         const existingUserByEmail = await this.userRepository.findByEmail(email);
         if (existingUserByEmail) {
-            throw new ApiError("Email already in use", StatusCodes.BAD_REQUEST);
+            throw new ApiError("Email already in use", StatusCodes.CONFLICT);
         }
 
         const existingUserByUsername = await this.userRepository.findByUsername(username);
         if (existingUserByUsername) {
-            throw new ApiError("Username already in use", StatusCodes.BAD_REQUEST);
+            throw new ApiError("Username already in use", StatusCodes.CONFLICT);
         }
 
         const hashedPassword = await BcryptUtils.hashPassword(password);
