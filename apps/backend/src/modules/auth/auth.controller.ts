@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { ResponseHandler } from "../../utils";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { AuthService } from "./auth.service";
-import { asyncHandler } from "../../utils";
+import { asyncHandler, ResponseHandler } from "../../utils";
 import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../config/constants";
 import { StatusCodes } from "http-status-codes";
 
