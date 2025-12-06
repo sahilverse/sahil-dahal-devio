@@ -5,7 +5,7 @@ import type { CreateUserPayload } from "../user";
 import { REFRESH_TOKEN_PREFIX, JWT_REFRESH_EXPIRATION_DAYS } from "../../config/constants";
 import { UserRepository } from "../user";
 import { AuthRepository } from "./auth.repository";
-import { BcryptUtils } from "../../utils";
+import { BcryptUtils, logger } from "../../utils";
 import type { User } from "../../generated/prisma/client";
 import { ApiError } from "../../utils";
 import { removePasswordFromUser } from "../../utils";
@@ -17,15 +17,12 @@ import { LoginServiceResponse } from "./auth.types";
 
 @injectable()
 export class AuthService {
-    private redisClient;
 
     constructor(
         @inject(TYPES.RedisManager) private redisManager: RedisManager,
         @inject(TYPES.UserRepository) private userRepository: UserRepository,
         @inject(TYPES.AuthRepository) private authRepository: AuthRepository,
-    ) {
-        this.redisClient = this.redisManager.getPub();
-    }
+    ) { }
 
 
     async registerUser(payload: CreateUserPayload): Promise<Omit<User, "password">> {
@@ -111,5 +108,8 @@ export class AuthService {
         }
     }
 
+    private get redisClient() {
+        return this.redisManager.getPub();
+    }
 
 }

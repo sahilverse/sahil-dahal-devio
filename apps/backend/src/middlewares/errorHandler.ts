@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { ApiError, ResponseHandler } from "../utils";
+import { ApiError, logger, ResponseHandler } from "../utils";
 import { StatusCodes } from "http-status-codes";
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
     let message: string | Record<string, string> = "Internal Server Error";
     let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
 
+    logger.error(err);
     if (err instanceof ApiError) {
         statusCode = err.statusCode;
 
