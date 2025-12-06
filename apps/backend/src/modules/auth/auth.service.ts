@@ -1,17 +1,13 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { RedisManager } from "../../config";
-import type { CreateUserPayload } from "../user";
+import type { CreateUserPayload, UserRepository } from "../user";
 import { REFRESH_TOKEN_PREFIX, JWT_REFRESH_EXPIRATION_DAYS } from "../../config/constants";
-import { UserRepository } from "../user";
 import { AuthRepository } from "./auth.repository";
-import { BcryptUtils } from "../../utils";
+import { BcryptUtils, ApiError, removePasswordFromUser, JwtManager } from "../../utils";
 import type { User } from "../../generated/prisma/client";
-import { ApiError } from "../../utils";
-import { removePasswordFromUser } from "../../utils";
 import type { LoginInput as LoginPayload } from '@devio/zod-utils';
 import { StatusCodes } from "http-status-codes";
-import { JwtManager } from "../../utils";
 import { LoginServiceResponse } from "./auth.types";
 
 @injectable()
