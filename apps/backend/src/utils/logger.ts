@@ -1,8 +1,9 @@
 import pino from 'pino';
+import { LOG_LEVEL } from '../config/constants';
 
 export const logger = pino({
     name: 'devio-backend',
-    level: process.env.LOG_LEVEL || 'info',
+    level: LOG_LEVEL,
     transport: {
         target: 'pino-pretty',
         options: {
