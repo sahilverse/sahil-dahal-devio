@@ -4,13 +4,12 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { AuthService } from "./auth.service";
 import { asyncHandler } from "../../utils";
-import { JWT_REFRESH_EXPIRATION_DAYS } from "../../config/constants";
+import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../config/constants";
 import { StatusCodes } from "http-status-codes";
 
 @injectable()
 export class AuthController {
     constructor(@inject(TYPES.AuthService) private authService: AuthService) { }
-
 
     register = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const registerPayload = req.body;
@@ -26,7 +25,7 @@ export class AuthController {
 
         res.cookie("refresh_token", loginResponse.refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: NODE_ENV === "production",
             sameSite: "strict",
             maxAge: refreshMaxAge,
         });
@@ -35,6 +34,15 @@ export class AuthController {
             user: loginResponse.user,
             access_token: loginResponse.accessToken,
         });
+    });
+
+    logout = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const refreshToken = req.cookies["refresh_token"];
+        if (refreshToken) {
+            await this.authService.logoutUser(refreshToken);
+        }
+        res.clearCookie("refresh_token");
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Logout successful");
     });
 
 }

@@ -14,7 +14,6 @@ import { StatusCodes } from "http-status-codes";
 import { JwtManager } from "../../utils";
 import { LoginServiceResponse } from "./auth.types";
 
-
 @injectable()
 export class AuthService {
 
@@ -76,6 +75,11 @@ export class AuthService {
 
         await this.setRefreshToken(jti);
         await this.userRepository.setLastLogin(user.id);
+        await this.authRepository.createSession({
+            userId: user.id,
+            sessionToken: jti,
+            expiresAt: new Date(Date.now() + JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000),
+        });
 
         return {
             user: removePasswordFromUser(user),
@@ -84,6 +88,11 @@ export class AuthService {
         };
     }
 
+    async logoutUser(refreshToken: string): Promise<void> {
+        const { jti } = JwtManager.verifyRefreshToken(refreshToken);
+        await this.revokeRefreshToken(jti!);
+        await this.authRepository.deleteSession(jti!);
+    }
 
     private async setRefreshToken(jti: string): Promise<void> {
         try {
