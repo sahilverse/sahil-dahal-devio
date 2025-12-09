@@ -3,6 +3,7 @@ export const TYPES = {
     PrismaClient: Symbol.for("PrismaClient"),
     Transporter: Symbol.for("Transporter"),
     MailService: Symbol.for("MailService"),
+    TokenService: Symbol.for("TokenService"),
 
     AuthRepository: Symbol.for("AuthRepository"),
     AuthService: Symbol.for("AuthService"),

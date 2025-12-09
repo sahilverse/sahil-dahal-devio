@@ -1,14 +1,7 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
-import { RedisManager } from "../../../config";
 import type { CreateUserPayload, UserRepository } from "../../user";
-import {
-    REFRESH_TOKEN_PREFIX,
-    JWT_REFRESH_EXPIRATION_DAYS,
-    JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
-    CLIENT_URL,
-    RESET_PASSWORD_SESSION_TOKEN_PREFIX,
-} from "../../../config/constants";
+import { CLIENT_URL } from "../../../config/constants";
 import { AuthRepository } from "../auth.repository";
 import { BcryptUtils, ApiError, JwtManager, logger } from "../../../utils";
 import type { LoginInput as LoginPayload } from '@devio/zod-utils';
@@ -20,14 +13,15 @@ import { AccountStatus, CodeType, SessionType } from "../../../generated/prisma/
 import { VerificationService } from "../../verification";
 import { EmailJobService } from "../../../queue";
 import { EMAIL_JOB_TYPES } from "../../../config/constants";
+import { TokenService } from "./token.service";
 
 @injectable()
 export class AuthService {
 
     constructor(
-        @inject(TYPES.RedisManager) private redisManager: RedisManager,
         @inject(TYPES.UserRepository) private userRepository: UserRepository,
         @inject(TYPES.AuthRepository) private authRepository: AuthRepository,
+        @inject(TYPES.TokenService) private tokenService: TokenService,
         @inject(TYPES.VerificationService) private verificationService: VerificationService,
         @inject(TYPES.EmailJobService) private emailJobService: EmailJobService
     ) { }
@@ -94,7 +88,7 @@ export class AuthService {
         if (!refreshToken) return;
         try {
             const { jti } = JwtManager.verifyRefreshToken(refreshToken);
-            await this.revokeRefreshToken(jti!);
+            await this.tokenService.revokeRefreshToken(jti!);
             await this.authRepository.invalidateSession(jti!);
         } catch (err: any) {
             logger.warn(`Error during logout: ${err.message}`);
@@ -127,7 +121,7 @@ export class AuthService {
             throw new ApiError("Account is no longer active.", StatusCodes.FORBIDDEN);
         }
 
-        await this.revokeRefreshToken(jti);
+        await this.tokenService.revokeRefreshToken(jti);
 
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await this.generateOrUpdateTokensAndSession(
             userId,
@@ -211,7 +205,7 @@ export class AuthService {
         const { token: resetSessionToken, jti, expIn } =
             JwtManager.generateResetPasswordSessionToken(user.email);
 
-        await this.setResetPasswordSessionToken(jti);
+        await this.tokenService.setResetPasswordSessionToken(jti);
 
         const sessionPayload: CreateSessionPayload = {
             userId: user.id,
@@ -240,7 +234,7 @@ export class AuthService {
         );
 
         if (currentResetSession?.isActive) {
-            await this.revokeResetPasswordSessionToken(currentResetSession.sessionToken!);
+            await this.tokenService.revokeResetPasswordSessionToken(currentResetSession.sessionToken!);
         }
 
         await this.authRepository.invalidateUserSessions(user.id);
@@ -341,57 +335,11 @@ export class AuthService {
             await this.authRepository.createSession(sessionPayload);
         }
 
-        await this.setRefreshToken(jti);
+        await this.tokenService.setRefreshToken(jti);
         await this.userRepository.setLastLogin(userId);
 
         return { accessToken, refreshToken };
     }
 
-    private async setResetPasswordSessionToken(jti: string): Promise<void> {
-        try {
-            await this.redisClient.set(
-                `${RESET_PASSWORD_SESSION_TOKEN_PREFIX}${jti}`,
-                "valid",
-                "EX",
-                JWT_RESET_PASSWORD_EXPIRATION_MINUTES * 60
-            );
-        } catch (err: any) {
-            throw new Error(`Failed to set reset password session token in Redis: ${err.message}`);
-        }
-    }
-
-    private async revokeResetPasswordSessionToken(jti: string): Promise<void> {
-        try {
-            await this.redisClient.del(`${RESET_PASSWORD_SESSION_TOKEN_PREFIX}${jti}`);
-        } catch (err: any) {
-            throw new Error(`Failed to revoke reset password session token in Redis: ${err.message}`);
-        }
-    }
-
-
-    private async setRefreshToken(jti: string): Promise<void> {
-        try {
-            await this.redisClient.set(
-                `${REFRESH_TOKEN_PREFIX}${jti}`,
-                "valid",
-                "EX",
-                JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60
-            );
-        } catch (err: any) {
-            throw new Error(`Failed to set refresh token in Redis: ${err.message}`);
-        }
-    }
-
-    private async revokeRefreshToken(jti: string): Promise<void> {
-        try {
-            await this.redisClient.del(`${REFRESH_TOKEN_PREFIX}${jti}`);
-        } catch (err: any) {
-            throw new Error(`Failed to revoke refresh token in Redis: ${err.message}`);
-        }
-    }
-
-    private get redisClient() {
-        return this.redisManager.getPub();
-    }
 
 }

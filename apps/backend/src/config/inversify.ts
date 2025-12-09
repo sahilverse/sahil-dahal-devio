@@ -1,7 +1,7 @@
 import { Container } from "inversify";
 import { TYPES } from "../types";
 import { RedisManager } from "./redis";
-import { AuthService, AuthController, AuthRepository } from "../modules/auth";
+import { AuthService, AuthController, AuthRepository, TokenService } from "../modules/auth";
 import { UserRepository } from "../modules/user";
 import { prisma } from "./prisma";
 import { AuthMiddleware } from "../middlewares";
@@ -19,6 +19,8 @@ container.bind<typeof prisma>(TYPES.PrismaClient).toConstantValue(prisma);
 
 container.bind<Transporter>(TYPES.Transporter).toConstantValue(transporter);
 container.bind<MailService>(TYPES.MailService).to(MailService).inSingletonScope();
+
+container.bind<TokenService>(TYPES.TokenService).to(TokenService).inSingletonScope();
 
 container.bind<AuthRepository>(TYPES.AuthRepository).to(AuthRepository).inSingletonScope();
 container.bind<AuthService>(TYPES.AuthService).to(AuthService).inSingletonScope();
