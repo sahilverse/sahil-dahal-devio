@@ -52,6 +52,10 @@ export class EmailWorkerService {
             connection: this.redisManager.getPub(),
         });
 
+        worker.on("active", (job) => {
+            logger.info(`Job started: ${job.name} in queue ${queueName}`);
+        });
+
         worker.on("completed", (job) => {
             logger.info(`Job completed: ${job.name} in queue ${queueName}`);
         });
