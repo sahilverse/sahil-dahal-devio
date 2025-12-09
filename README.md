@@ -109,15 +109,14 @@ pnpm build --filter @devio/frontend
 ### Database Migrations
 
 ```bash
-# Run migrations (from backend directory)
-cd apps/backend
-pnpm prisma migrate dev
+# Run migrations
+pnpm --filter @devio/backend exec prisma migrate dev
 
 # Reset database
-pnpm prisma migrate reset
+pnpm --filter @devio/backend exec prisma migrate reset
 
 # View database in Prisma Studio
-pnpm prisma studio
+pnpm --filter @devio/backend exec prisma studio
 ```
 
 ## 📦 Docker Deployment
@@ -195,6 +194,4 @@ devio/
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Docker Documentation](https://docs.docker.com/)
 
-## 📄 License
 
-ISC
