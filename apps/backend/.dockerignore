@@ -1,0 +1,21 @@
+# Dependency directories
+node_modules
+dist
+build
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Git and local files
+.git
+.gitignore
+Dockerfile*
+docker-compose*
+README.md
+
+# IDE files
+.vscode
+.DS_Store
+*.log
