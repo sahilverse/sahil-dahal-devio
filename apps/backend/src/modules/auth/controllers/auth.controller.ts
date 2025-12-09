@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
 import { UAParser } from "ua-parser-js";
-import { TYPES } from "../../types";
-import { AuthService } from "./auth.service";
-import { asyncHandler, ResponseHandler } from "../../utils";
-import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../config/constants";
+import { TYPES } from "../../../types";
+import { AuthService } from "../services/auth.service";
+import { asyncHandler, ResponseHandler } from "../../../utils";
+import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../../config/constants";
 import { StatusCodes } from "http-status-codes";
-import type { LoginServiceResponse } from "./auth.types";
-import type { UserAgentInfo } from "./auth.types";
+import type { LoginServiceResponse } from "../auth.types";
+import type { UserAgentInfo } from "../auth.types";
 
 @injectable()
 export class AuthController {

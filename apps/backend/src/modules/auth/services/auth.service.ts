@@ -1,25 +1,25 @@
 import { inject, injectable } from "inversify";
-import { TYPES } from "../../types";
-import { RedisManager } from "../../config";
-import type { CreateUserPayload, UserRepository } from "../user";
+import { TYPES } from "../../../types";
+import { RedisManager } from "../../../config";
+import type { CreateUserPayload, UserRepository } from "../../user";
 import {
     REFRESH_TOKEN_PREFIX,
     JWT_REFRESH_EXPIRATION_DAYS,
     JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
     CLIENT_URL,
     RESET_PASSWORD_SESSION_TOKEN_PREFIX,
-} from "../../config/constants";
-import { AuthRepository } from "./auth.repository";
-import { BcryptUtils, ApiError, JwtManager, logger } from "../../utils";
+} from "../../../config/constants";
+import { AuthRepository } from "../auth.repository";
+import { BcryptUtils, ApiError, JwtManager, logger } from "../../../utils";
 import type { LoginInput as LoginPayload } from '@devio/zod-utils';
 import { StatusCodes } from "http-status-codes";
-import { LoginServiceResponse, RefreshTokenServiceResponse } from "./auth.types";
-import { toAuthUserDTO } from "./auth.dto";
-import type { UserAgentInfo, CreateSessionPayload } from "./auth.types";
-import { AccountStatus, CodeType, SessionType } from "../../generated/prisma/enums";
-import { VerificationService } from "../verification";
-import { EmailJobService } from "../../queue";
-import { EMAIL_JOB_TYPES } from "../../config/constants";
+import { LoginServiceResponse, RefreshTokenServiceResponse } from "../auth.types";
+import { toAuthUserDTO } from "../auth.dto";
+import type { UserAgentInfo, CreateSessionPayload } from "../auth.types";
+import { AccountStatus, CodeType, SessionType } from "../../../generated/prisma/enums";
+import { VerificationService } from "../../verification";
+import { EmailJobService } from "../../../queue";
+import { EMAIL_JOB_TYPES } from "../../../config/constants";
 
 @injectable()
 export class AuthService {

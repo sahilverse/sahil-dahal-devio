@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { container } from "../../config";
-import { TYPES } from "../../types";
-import { AuthController } from "./auth.controller";
-import { AuthMiddleware, validateRequest } from '../../middlewares';
+import { container } from "../../../config";
+import { TYPES } from "../../../types";
+import { AuthController } from "../controllers";
+import { AuthMiddleware, validateRequest } from '../../../middlewares';
 import { registerSchema, loginSchema, verifyPasswordResetTokenSchema, resetPasswordSchema, verifyEmailVerificationTokenSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
