@@ -21,7 +21,7 @@ This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https:
 
 - **`@devio/eslint-config`** - Shared ESLint configuration
 - **`@devio/typescript-config`** - Shared TypeScript configuration
-- **`@devio/zod`** - Shared Zod validation schemas for authentication and OTP
+- **`@devio/zod`** - Shared Zod validation schemas
 - **`@devio/boilerplate-generator`** - Code boilerplate generation utilities
 
 ## 🛠️ Tech Stack
@@ -33,7 +33,7 @@ This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https:
 - **Database**: PostgreSQL with Prisma ORM
 - **Cache**: Redis
 - **Job Queue**: BullMQ
-- **Authentication**: JWT with bcryptjs
+- **Authentication**: JWT with bcryptjs (completed), OAuth (Pending)
 - **Email**: Nodemailer
 - **API Documentation**: Swagger/OpenAPI
 
@@ -48,7 +48,6 @@ This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https:
 - **Containerization**: Docker
 - **Supported Languages**: C++, Java, Node.js, Python
 - **Execution Client**: Dockerode
-- **HTTP Client**: Axios
 
 ## 📋 Prerequisites
 
