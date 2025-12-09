@@ -4,13 +4,15 @@ Dev.io is a developer-centered community platform with posts, communities, codin
 
 ## THE PROJECT IS UNDER ACTIVE DEVELOPMENT. SO THE STRUCTURE AND FEATURES MAY CHANGE FREQUENTLY. THIS README WILL BE UPDATED ACCORDINGLY.
 
+## This documentation covers only the features and structure that are currently implemented.
+
 ## 🏗️ Project Architecture
 
 This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https://pnpm.io/) as the package manager.
 
 ### Apps
 
-- **`backend`** - Node.js/Express REST API with Prisma ORM, Redis caching, and Bull job queues
+- **`backend`** - Node.js/Express REST API with Prisma ORM
 - **`frontend`** - Next.js 16 React application for the web interface
 - **`code-sandbox`** - Docker-based code execution service supporting multiple programming languages
 - **`judge0`** - Code judging and evaluation service integration
@@ -175,23 +177,3 @@ devio/
 ├── turbo.json                 # Turborepo configuration
 └── pnpm-workspace.yaml        # Workspace configuration
 ```
-
-## 🔑 Key Features
-
-- **Multi-language Code Execution** - C++, Java, Node.js, Python support
-- **Real-time Feedback** - Instant compilation and execution results
-- **Authentication** - JWT-based user authentication with OTP verification
-- **Job Queue System** - Asynchronous task processing with BullMQ
-- **Redis Caching** - Performance optimization and session management
-- **Type-Safe APIs** - Full TypeScript support with Zod validation
-- **API Documentation** - Swagger integration for API exploration
-
-## 📚 Useful Resources
-
-- [Turborepo Documentation](https://turborepo.com/docs)
-- [Prisma Documentation](https://www.prisma.io/docs/)
-- [Express.js Guide](https://expressjs.com/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Docker Documentation](https://docs.docker.com/)
-
-
