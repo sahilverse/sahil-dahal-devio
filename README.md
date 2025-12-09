@@ -1,135 +1,200 @@
-# Turborepo starter
+# Devio - IT community Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+Dev.io is a developer-centered community platform with posts, communities, coding challenges, CTF labs, events, and real-time collaboration. Users can join communities, solve problems, earn aura points, run code in a sandbox, chat, and customize their feed—all in one unified ecosystem.
 
-## Using this example
+## THE PROJECT IS UNDER ACTIVE DEVELOPMENT. SO THE STRUCTURE AND FEATURES MAY CHANGE FREQUENTLY. THIS README WILL BE UPDATED ACCORDINGLY.
 
-Run the following command:
+## 🏗️ Project Architecture
 
-```sh
-npx create-turbo@latest
+This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https://pnpm.io/) as the package manager.
+
+### Apps
+
+- **`backend`** - Node.js/Express REST API with Prisma ORM, Redis caching, and Bull job queues
+- **`frontend`** - Next.js 16 React application for the web interface
+- **`code-sandbox`** - Docker-based code execution service supporting multiple programming languages
+- **`judge0`** - Code judging and evaluation service integration
+
+### Shared Packages
+
+- **`@devio/eslint-config`** - Shared ESLint configuration
+- **`@devio/typescript-config`** - Shared TypeScript configuration
+- **`@devio/zod`** - Shared Zod validation schemas for authentication and OTP
+- **`@devio/boilerplate-generator`** - Code boilerplate generation utilities
+
+## 🛠️ Tech Stack
+
+### Backend
+
+- **Runtime**: Node.js (v18+)
+- **Framework**: Express.js
+- **Database**: PostgreSQL with Prisma ORM
+- **Cache**: Redis
+- **Job Queue**: BullMQ
+- **Authentication**: JWT with bcryptjs
+- **Email**: Nodemailer
+- **API Documentation**: Swagger/OpenAPI
+
+### Frontend
+
+- **Framework**: Next.js 16
+- **UI Library**: React 19
+- **Language**: TypeScript
+
+### Code Execution
+
+- **Containerization**: Docker
+- **Supported Languages**: C++, Java, Node.js, Python
+- **Execution Client**: Dockerode
+- **HTTP Client**: Axios
+
+## 📋 Prerequisites
+
+- Node.js >= 18
+- pnpm >= 10.24.0
+- Docker (for code sandbox)
+- PostgreSQL database
+- Redis cache
+
+## 🚀 Getting Started
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+# Copy .env.example to .env in backend and frontend directories
+# Configure database, Redis, and other services
 ```
 
-## What's inside?
+### Development
 
-This Turborepo includes the following packages/apps:
+Start all services in development mode:
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@devio/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@devio/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@devio/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+# Run all apps and packages in watch mode
+pnpm dev
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Or develop a specific app:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```bash
+# Frontend only
+pnpm dev --filter @devio/frontend
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+# Backend only
+pnpm dev --filter @devio/backend
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+# Code sandbox only
+pnpm dev --filter @devio/code-sandbox
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### Building
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+Build all apps and packages:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+pnpm build
 ```
 
-### Remote Caching
+Build a specific app:
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+pnpm build --filter @devio/backend
+pnpm build --filter @devio/frontend
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Database Migrations
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+```bash
+# Run migrations (from backend directory)
+cd apps/backend
+pnpm prisma migrate dev
+
+# Reset database
+pnpm prisma migrate reset
+
+# View database in Prisma Studio
+pnpm prisma studio
+```
+
+## 📦 Docker Deployment
+
+### Compose Services
+
+The `docker-compose.yml` orchestrates all services:
+
+```bash
+# Build and start all containers
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+```
+
+## 🔍 Code Quality
+
+### Linting
+
+```bash
+pnpm lint
+```
+
+### Type Checking
+
+```bash
+pnpm check-types
+```
+
+### Formatting
+
+```bash
+pnpm format
+```
+
+## 📝 Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+devio/
+├── apps/
+│   ├── backend/               # Express API server
+│   ├── frontend/              # Next.js frontend
+│   ├── code-sandbox/          # Docker execution service
+│   └── judge0/                # Judge0 configuration
+├── packages/
+│   ├── boilerplate-generator/ # Code template generation
+│   ├── eslint-config/         # Shared ESLint config
+│   ├── typescript-config/     # Shared TypeScript config
+│   └── zod/                   # Shared validation schemas
+├── infra/                     # Infrastructure configs
+├── docker-compose.yml         # Multi-container orchestration
+├── turbo.json                 # Turborepo configuration
+└── pnpm-workspace.yaml        # Workspace configuration
 ```
 
-## Useful Links
+## 🔑 Key Features
 
-Learn more about the power of Turborepo:
+- **Multi-language Code Execution** - C++, Java, Node.js, Python support
+- **Real-time Feedback** - Instant compilation and execution results
+- **Authentication** - JWT-based user authentication with OTP verification
+- **Job Queue System** - Asynchronous task processing with BullMQ
+- **Redis Caching** - Performance optimization and session management
+- **Type-Safe APIs** - Full TypeScript support with Zod validation
+- **API Documentation** - Swagger integration for API exploration
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## 📚 Useful Resources
+
+- [Turborepo Documentation](https://turborepo.com/docs)
+- [Prisma Documentation](https://www.prisma.io/docs/)
+- [Express.js Guide](https://expressjs.com/)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Docker Documentation](https://docs.docker.com/)
+
+## 📄 License
+
+ISC
