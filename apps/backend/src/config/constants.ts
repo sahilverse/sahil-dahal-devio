@@ -19,8 +19,8 @@ export const JWT_RESET_PASSWORD_EXPIRATION_MINUTES = Number(process.env.JWT_RESE
 export const REFRESH_TOKEN_PREFIX = "refresh_jti:";
 export const RESET_PASSWORD_SESSION_TOKEN_PREFIX = "reset_password_session:";
 
-export const EMAIL_USER = process.env.EMAIL_USER!;
-export const EMAIL_PASS = process.env.EMAIL_PASS!;
+export const SMTP_EMAIL_USER = process.env.SMTP_EMAIL_USER!;
+export const SMTP_EMAIL_PASS = process.env.SMTP_EMAIL_PASS!;
 
 export const JWT_EMAIL_VERIFICATION_SECRET = process.env.JWT_EMAIL_VERIFICATION_SECRET!;
 export const JWT_EMAIL_VERIFICATION_EXPIRATION_MINUTES = Number(process.env.JWT_EMAIL_VERIFICATION_EXPIRATION_MINUTES) || 10;
