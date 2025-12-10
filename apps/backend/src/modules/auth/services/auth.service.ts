@@ -69,7 +69,11 @@ export class AuthService {
             throw new ApiError({ "account": "Account is deactivated. Please reactivate to continue." }, StatusCodes.FORBIDDEN);
         }
 
-        const isPasswordValid = await BcryptUtils.comparePassword(password, user.password!);
+        if (!user.password) {
+            throw new ApiError({ "account": "User registered with different provider" }, StatusCodes.UNAUTHORIZED);
+        }
+
+        const isPasswordValid = await BcryptUtils.comparePassword(password, user.password);
 
         if (!isPasswordValid) {
             throw new ApiError({ "password": "Incorrect Password" }, StatusCodes.UNAUTHORIZED);
