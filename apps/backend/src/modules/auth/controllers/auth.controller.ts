@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
-import { UAParser } from "ua-parser-js";
 import { TYPES } from "../../../types";
 import { AuthService } from "../services/auth.service";
-import { asyncHandler, ResponseHandler } from "../../../utils";
+import { asyncHandler, ResponseHandler, RequestUtil } from "../../../utils";
 import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../../config/constants";
 import { StatusCodes } from "http-status-codes";
 import type { LoginServiceResponse } from "../auth.types";
-import type { UserAgentInfo } from "../auth.types";
+
 
 @injectable()
 export class AuthController {
@@ -21,8 +20,8 @@ export class AuthController {
 
     login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const loginPayload = req.body;
-        const clientIp = this.getClientIp(req);
-        const userAgent = this.getUserAgent(req);
+        const { ip: clientIp, userAgent } = RequestUtil.getIpAndUserAgent(req);
+
         const loginResponse: LoginServiceResponse = await this.authService.loginUser(loginPayload, clientIp!, userAgent);
 
         const refreshMaxAge = JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
@@ -55,8 +54,7 @@ export class AuthController {
             return ResponseHandler.sendResponse(res, StatusCodes.UNAUTHORIZED, "Refresh token missing");
         }
 
-        const clientIp = this.getClientIp(req);
-        const userAgent = this.getUserAgent(req);
+        const { ip: clientIp, userAgent } = RequestUtil.getIpAndUserAgent(req);
 
         const refreshResponse = await this.authService.refreshTokens(oldRefreshToken, clientIp!, userAgent);
 
@@ -83,8 +81,7 @@ export class AuthController {
 
     verifyPasswordResetToken = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { token, identifier } = req.body;
-        const clientIp = this.getClientIp(req);
-        const userAgent = this.getUserAgent(req);
+        const { ip: clientIp, userAgent } = RequestUtil.getIpAndUserAgent(req);
 
         const reset_session_token = await this.authService.verifyPasswordResetToken(clientIp!, userAgent, token, identifier);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Password reset token verified successfully", { reset_session_token });
@@ -110,46 +107,7 @@ export class AuthController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Email verified successfully");
     });
 
-    private getClientIp(req: Request): string | null {
-        const xForwardedFor = req.headers["x-forwarded-for"];
-        if (xForwardedFor) {
-            const ips = Array.isArray(xForwardedFor)
-                ? xForwardedFor
-                : xForwardedFor.split(",");
-            return ips.length > 0 ? ips[0]?.trim() ?? null : null;
-        }
 
-        return req.socket.remoteAddress || null;
-    }
 
-    private getUserAgent(req: Request): UserAgentInfo {
-        const rawUA = req.get("user-agent") || null;
-
-        if (!rawUA) {
-            return {
-                browser: null,
-                version: null,
-                os: null,
-                device: null,
-                raw: null,
-            };
-        }
-
-        const parser = new UAParser(rawUA);
-        const result = parser.getResult();
-
-        const browser = result.browser.name || null;
-        const version = result.browser.version || null;
-        const os = result.os.name ? `${result.os.name} ${result.os.version || ""}`.trim() : null;
-        const device = result.device.type || "Desktop";
-
-        return {
-            browser,
-            version,
-            os,
-            device,
-            raw: rawUA,
-        };
-    }
 
 }
