@@ -39,7 +39,7 @@ export class AuthService {
             throw new ApiError("Username already in use", StatusCodes.CONFLICT);
         }
 
-        const hashedPassword = await BcryptUtils.hashPassword(password);
+        const hashedPassword = await BcryptUtils.hashPassword(password!);
 
         await this.userRepository.createUser({
             firstName,
