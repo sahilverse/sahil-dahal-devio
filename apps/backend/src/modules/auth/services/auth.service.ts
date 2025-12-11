@@ -56,7 +56,7 @@ export class AuthService {
         const user = await this.userRepository.findByEmailOrUsername(identifier);
 
         if (!user) {
-            throw new ApiError({ "identifier": "User not found" }, StatusCodes.UNAUTHORIZED);
+            throw new ApiError("Invalid Credentials", StatusCodes.UNAUTHORIZED);
         }
 
         if (user.accountStatus === AccountStatus.ADMIN_DISABLED || user.accountStatus === AccountStatus.SUSPENDED) {
@@ -70,13 +70,13 @@ export class AuthService {
         }
 
         if (!user.password) {
-            throw new ApiError({ "account": "User registered with different provider" }, StatusCodes.UNAUTHORIZED);
+            throw new ApiError("Invalid Credentials", StatusCodes.UNAUTHORIZED);
         }
 
         const isPasswordValid = await BcryptUtils.comparePassword(password, user.password);
 
         if (!isPasswordValid) {
-            throw new ApiError({ "password": "Incorrect Password" }, StatusCodes.UNAUTHORIZED);
+            throw new ApiError("Invalid Credentials", StatusCodes.UNAUTHORIZED);
         }
 
         const { accessToken, refreshToken } = await this.generateOrUpdateTokensAndSession(user.id, clientIp, userAgent);
