@@ -7,7 +7,6 @@ import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../../config/constants
 import { StatusCodes } from "http-status-codes";
 import type { LoginServiceResponse } from "../auth.types";
 
-
 @injectable()
 export class AuthController {
     constructor(@inject(TYPES.AuthService) private authService: AuthService) { }
