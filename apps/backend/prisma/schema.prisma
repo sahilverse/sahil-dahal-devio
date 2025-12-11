@@ -52,7 +52,7 @@ model User {
   firstName     String        @map("first_name")
   lastName      String        @map("last_name")
   email         String        @unique
-  username      String        @unique
+  username      String?       @unique
   password      String?
   role          Role          @default(USER)
   avatarUrl     String?       @map("avatar_url")
@@ -119,7 +119,6 @@ model VerificationToken {
 
 model Account {
   userId            String       @map("user_id")
-  type              String
   provider          ProviderType
   providerAccountId String       @map("provider_account_id")
   id_token          String?

@@ -14,7 +14,10 @@ CREATE TYPE "CodeType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET');
 CREATE TYPE "ProviderType" AS ENUM ('GOOGLE', 'GITHUB');
 
 -- CreateEnum
-CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DEACTIVATED', 'ADMIN_DISABLED', 'DELETED');
+CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DEACTIVATED', 'ADMIN_DISABLED', 'PENDING_DELETION');
+
+-- CreateEnum
+CREATE TYPE "SessionType" AS ENUM ('AUTHENTICATION', 'PASSWORD_RESET');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -22,7 +25,7 @@ CREATE TABLE "User" (
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
+    "username" TEXT,
     "password" TEXT,
     "role" "Role" NOT NULL DEFAULT 'USER',
     "avatar_url" TEXT,
@@ -68,7 +71,6 @@ CREATE TABLE "VerificationToken" (
 -- CreateTable
 CREATE TABLE "Account" (
     "user_id" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
     "provider" "ProviderType" NOT NULL,
     "provider_account_id" TEXT NOT NULL,
     "id_token" TEXT,
@@ -99,6 +101,7 @@ CREATE TABLE "Session" (
     "ip" TEXT,
     "user_agent" JSONB,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "type" "SessionType" NOT NULL DEFAULT 'AUTHENTICATION',
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -137,7 +140,13 @@ CREATE INDEX "VerificationToken_user_id_idx" ON "VerificationToken"("user_id");
 CREATE INDEX "VerificationToken_expiresAt_idx" ON "VerificationToken"("expiresAt");
 
 -- CreateIndex
+CREATE INDEX "VerificationToken_code_idx" ON "VerificationToken"("code");
+
+-- CreateIndex
 CREATE INDEX "VerificationToken_type_idx" ON "VerificationToken"("type");
+
+-- CreateIndex
+CREATE INDEX "VerificationToken_code_type_idx" ON "VerificationToken"("code", "type");
 
 -- CreateIndex
 CREATE INDEX "Account_user_id_idx" ON "Account"("user_id");
@@ -168,6 +177,9 @@ CREATE INDEX "Session_ip_idx" ON "Session"("ip");
 
 -- CreateIndex
 CREATE INDEX "Session_createdAt_idx" ON "Session"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "Session_user_id_type_idx" ON "Session"("user_id", "type");
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
