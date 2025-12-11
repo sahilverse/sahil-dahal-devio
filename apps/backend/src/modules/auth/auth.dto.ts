@@ -2,9 +2,9 @@ import { User, Role } from "../../generated/prisma/client";
 
 export interface AuthUserDTO {
     id: string;
-    firstName: string;
-    lastName: string;
-    username: string;
+    firstName: string | null;
+    lastName: string | null;
+    username: string | null;
     email: string;
     avatarUrl: string | null;
     role: Role;
