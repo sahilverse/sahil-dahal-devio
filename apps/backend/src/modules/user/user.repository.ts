@@ -1,7 +1,13 @@
 import { injectable, inject } from "inversify";
 import type { User, Role, PrismaClient, AccountStatusHistory } from "../../generated/prisma/client";
-import type { CreateUserPayload, AccountStatusPayload } from "./user.types";
+import type {
+    CreateUserPayload,
+    AccountStatusPayload,
+    CreateOAuthUserPayload,
+    CreateAccountPayload
+} from "./user.types";
 import { TYPES } from "../../types";
+
 
 @injectable()
 export class UserRepository {
@@ -14,6 +20,45 @@ export class UserRepository {
                 emailVerified
             },
         });
+    }
+
+    async createUserOAuthAccount(payload: CreateAccountPayload): Promise<void> {
+        await this.prisma.account.create({
+            data: {
+                userId: payload.userId,
+                provider: payload.provider,
+                providerAccountId: payload.providerAccountId,
+                id_token: payload.id_token,
+            },
+        });
+    }
+
+    async createOAuthUser(payload: CreateOAuthUserPayload): Promise<User> {
+
+        const result = await this.prisma.$transaction(async (prisma) => {
+            const { provider, providerAccountId, id_token, ...userData } = payload;
+
+            const user = await prisma.user.create({
+                data: {
+                    ...userData,
+                    emailVerified: new Date(),
+                },
+            });
+
+            await prisma.account.create({
+                data: {
+                    userId: user.id,
+                    provider,
+                    providerAccountId,
+                    id_token,
+                },
+            });
+
+            return user;
+        });
+
+        return result;
+
     }
 
     async findByEmail(email: string): Promise<User | null> {
@@ -47,6 +92,25 @@ export class UserRepository {
     async findById(id: string): Promise<User | null> {
         return await this.prisma.user.findUnique({
             where: { id },
+        });
+    }
+
+    async updateUserName(identifier: string, newUsername: string): Promise<void> {
+        await this.prisma.user.updateMany({
+            where: {
+                OR: [
+                    { email: { equals: identifier, mode: "insensitive" } },
+                    { username: { equals: identifier, mode: "insensitive" } },
+                ],
+            },
+            data: { username: newUsername },
+        });
+    }
+
+    async updateUserNamebyId(userId: string, newUsername: string): Promise<void> {
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { username: newUsername },
         });
     }
 
