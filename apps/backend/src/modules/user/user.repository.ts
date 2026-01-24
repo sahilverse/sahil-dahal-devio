@@ -193,5 +193,12 @@ export class UserRepository {
         return history;
     }
 
+    async updateUserProfile(userId: string, data: { username?: string; firstName?: string; lastName?: string }): Promise<User> {
+        return await this.prisma.user.update({
+            where: { id: userId },
+            data
+        });
+    }
+
 
 }

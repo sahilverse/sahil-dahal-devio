@@ -2,7 +2,7 @@ import { Container } from "inversify";
 import { TYPES } from "../types";
 import { RedisManager } from "./redis";
 import { AuthService, AuthController, AuthRepository, TokenService, OAuthService, OAuthController } from "../modules/auth";
-import { UserRepository } from "../modules/user";
+import { UserRepository, UserService, UserController } from "../modules/user";
 import { prisma } from "./prisma";
 import { AuthMiddleware } from "../middlewares";
 import type { Transporter } from "nodemailer";
@@ -30,6 +30,8 @@ container.bind<OAuthService>(TYPES.OAuthService).to(OAuthService).inSingletonSco
 container.bind<OAuthController>(TYPES.OAuthController).to(OAuthController).inSingletonScope();
 
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository).inSingletonScope();
+container.bind<UserService>(TYPES.UserService).to(UserService).inSingletonScope();
+container.bind<UserController>(TYPES.UserController).to(UserController).inSingletonScope();
 
 container.bind(TYPES.VerificationRepository).to(VerificationRepository).inSingletonScope();
 container.bind(TYPES.VerificationService).to(VerificationService).inSingletonScope();

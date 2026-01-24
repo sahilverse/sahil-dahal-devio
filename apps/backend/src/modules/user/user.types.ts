@@ -29,3 +29,9 @@ export interface AccountStatusPayload {
     reason?: string;
     performedBy?: string;
 }
+
+export interface OnboardingPayload {
+    username: string;
+    firstName: string;
+    lastName: string;
+}
