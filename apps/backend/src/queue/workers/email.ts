@@ -49,7 +49,7 @@ export class EmailWorkerService {
         }
 
         const worker = new Worker(queueName, processor, {
-            connection: this.redisManager.getPub(),
+            connection: this.redisManager.getPub().duplicate(),
         });
 
         worker.on("active", (job) => {
