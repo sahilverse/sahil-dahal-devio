@@ -12,7 +12,7 @@ import { OAuthButton } from "./OAuthButton";
 import { LoginInput, loginSchema } from "@devio/zod-utils";
 
 export function LoginForm() {
-    const { switchToRegister, close } = useAuthModal();
+    const { switchToRegister, switchToForgotPassword, close } = useAuthModal();
     const dispatch = useAppDispatch();
     const { status } = useAppSelector((state) => state.auth);
     const isLoading = status === "loading";
@@ -137,7 +137,11 @@ export function LoginForm() {
                         disabled={isLoading}
                     />
                     <div className="flex justify-end">
-                        <button type="button" className="text-xs font-medium text-brand-primary hover:underline cursor-pointer">
+                        <button
+                            type="button"
+                            onClick={switchToForgotPassword}
+                            className="text-xs font-medium text-brand-primary hover:underline cursor-pointer"
+                        >
                             Forgot Password?
                         </button>
                     </div>

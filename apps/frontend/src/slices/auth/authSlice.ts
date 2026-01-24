@@ -8,6 +8,9 @@ import type {
     AuthResponse,
     OAuthResponse,
     OnboardingPayload,
+    ForgotPasswordPayload,
+    VerifyResetTokenPayload,
+    ResetPasswordPayload,
 } from "./authTypes";
 
 const initialState: AuthState = {
@@ -17,6 +20,7 @@ const initialState: AuthState = {
     status: "idle",
     errorMessage: null,
     fieldErrors: null,
+    resetSessionToken: null,
 };
 
 
@@ -115,6 +119,49 @@ export const logoutUser = createAsyncThunk<void, void>(
     }
 );
 
+export const forgotPassword = createAsyncThunk<
+    void,
+    ForgotPasswordPayload,
+    { rejectValue: { errorMessage?: string; fieldErrors?: Record<string, string> } }
+>("auth/forgotPassword", async (payload, { rejectWithValue }) => {
+    try {
+        await api.post("/auth/forgot-password", payload);
+    } catch (error: any) {
+        return rejectWithValue(error);
+    }
+});
+
+export const verifyResetToken = createAsyncThunk<
+    string,
+    VerifyResetTokenPayload,
+    { rejectValue: { errorMessage?: string; fieldErrors?: Record<string, string> } }
+>("auth/verifyResetToken", async (payload, { rejectWithValue }) => {
+    try {
+        const { data } = await api.post("/auth/verify-password-reset-token", payload);
+        return data.result.reset_session_token;
+    } catch (error: any) {
+        return rejectWithValue(error);
+    }
+});
+
+export const resetPassword = createAsyncThunk<
+    void,
+    ResetPasswordPayload,
+    { state: { auth: AuthState }; rejectValue: { errorMessage?: string; fieldErrors?: Record<string, string> } }
+>("auth/resetPassword", async (payload, { getState, rejectWithValue }) => {
+    try {
+        const { resetSessionToken } = getState().auth;
+        if (!resetSessionToken) {
+            return rejectWithValue({ errorMessage: "Session expired. Please start over." });
+        }
+        await api.post("/auth/reset-password", payload, {
+            headers: { Authorization: `Bearer ${resetSessionToken}` },
+        });
+    } catch (error: any) {
+        return rejectWithValue(error);
+    }
+});
+
 const authSlice = createSlice({
     name: "auth",
     initialState,
@@ -136,6 +183,9 @@ const authSlice = createSlice({
         clearErrors: (state) => {
             state.errorMessage = null;
             state.fieldErrors = null;
+        },
+        clearResetSession: (state) => {
+            state.resetSessionToken = null;
         },
     },
     extraReducers: (builder) => {
@@ -245,9 +295,60 @@ const authSlice = createSlice({
                 }
                 state.status = "succeeded";
             });
+
+
+        // Forgot Password
+        builder
+            .addCase(forgotPassword.pending, (state) => {
+                state.status = "loading";
+                state.errorMessage = null;
+                state.fieldErrors = null;
+            })
+            .addCase(forgotPassword.fulfilled, (state) => {
+                state.status = "succeeded";
+            })
+            .addCase(forgotPassword.rejected, (state, action) => {
+                state.status = "failed";
+                state.errorMessage = action.payload?.errorMessage || "Failed to send reset link";
+                state.fieldErrors = action.payload?.fieldErrors || null;
+            });
+
+        // Verify Reset Token
+        builder
+            .addCase(verifyResetToken.pending, (state) => {
+                state.status = "loading";
+                state.errorMessage = null;
+                state.fieldErrors = null;
+            })
+            .addCase(verifyResetToken.fulfilled, (state, action) => {
+                state.status = "succeeded";
+                state.resetSessionToken = action.payload;
+            })
+            .addCase(verifyResetToken.rejected, (state, action) => {
+                state.status = "failed";
+                state.errorMessage = action.payload?.errorMessage || "Invalid token";
+                state.fieldErrors = action.payload?.fieldErrors || null;
+            });
+
+        // Reset Password
+        builder
+            .addCase(resetPassword.pending, (state) => {
+                state.status = "loading";
+                state.errorMessage = null;
+                state.fieldErrors = null;
+            })
+            .addCase(resetPassword.fulfilled, (state) => {
+                state.status = "succeeded";
+                state.resetSessionToken = null; 
+            })
+            .addCase(resetPassword.rejected, (state, action) => {
+                state.status = "failed";
+                state.errorMessage = action.payload?.errorMessage || "Failed to reset password";
+                state.fieldErrors = action.payload?.fieldErrors || null;
+            });
     },
 });
 
-export const { setAccessToken, setUser, clearAuth, clearErrors } = authSlice.actions;
+export const { setAccessToken, setUser, clearAuth, clearErrors, clearResetSession } = authSlice.actions;
 export const authReducer = authSlice.reducer;
 

@@ -12,6 +12,7 @@ interface AuthModalContextType {
     close: () => void;
     switchToRegister: () => void;
     switchToLogin: () => void;
+    switchToForgotPassword: () => void;
 }
 
 const AuthModalContext = createContext<AuthModalContextType | undefined>(undefined);
@@ -34,6 +35,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
 
     const switchToRegister = () => setView('register');
     const switchToLogin = () => setView('login');
+    const switchToForgotPassword = () => setView('forgot-password');
 
     return (
         <AuthModalContext.Provider value={{
@@ -43,7 +45,8 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
             openRegister,
             close,
             switchToRegister,
-            switchToLogin
+            switchToLogin,
+            switchToForgotPassword
         }}>
             {children}
         </AuthModalContext.Provider>

@@ -17,6 +17,7 @@ export interface AuthState {
     status: "idle" | "loading" | "succeeded" | "failed";
     errorMessage: string | null;
     fieldErrors: Record<string, string> | null;
+    resetSessionToken: string | null;
 }
 
 export interface LoginPayload {
@@ -46,4 +47,18 @@ export interface OnboardingPayload {
     username: string;
     firstName: string;
     lastName: string;
+}
+
+export interface ForgotPasswordPayload {
+    identifier: string;
+}
+
+export interface VerifyResetTokenPayload {
+    token: string;
+    identifier?: string;
+}
+
+export interface ResetPasswordPayload {
+    newPassword: string;
+    confirmNewPassword: string;
 }
