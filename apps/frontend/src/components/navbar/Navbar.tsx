@@ -17,7 +17,7 @@ export default function Navbar() {
     };
 
     return (
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-2 px-6 border-b border-gray-300 dark:border-gray-700">
             {/* Logo */}
             <div>
                 <Link href="/">
