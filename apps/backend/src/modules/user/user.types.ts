@@ -1,12 +1,26 @@
-import { AccountStatus } from "../../generated/prisma/client";
+import { AccountStatus, ProviderType } from "../../generated/prisma/client";
 
 export interface CreateUserPayload {
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     username: string;
     email: string;
-    password: string;
+    password: string | null;
 }
+
+export interface CreateAccountPayload {
+    userId: string;
+    provider: ProviderType;
+    providerAccountId: string;
+    id_token: string | null;
+}
+
+export interface CreateOAuthUserPayload
+    extends Omit<CreateUserPayload, 'username'>,
+    CreateAccountPayload {
+    avatarUrl: string | null;
+}
+
 
 
 export interface AccountStatusPayload {

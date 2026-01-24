@@ -8,7 +8,7 @@ import { UserRepository } from '../modules/user';
 import { RedisManager } from '../config';
 import { ReqUser } from '../modules/auth';
 import { JwtPayload } from 'jsonwebtoken';
-import { AccountStatus, Role } from '../generated/prisma/enums';
+import { AccountStatus } from '../generated/prisma/enums';
 
 
 @injectable()
@@ -47,7 +47,7 @@ export class AuthMiddleware {
             req.user = {
                 id: user.id,
                 email: user.email,
-                role: user.role,
+                roleId: user.roleId,
                 username: user.username,
                 accountStatus: user.accountStatus,
                 emailVerified: user.emailVerified,
@@ -91,10 +91,10 @@ export class AuthMiddleware {
         }
     };
 
-    checkRole = (allowedRoles: Role[]) => {
+    checkRole = (allowedRoleIds: number[]) => {
         return (req: Request, res: Response, next: NextFunction) => {
             const user = req.user as ReqUser;
-            if (!user || !allowedRoles.includes(user.role)) {
+            if (!user || user.roleId === null || !allowedRoleIds.includes(user.roleId)) {
                 return ResponseHandler.sendError(res, StatusCodes.FORBIDDEN, 'Insufficient permissions');
             }
             next();

@@ -1,4 +1,4 @@
-import { User, Role } from "../../generated/prisma/client";
+import { User } from "../../generated/prisma/client";
 
 export interface AuthUserDTO {
     id: string;
@@ -7,7 +7,7 @@ export interface AuthUserDTO {
     username: string | null;
     email: string;
     avatarUrl: string | null;
-    role: Role;
+    roleId: number | null;
     createdAt: Date;
 }
 
@@ -19,7 +19,7 @@ export function toAuthUserDTO(user: User): AuthUserDTO {
         username: user.username,
         email: user.email,
         avatarUrl: user.avatarUrl || null,
-        role: user.role,
+        roleId: user.roleId,
         createdAt: user.createdAt,
     };
 }

@@ -31,3 +31,12 @@ export const EMAIL_JOB_TYPES = {
 } as const;
 
 export type EmailJobType = typeof EMAIL_JOB_TYPES[keyof typeof EMAIL_JOB_TYPES];
+
+// OAuth
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
+export const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
+
+export const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!;
+export const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!;
+export const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI!;

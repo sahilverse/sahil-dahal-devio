@@ -1,13 +1,13 @@
 import { Container } from "inversify";
 import { TYPES } from "../types";
 import { RedisManager } from "./redis";
-import { AuthService, AuthController, AuthRepository, TokenService } from "../modules/auth";
+import { AuthService, AuthController, AuthRepository, TokenService, OAuthService, OAuthController } from "../modules/auth";
 import { UserRepository } from "../modules/user";
 import { prisma } from "./prisma";
 import { AuthMiddleware } from "../middlewares";
 import type { Transporter } from "nodemailer";
 import { MailService } from "../modules/mail";
-import { VerificationRepository, VerificationService } from "../modules/verification"
+import { VerificationRepository, VerificationService } from "../modules/verification";
 import { QueueService, EmailJobService, EmailWorkerService } from "../queue";
 import { transporter } from "./transporter";
 
@@ -26,6 +26,8 @@ container.bind<AuthRepository>(TYPES.AuthRepository).to(AuthRepository).inSingle
 container.bind<AuthService>(TYPES.AuthService).to(AuthService).inSingletonScope();
 container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
+container.bind<OAuthService>(TYPES.OAuthService).to(OAuthService).inSingletonScope();
+container.bind<OAuthController>(TYPES.OAuthController).to(OAuthController).inSingletonScope();
 
 container.bind<UserRepository>(TYPES.UserRepository).to(UserRepository).inSingletonScope();
 

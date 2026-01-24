@@ -9,6 +9,8 @@ export const TYPES = {
     AuthService: Symbol.for("AuthService"),
     AuthController: Symbol.for("AuthController"),
     AuthMiddleware: Symbol.for("AuthMiddleware"),
+    OAuthService: Symbol.for("OAuthService"),
+    OAuthController: Symbol.for("OAuthController"),
 
     UserRepository: Symbol.for("UserRepository"),
     UserService: Symbol.for("UserService"),

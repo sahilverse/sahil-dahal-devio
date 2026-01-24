@@ -1,5 +1,4 @@
-import { Session } from "inspector";
-import type { CodeType, Role, AccountStatus, SessionType } from "../../generated/prisma/client";
+import type { AccountStatus, SessionType } from "../../generated/prisma/client";
 import type { AuthUserDTO } from "./auth.dto";
 export interface LoginServiceResponse {
     user: AuthUserDTO;
@@ -20,8 +19,8 @@ export interface CreateSessionPayload {
 export interface ReqUser {
     id: string;
     email: string;
-    role: Role;
-    username: string;
+    roleId: number | null;
+    username: string | null;
     accountStatus: AccountStatus
     emailVerified: Date | null;
 }
@@ -43,4 +42,35 @@ export interface UploadSessionPayload {
     expiresAt: Date;
 }
 
+// OAuth Types
+export interface GoogleUserInfo {
+    id: string;
+    email: string;
+    verified_email: boolean;
+    name: string;
+    given_name: string;
+    family_name: string;
+    picture: string;
+}
 
+export interface GitHubUserInfo {
+    id: number;
+    login: string;
+    name: string | null;
+    email: string | null;
+    avatar_url: string;
+}
+
+export interface GitHubEmail {
+    email: string;
+    primary: boolean;
+    verified: boolean;
+    visibility: string | null;
+}
+
+export interface OAuthLoginResult {
+    user: AuthUserDTO;
+    accessToken: string;
+    refreshToken: string;
+    isNewUser: boolean;
+}

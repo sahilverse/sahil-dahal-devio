@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import type { User, Role, PrismaClient, AccountStatusHistory } from "../../generated/prisma/client";
+import type { User, PrismaClient, AccountStatusHistory } from "../../generated/prisma/client";
 import type {
     CreateUserPayload,
     AccountStatusPayload,
@@ -158,11 +158,11 @@ export class UserRepository {
         });
     }
 
-    async updateUserRole(userId: string, role: Role): Promise<void> {
+    async updateUserRole(userId: string, roleId: number): Promise<void> {
         await this.prisma.user.update({
             where: { id: userId },
             data: {
-                role
+                roleId
             }
         });
     }
