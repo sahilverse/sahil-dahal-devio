@@ -7,11 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 enum CommunityRole {
   MEMBER
   MODERATOR
@@ -47,6 +42,16 @@ enum SessionType {
   PASSWORD_RESET
 }
 
+model Role {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
 model User {
   id            String        @id @default(cuid())
   firstName     String?       @map("first_name")
@@ -54,7 +59,6 @@ model User {
   email         String        @unique
   username      String?       @unique
   password      String?
-  role          Role          @default(USER)
   avatarUrl     String?       @map("avatar_url")
   bannerUrl     String?       @map("banner_url")
   accountStatus AccountStatus @default(ACTIVE) @map("account_status")
@@ -70,9 +74,11 @@ model User {
   statusHistory      AccountStatusHistory[]
   profile            Profile?
 
+  role   Role? @relation(fields: [roleId], references: [id])
+  roleId Int?  @default(0) @map("role_id")
+
   @@index([username])
   @@index([email])
-  @@index([role])
   @@index([accountStatus])
 }
 

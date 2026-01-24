@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
-
--- CreateEnum
 CREATE TYPE "CommunityRole" AS ENUM ('MEMBER', 'MODERATOR', 'ADMIN');
 
 -- CreateEnum
@@ -20,6 +17,17 @@ CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DEACTIVATED', 'ADMI
 CREATE TYPE "SessionType" AS ENUM ('AUTHENTICATION', 'PASSWORD_RESET');
 
 -- CreateTable
+CREATE TABLE "Role" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "first_name" TEXT,
@@ -27,7 +35,6 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "username" TEXT,
     "password" TEXT,
-    "role" "Role" NOT NULL DEFAULT 'USER',
     "avatar_url" TEXT,
     "banner_url" TEXT,
     "account_status" "AccountStatus" NOT NULL DEFAULT 'ACTIVE',
@@ -35,6 +42,7 @@ CREATE TABLE "User" (
     "last_login" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "role_id" INTEGER DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -110,6 +118,9 @@ CREATE TABLE "Session" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
@@ -120,9 +131,6 @@ CREATE INDEX "User_username_idx" ON "User"("username");
 
 -- CreateIndex
 CREATE INDEX "User_email_idx" ON "User"("email");
-
--- CreateIndex
-CREATE INDEX "User_role_idx" ON "User"("role");
 
 -- CreateIndex
 CREATE INDEX "User_account_status_idx" ON "User"("account_status");
@@ -180,6 +188,9 @@ CREATE INDEX "Session_createdAt_idx" ON "Session"("createdAt");
 
 -- CreateIndex
 CREATE INDEX "Session_user_id_type_idx" ON "Session"("user_id", "type");
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
