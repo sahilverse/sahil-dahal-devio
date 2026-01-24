@@ -3,29 +3,15 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthModal } from "./AuthModalContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { register as registerUser } from "@/slices/auth";
+import { register as registerUser, sendVerificationEmail, login } from "@/slices/auth";
 import { toast } from "sonner";
 import { OAuthButton } from "./OAuthButton";
 import { ChevronLeft } from "lucide-react";
-
-const registerSchema = z.object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { registerSchema, RegisterInput } from "@devio/zod-utils";
 
 export function RegisterForm() {
     const [step, setStep] = useState(1);
@@ -39,8 +25,9 @@ export function RegisterForm() {
         handleSubmit,
         trigger,
         watch,
+        setError,
         formState: { errors, isValid },
-    } = useForm<RegisterFormData>({
+    } = useForm<RegisterInput>({
         resolver: zodResolver(registerSchema),
         mode: "onChange",
     });
@@ -49,7 +36,7 @@ export function RegisterForm() {
     const username = watch("username");
 
     const handleNext = async () => {
-        let fieldsToValidate: (keyof RegisterFormData)[] = [];
+        let fieldsToValidate: (keyof RegisterInput)[] = [];
         if (step === 1) fieldsToValidate = ["email"];
         if (step === 2) fieldsToValidate = ["username"];
 
@@ -63,30 +50,86 @@ export function RegisterForm() {
         setStep((prev) => prev - 1);
     };
 
-    const onSubmit = async (data: RegisterFormData) => {
-        const result = await dispatch(registerUser({
-            username: data.username,
-            email: data.email,
-            password: data.password,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            confirmPassword: data.confirmPassword
-        }));
+    const onSubmit = async (data: RegisterInput) => {
+        try {
+            await dispatch(registerUser({
+                username: data.username,
+                email: data.email,
+                password: data.password,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                confirmPassword: data.confirmPassword
+            })).unwrap();
 
-        if (registerUser.fulfilled.match(result)) {
-            toast.success("Account created! Please log in.");
-            switchToLogin();
-        } else {
-            toast.error(result.payload?.errorMessage || "Failed to register");
+            await dispatch(login({
+                identifier: data.email,
+                password: data.password
+            })).unwrap();
+
+            toast.success("Account created!");
+
+            await dispatch(sendVerificationEmail(data.email)).unwrap();
+
+            close();
+        } catch (err: any) {
+            console.log(err);
+            const { fieldErrors, errorMessage } = err || {};
+
+            if (fieldErrors) {
+                Object.entries(fieldErrors).forEach(([field, message]) => {
+                    setError(field as keyof RegisterInput, {
+                        type: "manual",
+                        message: message as string,
+                    });
+
+                    if (field === "email") setStep(1);
+                    if (field === "username") setStep(2);
+                });
+            } else if (errorMessage) {
+                if (errorMessage.toLowerCase().includes("email")) {
+                    setError("email", { type: "manual", message: errorMessage });
+                    setStep(1);
+                } else if (errorMessage.toLowerCase().includes("username")) {
+                    setError("username", { type: "manual", message: errorMessage });
+                    setStep(2);
+                } else {
+                    setError("root", { type: "manual", message: errorMessage });
+                }
+            } else {
+                setError("root", {
+                    type: "manual",
+                    message: "An error occurred during registration. Please try again."
+                });
+            }
         }
     };
 
     const handleGoogleLogin = () => {
-        toast.info("Google login implementation pending");
+        const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+        const options = {
+            redirect_uri: `${window.location.origin}/auth/google/callback`,
+            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
+            access_type: "offline",
+            response_type: "code",
+            prompt: "consent",
+            scope: [
+                "https://www.googleapis.com/auth/userinfo.profile",
+                "https://www.googleapis.com/auth/userinfo.email",
+            ].join(" "),
+        };
+        const qs = new URLSearchParams(options);
+        window.location.assign(`${rootUrl}?${qs.toString()}`);
     };
 
     const handleGithubLogin = () => {
-        toast.info("GitHub login implementation pending");
+        const rootUrl = "https://github.com/login/oauth/authorize";
+        const options = {
+            client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID as string,
+            redirect_uri: `${window.location.origin}/auth/github/callback`,
+            scope: "user:email",
+        };
+        const qs = new URLSearchParams(options);
+        window.location.assign(`${rootUrl}?${qs.toString()}`);
     };
 
     return (
@@ -128,6 +171,11 @@ export function RegisterForm() {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+                {errors.root?.message && (
+                    <div className="p-3 bg-destructive/15 border border-destructive/50 rounded-md text-xs text-destructive text-center font-medium">
+                        {errors.root.message}
+                    </div>
+                )}
 
                 {step === 1 && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">

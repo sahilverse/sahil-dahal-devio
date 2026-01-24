@@ -76,3 +76,4 @@ export function Providers({ children, token }: ProvidersProps) {
         </Provider>
     );
 }
+

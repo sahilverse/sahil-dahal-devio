@@ -8,7 +8,7 @@ export default function ThemedToaster() {
 
     return (
         <Toaster
-            position="top-right"
+            position="bottom-center"
             theme={actualTheme as "light" | "dark" | "system"}
             toastOptions={{
                 duration: 3000,

@@ -84,6 +84,30 @@ export const completeOnboarding = createAsyncThunk<
     }
 });
 
+export const sendVerificationEmail = createAsyncThunk<
+    void,
+    string,
+    { rejectValue: { errorMessage?: string } }
+>("auth/sendVerificationEmail", async (email, { rejectWithValue }) => {
+    try {
+        await api.post("/auth/send-email-verification-token", { email });
+    } catch (error: any) {
+        return rejectWithValue(error);
+    }
+});
+
+export const verifyEmail = createAsyncThunk<
+    void,
+    { email?: string; token: string },
+    { rejectValue: { errorMessage?: string } }
+>("auth/verifyEmail", async ({ email, token }, { rejectWithValue }) => {
+    try {
+        await api.post("/auth/verify-email-verification-token", { email, token });
+    } catch (error: any) {
+        return rejectWithValue(error);
+    }
+});
+
 export const logoutUser = createAsyncThunk<void, void>(
     "auth/logout",
     async () => {
@@ -212,8 +236,18 @@ const authSlice = createSlice({
                 state.user = null;
                 state.status = "idle";
             });
+
+        // Email Verification
+        builder
+            .addCase(verifyEmail.fulfilled, (state) => {
+                if (state.user) {
+                    state.user.emailVerified = new Date().toISOString();
+                }
+                state.status = "succeeded";
+            });
     },
 });
 
 export const { setAccessToken, setUser, clearAuth, clearErrors } = authSlice.actions;
 export const authReducer = authSlice.reducer;
+
