@@ -36,7 +36,7 @@ export class UserRepository {
     async createOAuthUser(payload: CreateOAuthUserPayload): Promise<User> {
 
         const result = await this.prisma.$transaction(async (prisma) => {
-            const { provider, providerAccountId, id_token, ...userData } = payload;
+            const { provider, providerAccountId, id_token, userId, ...userData } = payload;
 
             const user = await prisma.user.create({
                 data: {
