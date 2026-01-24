@@ -64,11 +64,6 @@ export class AuthService {
             throw new ApiError({ "account": message }, StatusCodes.FORBIDDEN);
         }
 
-
-        if (user.accountStatus === AccountStatus.DEACTIVATED || user.accountStatus === AccountStatus.PENDING_DELETION) {
-            throw new ApiError({ "account": "Account is deactivated. Please reactivate to continue." }, StatusCodes.FORBIDDEN);
-        }
-
         if (!user.password) {
             throw new ApiError("Invalid Credentials", StatusCodes.UNAUTHORIZED);
         }
@@ -77,6 +72,14 @@ export class AuthService {
 
         if (!isPasswordValid) {
             throw new ApiError("Invalid Credentials", StatusCodes.UNAUTHORIZED);
+        }
+
+        if (user.accountStatus === AccountStatus.DEACTIVATED || user.accountStatus === AccountStatus.PENDING_DELETION) {
+            const payload = {
+                userId: user.id,
+                status: AccountStatus.ACTIVE,
+            }
+            await this.userRepository.updateAccountStatus(payload);
         }
 
         const { accessToken, refreshToken } = await this.generateOrUpdateTokensAndSession(user.id, clientIp, userAgent);
