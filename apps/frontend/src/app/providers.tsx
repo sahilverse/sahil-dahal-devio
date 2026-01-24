@@ -8,6 +8,9 @@ import { Provider } from "react-redux";
 import { store } from "@/store";
 import { setAccessToken, setUser } from "@/slices/auth";
 import { startRefreshing, stopRefreshing, processQueue } from "@/api/refreshQueue";
+import { AuthModalProvider, AuthModal } from "@/components/auth";
+import ThemedToaster from "@/components/ThemedToaster";
+import { logout } from "@/lib/auth";
 
 interface ProvidersProps {
     children: React.ReactNode;
@@ -34,6 +37,7 @@ export function Providers({ children, token }: ProvidersProps) {
                 processQueue(null, access_token);
             } catch {
                 processQueue(null, null);
+                logout();
             } finally {
                 stopRefreshing();
                 setAuthReady(true);
@@ -58,7 +62,11 @@ export function Providers({ children, token }: ProvidersProps) {
     return (
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-                {children}
+                <AuthModalProvider>
+                    {children}
+                    <AuthModal />
+                    <ThemedToaster />
+                </AuthModalProvider>
             </QueryClientProvider>
         </Provider>
     );

@@ -33,8 +33,8 @@ api.interceptors.response.use(
 
         if (!error.response) return Promise.reject({ statusCode: 500, errorMessage: "Network error" });
 
-        const { StatusCode, ErrorMessage } = error.response.data || {};
-        const status = StatusCode || error.response.status;
+        const { statusCode, errorMessage } = error.response.data || {};
+        const status = statusCode || error.response.status;
 
         const skipRefresh = ["/auth/token/refresh", "/auth/login", "/auth/register"];
         const shouldRefresh =
@@ -79,8 +79,8 @@ api.interceptors.response.use(
 
         return Promise.reject({
             statusCode: status,
-            errorMessage: typeof ErrorMessage === "string" ? ErrorMessage : null,
-            fieldErrors: typeof ErrorMessage === "object" ? ErrorMessage : null,
+            errorMessage: typeof errorMessage === "string" ? errorMessage : null,
+            fieldErrors: typeof errorMessage === "object" ? errorMessage : null,
         });
     }
 );

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Toaster } from "sonner";
 import { Providers } from "./providers";
 import { cookies } from "next/headers";
 import ThemeWatcher from "@/components/ThemeWatcher";
@@ -51,11 +50,6 @@ export default async function RootLayout({
         <Providers token={token}>
           <ThemeWatcher />
           {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{ duration: 3000 }}
-          />
-
         </Providers>
       </body>
     </html>

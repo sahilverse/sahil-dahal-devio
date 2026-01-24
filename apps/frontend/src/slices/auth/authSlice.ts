@@ -26,7 +26,7 @@ export const login = createAsyncThunk<
 >("auth/login", async (payload, { rejectWithValue }) => {
     try {
         const { data } = await api.post("/auth/login", payload);
-        return data.Result as AuthResponse;
+        return data.result as AuthResponse;
     } catch (error: any) {
         return rejectWithValue(error);
     }
@@ -51,7 +51,7 @@ export const googleOAuth = createAsyncThunk<
 >("auth/googleOAuth", async (code, { rejectWithValue }) => {
     try {
         const { data } = await api.post("/oauth/google/callback", { code });
-        return data.Result as OAuthResponse;
+        return data.result as OAuthResponse;
     } catch (error: any) {
         return rejectWithValue(error);
     }
@@ -64,7 +64,7 @@ export const githubOAuth = createAsyncThunk<
 >("auth/githubOAuth", async (code, { rejectWithValue }) => {
     try {
         const { data } = await api.post("/oauth/github/callback", { code });
-        return data.Result as OAuthResponse;
+        return data.result as OAuthResponse;
     } catch (error: any) {
         return rejectWithValue(error);
     }
