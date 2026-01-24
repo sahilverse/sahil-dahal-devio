@@ -6,6 +6,7 @@ export interface AuthUserDTO {
     lastName: string | null;
     username: string | null;
     email: string;
+    emailVerified: Date | null;
     avatarUrl: string | null;
     roleId: number | null;
     createdAt: Date;
@@ -18,6 +19,7 @@ export function toAuthUserDTO(user: User): AuthUserDTO {
         lastName: user.lastName,
         username: user.username,
         email: user.email,
+        emailVerified: user.emailVerified,
         avatarUrl: user.avatarUrl || null,
         roleId: user.roleId,
         createdAt: user.createdAt,
