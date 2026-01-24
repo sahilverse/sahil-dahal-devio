@@ -40,3 +40,9 @@ export interface AuthResponse {
 export interface OAuthResponse extends AuthResponse {
     is_new_user: boolean;
 }
+
+export interface OnboardingPayload {
+    username: string;
+    firstName: string;
+    lastName: string;
+}

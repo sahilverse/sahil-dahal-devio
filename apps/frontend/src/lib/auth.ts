@@ -1,16 +1,23 @@
-import { store } from "@/store";
 import { clearAuth } from "@/slices/auth";
 
+let storeInstance: any = null;
+
+function getStore() {
+    if (!storeInstance) {
+        // Lazy import to avoid circular dependency
+        storeInstance = require("@/store").store;
+    }
+    return storeInstance;
+}
+
 export function getAccessToken(): string | null {
-    return store.getState().auth.accessToken;
+    return getStore().getState().auth.accessToken;
 }
 
 export function setAccessToken(token: string): void {
-    store.dispatch({ type: "auth/setAccessToken", payload: token });
+    getStore().dispatch({ type: "auth/setAccessToken", payload: token });
 }
 
 export function logout(): void {
-    store.dispatch(clearAuth());
+    getStore().dispatch(clearAuth());
 }
-
-

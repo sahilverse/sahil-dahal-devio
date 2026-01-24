@@ -52,3 +52,28 @@ export const registerSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+
+export const onboardingSchema = z.object({
+    username: z
+        .string()
+        .min(3, "Username must be at least 3 characters")
+        .max(30, "Username is too long")
+        .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscore, and hyphen allowed")
+        .trim(),
+
+    firstName: z
+        .string()
+        .min(1, "First name is required")
+        .max(50, "First name is too long")
+        .trim(),
+
+    lastName: z
+        .string()
+        .min(1, "Last name is required")
+        .max(50, "Last name is too long")
+        .trim(),
+});
+
+export type OnboardingInput = z.infer<typeof onboardingSchema>;
+

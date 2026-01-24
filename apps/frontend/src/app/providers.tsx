@@ -9,6 +9,7 @@ import { store } from "@/store";
 import { setAccessToken, setUser } from "@/slices/auth";
 import { startRefreshing, stopRefreshing, processQueue } from "@/api/refreshQueue";
 import { AuthModalProvider, AuthModal } from "@/components/auth";
+import { OnboardingModalProvider, OnboardingModal, OnboardingWatcher } from "@/components/onboarding";
 import ThemedToaster from "@/components/ThemedToaster";
 import { logout } from "@/lib/auth";
 
@@ -30,7 +31,7 @@ export function Providers({ children, token }: ProvidersProps) {
             startRefreshing();
             try {
                 const { data } = await api.post("/auth/token/refresh");
-                const { access_token, user } = data.Result;
+                const { access_token, user } = data.result;
 
                 store.dispatch(setAccessToken(access_token));
                 store.dispatch(setUser(user));
@@ -63,9 +64,13 @@ export function Providers({ children, token }: ProvidersProps) {
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
                 <AuthModalProvider>
-                    {children}
-                    <AuthModal />
-                    <ThemedToaster />
+                    <OnboardingModalProvider>
+                        {children}
+                        <AuthModal />
+                        <OnboardingModal />
+                        <OnboardingWatcher />
+                        <ThemedToaster />
+                    </OnboardingModalProvider>
                 </AuthModalProvider>
             </QueryClientProvider>
         </Provider>

@@ -7,6 +7,7 @@ import type {
     RegisterPayload,
     AuthResponse,
     OAuthResponse,
+    OnboardingPayload,
 } from "./authTypes";
 
 const initialState: AuthState = {
@@ -65,6 +66,19 @@ export const githubOAuth = createAsyncThunk<
     try {
         const { data } = await api.post("/oauth/github/callback", { code });
         return data.result as OAuthResponse;
+    } catch (error: any) {
+        return rejectWithValue(error);
+    }
+});
+
+export const completeOnboarding = createAsyncThunk<
+    AuthUser,
+    OnboardingPayload,
+    { rejectValue: { errorMessage?: string; fieldErrors?: Record<string, string> } }
+>("auth/completeOnboarding", async (payload, { rejectWithValue }) => {
+    try {
+        const { data } = await api.patch("/user/onboarding", payload);
+        return data.result as AuthUser;
     } catch (error: any) {
         return rejectWithValue(error);
     }
@@ -171,6 +185,23 @@ const authSlice = createSlice({
             .addCase(githubOAuth.rejected, (state, action) => {
                 state.status = "failed";
                 state.errorMessage = action.payload?.errorMessage || "GitHub login failed";
+                state.fieldErrors = action.payload?.fieldErrors || null;
+            });
+
+        // Complete Onboarding
+        builder
+            .addCase(completeOnboarding.pending, (state) => {
+                state.status = "loading";
+                state.errorMessage = null;
+                state.fieldErrors = null;
+            })
+            .addCase(completeOnboarding.fulfilled, (state, action) => {
+                state.status = "succeeded";
+                state.user = action.payload;
+            })
+            .addCase(completeOnboarding.rejected, (state, action) => {
+                state.status = "failed";
+                state.errorMessage = action.payload?.errorMessage || "Failed to complete profile";
                 state.fieldErrors = action.payload?.fieldErrors || null;
             });
 
