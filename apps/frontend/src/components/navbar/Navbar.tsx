@@ -8,14 +8,17 @@ import { useAuthModal } from "../auth/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
 import UserMenu from "./UserMenu";
 
+
 export default function Navbar() {
+
     const { user } = useAppSelector((state) => state.auth);
     const { openLogin } = useAuthModal();
 
     return (
-        <div className="flex justify-between items-center py-2 px-6 border-b border-gray-300 dark:border-gray-700">
-            {/* Logo */}
-            <div>
+        <div className="sticky top-0 z-50 bg-white dark:bg-[#0B0B0F] flex justify-between items-center py-2 px-6 border-b border-gray-300 dark:border-gray-700">
+            {/* Logo*/}
+            <div className="flex items-center gap-4">
+
                 <Link href="/">
                     <p className="text-2xl font-bold">
                         Dev.io
