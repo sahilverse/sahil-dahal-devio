@@ -48,7 +48,6 @@ export default function OAuthCallbackPage() {
 
                 await dispatch(action).unwrap();
                 toast.success(`Successfully logged in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}`);
-                // Always redirect to home - OnboardingWatcher will show modal if needed
                 router.push("/");
             } catch (err: any) {
                 console.error("OAuth Error:", err);
