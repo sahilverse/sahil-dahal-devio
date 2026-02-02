@@ -9,6 +9,7 @@ import {
     stopRefreshing,
     processQueue,
 } from "@/api/refreshQueue";
+import { logger } from "./logger";
 
 export default class SocketService {
     private socket: Socket | null = null;
@@ -42,15 +43,15 @@ export default class SocketService {
         if (!this.socket) return;
 
         this.socket.on("connect", () => {
-            console.log("Socket connected:", this.socket?.id);
+            logger.info(`Socket connected: ${this.socket?.id}`);
         });
 
         this.socket.on("disconnect", (reason) => {
-            console.warn("Socket disconnected:", reason);
+            logger.info(`Socket disconnected: ${reason}`);
         });
 
         this.socket.on("connect_error", async (error: any) => {
-            console.error("Socket connection error:", error?.message || error);
+            logger.error(`Socket connection error: ${error?.message || error}`);
 
             const tokenErrors = ["INVALID_TOKEN", "NO_TOKEN_PROVIDED"];
             if (!tokenErrors.includes(error?.message)) return;

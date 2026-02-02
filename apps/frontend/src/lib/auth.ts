@@ -4,7 +4,6 @@ let storeInstance: any = null;
 
 function getStore() {
     if (!storeInstance) {
-        // Lazy import to avoid circular dependency
         storeInstance = require("@/store").store;
     }
     return storeInstance;

@@ -14,6 +14,8 @@ import { OnboardingModalProvider, OnboardingModal, OnboardingWatcher } from "@/c
 import ThemedToaster from "@/components/ThemedToaster";
 import { logout } from "@/lib/auth";
 
+import { socketInstance } from "@/lib/socket";
+
 interface ProvidersProps {
     children: React.ReactNode;
     token?: boolean;
@@ -34,6 +36,7 @@ export function Providers({ children, token }: ProvidersProps) {
                 const { data } = await api.post("/auth/token/refresh");
                 const { access_token, user } = data.result;
 
+                socketInstance.connect(access_token);
                 store.dispatch(setAccessToken(access_token));
                 store.dispatch(setUser(user));
                 processQueue(null, access_token);
