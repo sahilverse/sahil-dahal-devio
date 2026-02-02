@@ -5,7 +5,7 @@ import { router as userRoutes } from "../modules/user/user.route";
 const router: Router = Router();
 
 router.use(authRoutes);
-router.use("/user", userRoutes);
+router.use("/users", userRoutes);
 
 
 

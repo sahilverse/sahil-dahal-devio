@@ -11,7 +11,7 @@ const userController = container.get<UserController>(TYPES.UserController);
 
 /**
  * @swagger
- * /user/onboarding:
+ * /users/onboarding:
  *   patch:
  *     summary: Complete user profile onboarding
  *     tags: [User]
@@ -61,7 +61,7 @@ router.patch(
 
 /**
  * @swagger
- * /user/{username}:
+ * /users/{username}:
  *   get:
  *     summary: Get user profile by username
  *     description: Returns public profile for everyone, private profile for owner.
@@ -90,7 +90,7 @@ router.get(
 
 /**
  * @swagger
- * /user/{username}/follow:
+ * /users/{username}/follow:
  *   post:
  *     summary: Follow a user
  *     tags: [User]
@@ -122,7 +122,7 @@ router.post(
 
 /**
  * @swagger
- * /user/{username}/follow:
+ * /users/{username}/follow:
  *   delete:
  *     summary: Unfollow a user
  *     tags: [User]
