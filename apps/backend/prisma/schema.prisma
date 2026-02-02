@@ -7,13 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-enum CommunityRole {
-  MEMBER
-  MODERATOR
-  ADMIN
-}
-
-enum CommunityType {
+enum CommunityVisibility {
   PUBLIC
   PRIVATE
   RESTRICTED
@@ -77,6 +71,60 @@ model User {
   role   Role? @relation(fields: [roleId], references: [id])
   roleId Int?  @default(0) @map("role_id")
 
+  following          Follow[]            @relation("following")
+  followers          Follow[]            @relation("follower")
+  userStreak         UserStreak?
+  activityLogs       ActivityLog[]
+  auraTransactions   AuraTransaction[]
+  cipherTransactions CipherTransaction[]
+
+  auraPoints    Int @default(0) @map("aura_points")
+  cipherBalance Int @default(0) @map("cipher_balance")
+
+  createdCommunities   Community[]            @relation("community_creator")
+  communityMembers     CommunityMember[]
+  joinRequests         CommunityJoinRequest[] @relation("join_requester")
+  reviewedJoinRequests CommunityJoinRequest[] @relation("join_reviewer")
+
+  posts        Post[]
+  comments     Comment[]
+  postVotes    PostVote[]
+  commentVotes CommentVote[]
+
+  conversationParticipants ConversationParticipant[]
+  messages                 Message[]
+
+  submissions Submission[]
+
+  cyberRoomEnrollments CyberRoomEnrollment[]
+  ctfSubmissions       CTFSubmission[]
+  vmSessions           VMSession[]
+
+  createdEvents     Event[]            @relation("event_creator")
+  eventParticipants EventParticipant[]
+
+  userAchievements UserAchievement[]
+
+  authoredCourses   Course[]         @relation("course_author")
+  courseEnrollments Enrollment[]     @relation("student_enrollments")
+  lessonProgress    LessonProgress[]
+  payments          Payment[]
+
+  // Professional Profile
+  experiences    UserExperience[]
+  educations     UserEducation[]
+  certifications UserCertification[]
+  projects       UserProject[]
+  skills         UserSkill[]
+
+  // Job Board
+  ownedCompanies         Company[]        @relation("company_owner")
+  jobApplications        JobApplication[]
+  postedJobs             Job[]            @relation("job_poster")
+  notifications          Notification[]
+  triggeredNotifications Notification[]   @relation("notification_actor")
+  jobs                   Job[]
+
   @@index([username])
   @@index([email])
   @@index([accountStatus])
@@ -93,16 +141,10 @@ model Profile {
 
   socials Json?
 
-  skills String[]
-
-  birthday DateTime?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([skills])
 }
 
 model VerificationToken {
@@ -113,8 +155,13 @@ model VerificationToken {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  expiresAt DateTime
+  createdAt        DateTime          @default(now())
+  expiresAt        DateTime
+  userAchievements UserAchievement[]
+  courses          Course[]
+  enrollments      Enrollment[]
+  lessonProgresses LessonProgress[]
+  payments         Payment[]
 
   @@index([userId])
   @@index([expiresAt])
@@ -176,4 +223,1296 @@ model Session {
   @@index([ip])
   @@index([createdAt])
   @@index([userId, type])
+}
+
+model Follow {
+  id          String @id @default(cuid())
+  followingId String @map("following_id")
+  followerId  String @map("follower_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@unique([followingId, followerId])
+  @@index([followingId])
+  @@index([followerId])
+}
+
+model UserStreak {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+
+  currentStreak Int @default(0) @map("current_streak")
+  longestStreak Int @default(0) @map("longest_streak")
+
+  lastActiveDate DateTime? @map("last_active_date") @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lastActiveDate])
+  @@index([userId])
+}
+
+model ActivityLog {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+
+  date  DateTime @db.Date
+  count Int      @default(1)
+
+  breakdown Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+enum AuraReason {
+  POST_UPVOTED
+  POST_DOWNVOTED
+  COMMENT_UPVOTED
+  COMMENT_DOWNVOTED
+  PROBLEM_SOLVED
+  ANSWER_ACCEPTED
+  DAILY_LOGIN
+  STREAK_MILESTONE
+  PROFILE_COMPLETED
+}
+
+model AuraTransaction {
+  id       String     @id @default(cuid())
+  userId   String     @map("user_id")
+  amount   Int
+  reason   AuraReason
+  sourceId String?    @map("source_id")
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([reason])
+  @@index([createdAt])
+}
+
+enum CipherReason {
+  PROBLEM_SOLVED
+  DAILY_CHALLENGE
+  LAB_COMPLETED
+  CTF_ROOM_CLEARED
+  CONTEST_WIN
+  HACKATHON_PLACEMENT
+  ANSWER_ACCEPTED
+  ANSWER_UPVOTED
+  LEADERBOARD_REWARD
+
+  // Spent
+  COURSE_DISCOUNT
+  PREMIUM_CONTENT_UNLOCK
+  LAB_TIME_EXTENSION
+  BOUNTY_CREATED
+  CONTEST_ENTRY
+  HINT_UNLOCK
+  FEATURE_TRIAL
+}
+
+model CipherTransaction {
+  id       String       @id @default(cuid())
+  userId   String       @map("user_id")
+  amount   Int
+  reason   CipherReason
+  sourceId String?      @map("source_id")
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([reason])
+  @@index([createdAt])
+}
+
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Community {
+  id          String              @id @default(cuid())
+  name        String              @unique
+  displayName String              @map("display_name")
+  description String?
+  iconUrl     String?             @map("icon_url")
+  bannerUrl   String?             @map("banner_url")
+  visibility  CommunityVisibility @default(PUBLIC)
+  createdById String              @map("created_by_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy    User                   @relation("community_creator", fields: [createdById], references: [id])
+  settings     CommunitySettings?
+  members      CommunityMember[]
+  joinRequests CommunityJoinRequest[]
+  posts        Post[]
+  topics       CommunityTopic[]
+  events       Event[]
+
+  @@index([name])
+  @@index([visibility])
+  @@index([createdById])
+}
+
+model CommunitySettings {
+  id          String @id @default(cuid())
+  communityId String @unique @map("community_id")
+
+  allowPostImages     Boolean @default(true) @map("allow_post_images")
+  allowPostLinks      Boolean @default(true) @map("allow_post_links")
+  requirePostApproval Boolean @default(false) @map("require_post_approval")
+  minAuraToPost       Int     @default(0) @map("min_aura_to_post")
+  minAuraToComment    Int     @default(0) @map("min_aura_to_comment")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+}
+
+model CommunityMember {
+  id          String @id @default(cuid())
+  communityId String @map("community_id")
+  userId      String @map("user_id")
+
+  isMod       Boolean @default(false) @map("is_mod")
+  permissions Json? // { everything, manageUsers, manageConfig, managePostsAndComments }
+
+  joinedAt DateTime @default(now())
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@index([isMod])
+}
+
+model CommunityJoinRequest {
+  id           String            @id @default(cuid())
+  communityId  String            @map("community_id")
+  userId       String            @map("user_id")
+  status       JoinRequestStatus @default(PENDING)
+  message      String?
+  reviewedById String?           @map("reviewed_by_id")
+
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime? @map("reviewed_at")
+
+  community  Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user       User      @relation("join_requester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User?     @relation("join_reviewer", fields: [reviewedById], references: [id])
+
+  @@unique([communityId, userId])
+  @@index([communityId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum PostType {
+  TEXT
+  IMAGE
+  LINK
+  QUESTION
+  POLL
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+model Post {
+  id          String  @id @default(cuid())
+  authorId    String  @map("author_id")
+  communityId String? @map("community_id")
+
+  title   String
+  content String?
+  type    PostType @default(TEXT)
+  linkUrl String?  @map("link_url")
+
+  acceptedAnswerId String?   @unique @map("accepted_answer_id")
+  bountyAmount     Int?      @map("bounty_amount")
+  bountyExpiresAt  DateTime? @map("bounty_expires_at")
+  isBountyPaid     Boolean   @default(false) @map("is_bounty_paid")
+
+  deletedAt DateTime? @map("deleted_at")
+  isPinned  Boolean   @default(false) @map("is_pinned")
+  isLocked  Boolean   @default(false) @map("is_locked")
+
+  upvotes      Int @default(0)
+  downvotes    Int @default(0)
+  commentCount Int @default(0) @map("comment_count")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author         User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  community      Community?  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  acceptedAnswer Comment?    @relation("accepted_answer", fields: [acceptedAnswerId], references: [id])
+  comments       Comment[]   @relation("post_comments")
+  votes          PostVote[]
+  media          Media[]     @relation("post_media")
+  topics         PostTopic[]
+
+  @@index([authorId])
+  @@index([communityId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model Comment {
+  id       String  @id @default(cuid())
+  postId   String  @map("post_id")
+  authorId String  @map("author_id")
+  parentId String? @map("parent_id")
+
+  content   String
+  deletedAt DateTime? @map("deleted_at")
+
+  upvotes   Int @default(0)
+  downvotes Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post            Post          @relation("post_comments", fields: [postId], references: [id], onDelete: Cascade)
+  author          User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent          Comment?      @relation("replies", fields: [parentId], references: [id])
+  replies         Comment[]     @relation("replies")
+  acceptedForPost Post?         @relation("accepted_answer")
+  votes           CommentVote[]
+  media           Media[]       @relation("comment_media")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+model PostVote {
+  id     String   @id @default(cuid())
+  postId String   @map("post_id")
+  userId String   @map("user_id")
+  type   VoteType
+
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model CommentVote {
+  id        String   @id @default(cuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  type      VoteType
+
+  createdAt DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@index([userId])
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  FILE
+}
+
+model Media {
+  id        String  @id @default(cuid())
+  postId    String? @map("post_id")
+  commentId String? @map("comment_id")
+
+  url  String
+  type MediaType
+
+  fileName String? @map("file_name")
+  fileSize Int?    @map("file_size")
+  position Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  post    Post?    @relation("post_media", fields: [postId], references: [id], onDelete: Cascade)
+  comment Comment? @relation("comment_media", fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([commentId])
+}
+
+model Topic {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+
+  postCount      Int @default(0) @map("post_count")
+  communityCount Int @default(0) @map("community_count")
+  courseCount    Int @default(0) @map("course_count")
+  jobCount       Int @default(0) @map("job_count")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts        PostTopic[]
+  communities  CommunityTopic[]
+  courseTopics CourseTopic[]
+  jobTopics    JobTopic[]
+
+  @@index([slug])
+  @@index([postCount])
+}
+
+model PostTopic {
+  id      String @id @default(cuid())
+  postId  String @map("post_id")
+  topicId String @map("topic_id")
+
+  post  Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, topicId])
+  @@index([postId])
+  @@index([topicId])
+}
+
+model CommunityTopic {
+  id          String @id @default(cuid())
+  communityId String @map("community_id")
+  topicId     String @map("topic_id")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  topic     Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, topicId])
+  @@index([communityId])
+  @@index([topicId])
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VOICE
+  FILE
+  LINK
+}
+
+model Conversation {
+  id   String           @id @default(cuid())
+  type ConversationType @default(DIRECT)
+  name String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([type])
+  @@index([updatedAt])
+}
+
+model ConversationParticipant {
+  id             String @id @default(cuid())
+  conversationId String @map("conversation_id")
+  userId         String @map("user_id")
+
+  isAdmin    Boolean   @default(false) @map("is_admin")
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+  lastReadAt DateTime? @map("last_read_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+model Message {
+  id             String @id @default(cuid())
+  conversationId String @map("conversation_id")
+  senderId       String @map("sender_id")
+
+  type    MessageType @default(TEXT)
+  content String?
+
+  mediaUrl String? @map("media_url")
+  fileName String? @map("file_name")
+  fileSize Int?    @map("file_size")
+  duration Int?
+
+  deletedAt DateTime? @map("deleted_at")
+  editedAt  DateTime? @map("edited_at")
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum SubmissionStatus {
+  PENDING
+  RUNNING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT
+  MEMORY_LIMIT
+  RUNTIME_ERROR
+  COMPILE_ERROR
+}
+
+model Problem {
+  id         String     @id @default(cuid())
+  title      String
+  slug       String     @unique
+  difficulty Difficulty
+
+  description String
+  storagePath String @map("storage_path")
+
+  testCaseCount Int     @default(0) @map("test_case_count")
+  isPublished   Boolean @default(false) @map("is_published")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions Submission[]
+  tags        ProblemTag[]
+
+  @@index([slug])
+  @@index([difficulty])
+  @@index([isPublished])
+}
+
+model ProblemTag {
+  id        String @id @default(cuid())
+  problemId String @map("problem_id")
+  tag       String
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, tag])
+  @@index([problemId])
+  @@index([tag])
+}
+
+model Submission {
+  id        String @id @default(cuid())
+  problemId String @map("problem_id")
+  userId    String @map("user_id")
+
+  language String
+  code     String
+  status   SubmissionStatus @default(PENDING)
+
+  runtime Int?
+  memory  Int?
+
+  createdAt DateTime @default(now())
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([problemId, userId])
+  @@index([problemId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum CyberRoomDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  INSANE
+}
+
+enum VMStatus {
+  PENDING
+  RUNNING
+  STOPPED
+  TERMINATED
+}
+
+model CyberRoom {
+  id          String              @id @default(cuid())
+  title       String
+  slug        String              @unique
+  description String
+  difficulty  CyberRoomDifficulty
+
+  imageUrl      String? @map("image_url")
+  estimatedTime Int?    @map("estimated_time")
+  pointsReward  Int     @default(0) @map("points_reward")
+
+  isPublished Boolean @default(false) @map("is_published")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  challenges  CTFChallenge[]
+  enrollments CyberRoomEnrollment[]
+  vmSessions  VMSession[]
+
+  @@index([slug])
+  @@index([difficulty])
+  @@index([isPublished])
+}
+
+model CTFChallenge {
+  id     String @id @default(cuid())
+  roomId String @map("room_id")
+
+  title       String
+  description String
+  flag        String
+  points      Int    @default(10)
+  order       Int    @default(0)
+
+  hints String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  room        CyberRoom       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  submissions CTFSubmission[]
+
+  @@index([roomId])
+  @@index([order])
+}
+
+model CTFSubmission {
+  id          String @id @default(cuid())
+  challengeId String @map("challenge_id")
+  userId      String @map("user_id")
+
+  answer    String
+  isCorrect Boolean @map("is_correct")
+
+  createdAt DateTime @default(now())
+
+  challenge CTFChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([challengeId, userId])
+  @@index([challengeId])
+  @@index([userId])
+}
+
+model CyberRoomEnrollment {
+  id     String @id @default(cuid())
+  roomId String @map("room_id")
+  userId String @map("user_id")
+
+  progress    Int     @default(0)
+  isCompleted Boolean @default(false) @map("is_completed")
+
+  enrolledAt  DateTime  @default(now()) @map("enrolled_at")
+  completedAt DateTime? @map("completed_at")
+
+  room CyberRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@index([isCompleted])
+}
+
+model VMSession {
+  id     String  @id @default(cuid())
+  userId String  @map("user_id")
+  roomId String? @map("room_id")
+
+  instanceId String? @map("instance_id")
+  ipAddress  String? @map("ip_address")
+
+  status    VMStatus @default(PENDING)
+  expiresAt DateTime @map("expires_at")
+
+  createdAt DateTime @default(now())
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room CyberRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([roomId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+enum EventType {
+  HACKATHON
+  CTF
+  CONTEST
+  WORKSHOP
+  MEETUP
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING_APPROVAL
+  PUBLISHED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  REGISTERED
+  CHECKED_IN
+  COMPLETED
+  DISQUALIFIED
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String      @unique
+  description String
+  type        EventType
+  status      EventStatus @default(DRAFT)
+
+  createdById String  @map("created_by_id")
+  communityId String? @map("community_id")
+
+  startsAt DateTime @map("starts_at")
+  endsAt   DateTime @map("ends_at")
+
+  minAuraPoints   Int  @default(0) @map("min_aura_points")
+  entryCipherCost Int  @default(0) @map("entry_cipher_cost")
+  maxParticipants Int? @map("max_participants")
+
+  participationAura Int @default(0) @map("participation_aura")
+
+  imageUrl     String? @map("image_url")
+  isApproved   Boolean @default(false) @map("is_approved")
+  requiresTeam Boolean @default(false) @map("requires_team")
+  teamSize     Int?    @map("team_size")
+  externalUrl  String? @map("external_url")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy    User               @relation("event_creator", fields: [createdById], references: [id])
+  community    Community?         @relation(fields: [communityId], references: [id], onDelete: SetNull)
+  participants EventParticipant[]
+  prizes       EventPrize[]
+
+  @@index([slug])
+  @@index([type])
+  @@index([status])
+  @@index([createdById])
+  @@index([communityId])
+  @@index([startsAt])
+  @@index([isApproved])
+}
+
+model EventParticipant {
+  id      String @id @default(cuid())
+  eventId String @map("event_id")
+  userId  String @map("user_id")
+
+  status ParticipantStatus @default(REGISTERED)
+  score  Int               @default(0)
+  rank   Int?
+
+  registeredAt DateTime @default(now()) @map("registered_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+}
+
+model EventPrize {
+  id      String @id @default(cuid())
+  eventId String @map("event_id")
+
+  rankFrom Int @map("rank_from")
+  rankTo   Int @map("rank_to")
+
+  auraReward   Int     @default(0) @map("aura_reward")
+  cipherReward Int     @default(0) @map("cipher_reward")
+  title        String?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+enum AchievementCategory {
+  PROBLEMS
+  CYBER_SECURITY
+  STREAKS
+  AURA
+  ENGAGEMENT
+  CONTRIBUTION
+}
+
+model Achievement {
+  id          String              @id @default(cuid())
+  name        String              @unique
+  slug        String              @unique
+  description String
+  iconUrl     String?             @map("icon_url")
+  category    AchievementCategory
+
+  criteria     String
+  threshold    Int?
+  auraReward   Int     @default(0) @map("aura_reward")
+  cipherReward Int     @default(0) @map("cipher_reward")
+  isHidden     Boolean @default(false) @map("is_hidden")
+
+  createdAt DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@index([category])
+  @@index([slug])
+}
+
+model UserAchievement {
+  id            String @id @default(cuid())
+  userId        String @map("user_id")
+  achievementId String @map("achievement_id")
+
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement         Achievement        @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
+  verificationTokenId String?
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+  @@index([unlockedAt])
+}
+
+enum PaymentProvider {
+  ESEWA
+  KHALTI
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  COURSE_PURCHASE
+  CIPHER_PURCHASE
+}
+
+model CipherPackage {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  points      Int
+  price       Decimal @db.Decimal(10, 2)
+  currency    String  @default("NPR")
+
+  isActive   Boolean @default(true) @map("is_active")
+  isFeatured Boolean @default(false) @map("is_featured")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([isActive])
+}
+
+model PromoCode {
+  id       String  @id @default(cuid())
+  code     String  @unique
+  discount Decimal @db.Decimal(10, 2)
+  isActive Boolean @default(true) @map("is_active")
+
+  validFrom  DateTime? @map("valid_from")
+  validUntil DateTime? @map("valid_until")
+
+  maxUses   Int? @map("max_uses")
+  usedCount Int  @default(0) @map("used_count")
+
+  payments Payment[]
+}
+
+model Course {
+  id           String  @id @default(cuid())
+  title        String
+  slug         String  @unique
+  description  String
+  thumbnailUrl String? @map("thumbnail_url")
+
+  price  Decimal @default(0) @db.Decimal(10, 2)
+  isFree Boolean @default(false) @map("is_free")
+
+  maxCipherDiscount Int?    @map("max_cipher_discount")
+  isPublished       Boolean @default(false) @map("is_published")
+
+  authorId String @map("author_id")
+  author   User   @relation("course_author", fields: [authorId], references: [id])
+
+  modules     CourseModule[]
+  enrollments Enrollment[]
+  payments    Payment[]
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
+  verificationTokenId String?
+  courseTopics        CourseTopic[]
+
+  @@index([authorId])
+  @@index([isPublished])
+}
+
+model CourseTopic {
+  id       String @id @default(cuid())
+  courseId String @map("course_id")
+  topicId  String @map("topic_id")
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  topic  Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, topicId])
+  @@index([courseId])
+  @@index([topicId])
+}
+
+model CourseModule {
+  id       String @id @default(cuid())
+  courseId String @map("course_id")
+  title    String
+  order    Int    @default(0)
+
+  lessons Lesson[]
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([order])
+}
+
+model Lesson {
+  id        String  @id @default(cuid())
+  moduleId  String  @map("module_id")
+  title     String
+  content   String?
+  videoUrl  String? @map("video_url")
+  duration  Int?
+  order     Int     @default(0)
+  isPreview Boolean @default(false) @map("is_preview")
+
+  module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@index([moduleId])
+  @@index([order])
+}
+
+model Enrollment {
+  id       String @id @default(cuid())
+  userId   String @map("user_id")
+  courseId String @map("course_id")
+
+  progress Int @default(0)
+
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+
+  user                User               @relation("student_enrollments", fields: [userId], references: [id], onDelete: Cascade)
+  course              Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
+  verificationTokenId String?
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
+model LessonProgress {
+  id       String @id @default(cuid())
+  userId   String @map("user_id")
+  lessonId String @map("lesson_id")
+
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson              Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
+  verificationTokenId String?
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+}
+
+model Payment {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+
+  type PaymentType
+
+  courseId  String? @map("course_id")
+  packageId String? @map("package_id")
+
+  totalAmount    Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+
+  cipherUsed          Int     @default(0) @map("cipher_used")
+  cipherMonetaryValue Decimal @default(0) @map("cipher_monetary_value") @db.Decimal(10, 2)
+
+  cashAmount Decimal @map("cash_amount") @db.Decimal(10, 2)
+  currency   String  @default("NPR")
+
+  provider     PaymentProvider?
+  status       PaymentStatus    @default(PENDING)
+  providerTxId String?          @unique @map("provider_tx_id")
+  metadata     Json?
+
+  promoCodeId String? @map("promo_code_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user                User               @relation(fields: [userId], references: [id])
+  course              Course?            @relation(fields: [courseId], references: [id])
+  package             CipherPackage?     @relation(fields: [packageId], references: [id])
+  promoCode           PromoCode?         @relation(fields: [promoCodeId], references: [id])
+  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
+  verificationTokenId String?
+
+  @@index([userId])
+  @@index([status])
+  @@index([providerTxId])
+  @@index([type])
+}
+
+model UserExperience {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+
+  title       String
+  companyName String  @map("company_name")
+  companyId   String? @map("company_id")
+
+  location String?
+  type     String?
+
+  startDate DateTime  @map("start_date")
+  endDate   DateTime? @map("end_date")
+  isCurrent Boolean   @default(false) @map("is_current")
+
+  description String?
+
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company? @relation(fields: [companyId], references: [id])
+
+  @@index([userId])
+}
+
+model UserEducation {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+
+  school       String
+  degree       String?
+  fieldOfStudy String? @map("field_of_study")
+
+  startDate DateTime  @map("start_date")
+  endDate   DateTime? @map("end_date")
+
+  grade       String?
+  activities  String?
+  description String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserCertification {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+
+  name           String
+  issuingOrg     String    @map("issuing_org")
+  issueDate      DateTime  @map("issue_date")
+  expirationDate DateTime? @map("expiration_date")
+
+  credentialId  String? @map("credential_id")
+  credentialUrl String? @map("credential_url")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserProject {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+
+  title       String
+  description String?
+  url         String?
+
+  startDate DateTime? @map("start_date")
+  endDate   DateTime? @map("end_date")
+
+  skills String[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Skill {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  users UserSkill[]
+  jobs  JobSkill[]
+
+  @@index([slug])
+}
+
+model UserSkill {
+  userId  String @map("user_id")
+  skillId String @map("skill_id")
+
+  endorsements Int @default(0)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+}
+
+model Company {
+  id         String  @id @default(cuid())
+  name       String  @unique
+  slug       String  @unique
+  logoUrl    String? @map("logo_url")
+  websiteUrl String? @map("website_url")
+
+  description String?
+  location    String?
+  size        String?
+
+  isVerified Boolean @default(false) @map("is_verified")
+
+  ownerId String @map("owner_id")
+  owner   User   @relation("company_owner", fields: [ownerId], references: [id])
+
+  jobs        Job[]
+  experiences UserExperience[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isVerified])
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+  REMOTE
+}
+
+enum JobWorkplace {
+  ON_SITE
+  HYBRID
+  REMOTE
+}
+
+model Job {
+  id          String @id @default(cuid())
+  title       String
+  slug        String @unique
+  description String
+
+  companyId String?  @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  authorId String @map("author_id")
+  author   User   @relation("job_poster", fields: [authorId], references: [id])
+
+  type      JobType      @default(FULL_TIME)
+  workplace JobWorkplace @default(ON_SITE)
+  location  String?
+
+  salaryMin Int?   @map("salary_min")
+  salaryMax Int?   @map("salary_max")
+  currency  String @default("NPR")
+
+  applyLink String? @map("apply_link")
+
+  isActive   Boolean @default(true) @map("is_active")
+  isFeatured Boolean @default(false) @map("is_featured")
+
+  applications JobApplication[]
+  skills       JobSkill[]
+  topics       JobTopic[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime? @map("expires_at")
+  user      User?     @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([companyId])
+  @@index([type])
+  @@index([isActive])
+}
+
+model JobTopic {
+  jobId   String @map("job_id")
+  topicId String @map("topic_id")
+
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, topicId])
+  @@index([jobId])
+  @@index([topicId])
+}
+
+model JobSkill {
+  jobId   String @map("job_id")
+  skillId String @map("skill_id")
+
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  ACCEPTED
+}
+
+model JobApplication {
+  id     String @id @default(cuid())
+  jobId  String @map("job_id")
+  userId String @map("user_id")
+
+  status ApplicationStatus @default(PENDING)
+
+  coverLetter String? @map("cover_letter")
+  resumeUrl   String? @map("resume_url")
+
+  appliedAt DateTime @default(now()) @map("applied_at")
+  updatedAt DateTime @updatedAt
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@index([jobId])
+  @@index([userId])
+}
+
+enum NotificationType {
+  SYSTEM
+  FOLLOW
+  UPVOTE
+  COMMENT
+  MENTION
+  ACHIEVEMENT_UNLOCKED
+  COURSE_ENROLLMENT
+  JOB_APPLICATION_UPDATE
+  COMMUNITY_INVITE
+}
+
+model Notification {
+  id     String           @id @default(cuid())
+  userId String           @map("user_id")
+  type   NotificationType
+
+  title     String?
+  message   String
+  read_at   DateTime? @map("read_at")
+  actionUrl String?   @map("action_url")
+
+  data      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  actorId String? @map("actor_id")
+  actor   User?   @relation("notification_actor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([actorId])
 }
