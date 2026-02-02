@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { cookies } from "next/headers";
 import ThemeWatcher from "@/components/ThemeWatcher";
+import Navbar from "@/components/navbar/Navbar";
+import HomeLayout from "@/components/layout/HomeLayout";
 import "./globals.css";
 
 
@@ -49,7 +51,10 @@ export default async function RootLayout({
       <body>
         <Providers token={token}>
           <ThemeWatcher />
-          {children}
+          <Navbar />
+          <HomeLayout>
+            {children}
+          </HomeLayout>
         </Providers>
       </body>
     </html>
