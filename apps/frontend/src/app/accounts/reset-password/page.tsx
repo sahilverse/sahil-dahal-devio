@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { verifyResetToken, resetPassword } from "@/slices/auth";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -12,81 +10,34 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { resetPasswordSchema } from "@devio/zod-utils";
+import { useRouter } from "next/navigation";
+import { useTokenVerifier } from "@/hooks/use-token-verifier";
+import { useAutoRedirect } from "@/hooks/use-auto-redirect";
 
 type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
-    const searchParams = useSearchParams();
     const router = useRouter();
     const dispatch = useAppDispatch();
 
-    const token = searchParams?.get("token");
-    const [status, setStatus] = useState<"verifying" | "verified" | "success" | "error">("verifying");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [progress, setProgress] = useState(0);
-    const verifyCalled = useRef(false);
+    const { status, error, setStatus, setError } = useTokenVerifier({
+        action: verifyResetToken,
+        successMessage: "Token verified. Please set a new password.",
+        errorMessage: "Invalid or expired reset token."
+    });
+
+    const { progress } = useAutoRedirect({
+        shouldRedirect: status === "success" || status === "error",
+        to: "/"
+    });
 
     const {
         register,
         handleSubmit,
-        setError,
         formState: { errors, isSubmitting },
     } = useForm<ResetPasswordInput>({
         resolver: zodResolver(resetPasswordSchema),
     });
-
-    useEffect(() => {
-        if (!token) {
-            setStatus("error");
-            setErrorMessage("Invalid reset link");
-            return;
-        }
-
-        if (verifyCalled.current) return;
-        verifyCalled.current = true;
-
-        const verify = async () => {
-            try {
-                await dispatch(verifyResetToken({ token })).unwrap();
-                setStatus("verified");
-                toast.success("Token verified. Please set a new password.");
-            } catch (err: any) {
-                setStatus("error");
-                setErrorMessage(err?.errorMessage || "Invalid or expired reset token.");
-            }
-        };
-
-        verify();
-    }, [token, dispatch]);
-
-    useEffect(() => {
-        if (status === "success" || status === "error") {
-            const duration = 3000;
-            const interval = 30;
-            const steps = duration / interval;
-            const increment = 100 / steps;
-
-            const timer = setInterval(() => {
-                setProgress((prev) => {
-                    const next = prev + increment;
-                    if (next >= 100) {
-                        clearInterval(timer);
-                        return 100;
-                    }
-                    return next;
-                });
-            }, interval);
-
-            const redirectTimer = setTimeout(() => {
-                router.replace("/");
-            }, duration);
-
-            return () => {
-                clearInterval(timer);
-                clearTimeout(redirectTimer);
-            };
-        }
-    }, [status, router]);
 
     const onSubmit = async (data: ResetPasswordInput) => {
         try {
@@ -98,10 +49,7 @@ export default function ResetPasswordPage() {
             setStatus("success");
             toast.success("Password reset successfully!");
         } catch (err: any) {
-            setError("root", {
-                type: "manual",
-                message: err?.errorMessage || "Failed to reset password",
-            });
+            setError(err?.errorMessage || "Failed to reset password");
         }
     };
 
@@ -148,9 +96,9 @@ export default function ResetPasswordPage() {
                             {...register("confirmNewPassword")}
                             disabled={isSubmitting}
                         />
-                        {errors.root?.message && (
+                        {error && status === "verified" && ( // Show non-redirecting errors here if any logic adds them
                             <div className="p-3 bg-destructive/15 border border-destructive/50 rounded-md text-xs text-destructive text-center font-medium">
-                                {errors.root.message}
+                                {error}
                             </div>
                         )}
                         <Button
@@ -189,7 +137,7 @@ export default function ResetPasswordPage() {
                     </div>
                     <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Invalid Link</h1>
                     <p className="text-muted-foreground max-w-sm">
-                        {errorMessage}
+                        {error}
                     </p>
                     <p className="text-sm text-muted-foreground">Redirecting to home...</p>
                     <Button

@@ -1,76 +1,33 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { verifyEmail } from "@/slices/auth";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useTokenVerifier } from "@/hooks/use-token-verifier";
+import { useAutoRedirect } from "@/hooks/use-auto-redirect";
+import { useEffect } from "react";
 
 export default function VerifyEmailPage() {
-    const searchParams = useSearchParams();
     const router = useRouter();
-    const dispatch = useAppDispatch();
 
-    const token = searchParams?.get("token");
-    const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [progress, setProgress] = useState(0);
-    const verifyCalled = useRef(false);
-
-    useEffect(() => {
-        if (!token) {
-            setStatus("error");
-            setErrorMessage("Invalid verification link");
-            return;
-        }
-
-        if (verifyCalled.current) return;
-        verifyCalled.current = true;
-
-        const verify = async () => {
-            try {
-                await dispatch(verifyEmail({ token })).unwrap();
-                setStatus("success");
-                toast.success("Email verified successfully!");
-            } catch (err: any) {
-                setStatus("error");
-                setErrorMessage("Failed to verify email. The link might be expired.");
-            }
-        };
-
-        verify();
-    }, [token, dispatch]);
+    const { status, error, setStatus } = useTokenVerifier({
+        action: verifyEmail,
+        successMessage: "Email verified successfully!",
+        errorMessage: "Failed to verify email. The link might be expired."
+    });
 
     useEffect(() => {
-        if (status === "success" || status === "error") {
-            const duration = 3000;
-            const interval = 30;
-            const steps = duration / interval;
-            const increment = 100 / steps;
-
-            const timer = setInterval(() => {
-                setProgress((prev) => {
-                    const next = prev + increment;
-                    if (next >= 100) {
-                        clearInterval(timer);
-                        return 100;
-                    }
-                    return next;
-                });
-            }, interval);
-
-            const redirectTimer = setTimeout(() => {
-                router.push("/");
-            }, duration);
-
-            return () => {
-                clearInterval(timer);
-                clearTimeout(redirectTimer);
-            };
+        if (status === "verified") {
+            setStatus("success");
         }
-    }, [status, router]);
+    }, [status, setStatus]);
+
+    const { progress } = useAutoRedirect({
+        shouldRedirect: status === "success" || status === "error",
+        to: "/"
+    });
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center relative">
@@ -116,7 +73,7 @@ export default function VerifyEmailPage() {
                     </div>
                     <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Verification Failed</h1>
                     <p className="text-muted-foreground max-w-sm">
-                        {errorMessage}
+                        {error}
                     </p>
                     <p className="text-sm text-muted-foreground">Redirecting to home...</p>
                     <Button
