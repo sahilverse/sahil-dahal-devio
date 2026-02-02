@@ -42,15 +42,15 @@ export default class SocketService {
         if (!this.socket) return;
 
         this.socket.on("connect", () => {
-            console.log("✅ Socket connected:", this.socket?.id);
+            console.log("Socket connected:", this.socket?.id);
         });
 
         this.socket.on("disconnect", (reason) => {
-            console.warn("⚠️ Socket disconnected:", reason);
+            console.warn("Socket disconnected:", reason);
         });
 
         this.socket.on("connect_error", async (error: any) => {
-            console.error("❌ Socket connection error:", error?.message || error);
+            console.error("Socket connection error:", error?.message || error);
 
             const tokenErrors = ["INVALID_TOKEN", "NO_TOKEN_PROVIDED"];
             if (!tokenErrors.includes(error?.message)) return;

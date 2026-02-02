@@ -9,11 +9,13 @@ import { TYPES } from './types';
 import { RedisManager } from './config';
 import { PrismaClient } from './generated/prisma/client';
 import { EmailWorkerService } from './queue';
+import { SocketService } from './modules/socket';
 
 const server = createServer(app);
 const redisManager = container.get<RedisManager>(TYPES.RedisManager);
 const prismaClient = container.get<PrismaClient>(TYPES.PrismaClient);
 const emailWorkerService = container.get<EmailWorkerService>(TYPES.EmailWorkerService);
+const socketService = container.get<SocketService>(TYPES.SocketService);
 
 async function startServer() {
     try {
@@ -21,6 +23,8 @@ async function startServer() {
 
         await prismaClient.$connect();
         logger.info("Connected to the database");
+
+        socketService.init(server);
 
 
         server.listen(PORT, () => {
@@ -51,7 +55,7 @@ async function shutdown() {
             process.exit(0);
         });
     } catch (err: any) {
-        logger.error("❌ Error during shutdown:", err);
+        logger.error("Error during shutdown:", err);
         process.exit(1);
     }
 }

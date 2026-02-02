@@ -9,6 +9,7 @@ import type { Transporter } from "nodemailer";
 import { MailService } from "../modules/mail";
 import { VerificationRepository, VerificationService } from "../modules/verification";
 import { QueueService, EmailJobService, EmailWorkerService } from "../queue";
+import { SocketService } from "../modules/socket";
 import { transporter } from "./transporter";
 
 
@@ -39,6 +40,8 @@ container.bind(TYPES.VerificationService).to(VerificationService).inSingletonSco
 container.bind<QueueService>(TYPES.QueueService).to(QueueService).inSingletonScope();
 container.bind<EmailJobService>(TYPES.EmailJobService).to(EmailJobService).inSingletonScope();
 container.bind<EmailWorkerService>(TYPES.EmailWorkerService).to(EmailWorkerService).inSingletonScope();
+
+container.bind(TYPES.SocketService).to(SocketService).inSingletonScope();
 
 
 export { container };
