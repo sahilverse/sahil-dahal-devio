@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
                             {...register("confirmNewPassword")}
                             disabled={isSubmitting}
                         />
-                        {error && status === "verified" && ( // Show non-redirecting errors here if any logic adds them
+                        {error && status === "verified" && (
                             <div className="p-3 bg-destructive/15 border border-destructive/50 rounded-md text-xs text-destructive text-center font-medium">
                                 {error}
                             </div>
