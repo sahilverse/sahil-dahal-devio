@@ -74,8 +74,10 @@ export class UserService {
             activityMap: user.activityLogs,
 
             achievements: user.userAchievements.map((ua: any) => ua.achievement),
-            problemSolvedCount: user._count.submissions,
-            roomsCompletedCount: user._count.cyberRoomEnrollments,
+
+            problemStats: this.calculateProblemStats(user.submissions),
+            roomStats: this.calculateRoomStats(user.cyberRoomEnrollments),
+            recentActivity: this.getRecentActivity(user.submissions, user.cyberRoomEnrollments),
 
             experiences: user.experiences,
             educations: user.educations,
@@ -138,5 +140,57 @@ export class UserService {
         }
 
         return `${years}y ${remainingMonths}m`;
+    }
+
+    private calculateProblemStats(submissions: any[]) {
+        const stats = { total: 0, easy: 0, medium: 0, hard: 0 };
+        if (!submissions) return stats;
+
+        submissions.forEach((s) => {
+            stats.total++;
+            const diff = s.problem?.difficulty;
+            if (diff === 'EASY') stats.easy++;
+            else if (diff === 'MEDIUM') stats.medium++;
+            else if (diff === 'HARD') stats.hard++;
+        });
+        return stats;
+    }
+
+    private calculateRoomStats(enrollments: any[]) {
+        const stats = { total: 0, easy: 0, medium: 0, hard: 0 };
+        if (!enrollments) return stats;
+
+        enrollments.forEach((e) => {
+            stats.total++;
+            const diff = e.room?.difficulty;
+            if (diff === 'EASY') stats.easy++;
+            else if (diff === 'MEDIUM') stats.medium++;
+            else if (diff === 'HARD') stats.hard++;
+        });
+        return stats;
+    }
+
+    private getRecentActivity(submissions: any[], enrollments: any[]) {
+        const problems = (submissions || []).map((s) => ({
+            id: s.problem.id,
+            title: s.problem.title,
+            slug: s.problem.slug,
+            difficulty: s.problem.difficulty,
+            completedAt: s.createdAt,
+            type: 'PROBLEM' as const
+        }));
+
+        const rooms = (enrollments || []).map((e) => ({
+            id: e.room.id,
+            title: e.room.title,
+            slug: e.room.slug,
+            difficulty: e.room.difficulty,
+            completedAt: e.completedAt,
+            type: 'ROOM' as const
+        }));
+
+        return [...problems, ...rooms]
+            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+            .slice(0, 5);
     }
 }

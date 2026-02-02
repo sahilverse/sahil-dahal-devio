@@ -223,7 +223,7 @@ export class UserRepository {
                 activityLogs: {
                     where: {
                         date: {
-                            gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) 
+                            gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1))
                         }
                     },
                     orderBy: { date: 'asc' }
@@ -231,10 +231,28 @@ export class UserRepository {
                 _count: {
                     select: {
                         followers: true,
-                        following: true,
-                        submissions: { where: { status: "ACCEPTED" } }, 
-                        cyberRoomEnrollments: { where: { completedAt: { not: null } } } 
+                        following: true
                     }
+                },
+                submissions: {
+                    where: { status: "ACCEPTED" },
+                    select: {
+                        createdAt: true,
+                        problem: {
+                            select: { id: true, title: true, slug: true, difficulty: true }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
+                },
+                cyberRoomEnrollments: {
+                    where: { completedAt: { not: null } },
+                    select: {
+                        completedAt: true,
+                        room: {
+                            select: { id: true, title: true, slug: true, difficulty: true }
+                        }
+                    },
+                    orderBy: { completedAt: 'desc' }
                 }
             }
         });

@@ -29,8 +29,29 @@ export interface PublicProfileDTO {
 
     // Achievements
     achievements: any[];
-    problemSolvedCount: number;
-    roomsCompletedCount: number;
+
+    // Detailed Stats
+    problemStats: {
+        total: number;
+        easy: number;
+        medium: number;
+        hard: number;
+    };
+    roomStats: {
+        total: number;
+        easy: number;
+        medium: number;
+        hard: number;
+    };
+
+    recentActivity: {
+        id: string;
+        title: string;
+        slug: string;
+        difficulty: string;
+        completedAt: Date;
+        type: 'PROBLEM' | 'ROOM';
+    }[];
 
     // Professional
     experiences: any[];

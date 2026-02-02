@@ -54,8 +54,24 @@ export type UserProfile = Prisma.UserGetPayload<{
             select: {
                 followers: true;
                 following: true;
-                submissions: true;
-                cyberRoomEnrollments: true;
+            };
+        };
+        submissions: {
+            where: { status: "ACCEPTED" };
+            select: {
+                createdAt: true;
+                problem: {
+                    select: { id: true; title: true; slug: true; difficulty: true };
+                };
+            };
+        };
+        cyberRoomEnrollments: {
+            where: { completedAt: { not: null } };
+            select: {
+                completedAt: true;
+                room: {
+                    select: { id: true; title: true; slug: true; difficulty: true };
+                };
             };
         };
     };
