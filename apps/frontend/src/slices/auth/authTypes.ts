@@ -6,7 +6,7 @@ export interface AuthUser {
     email: string;
     emailVerified: string | null;
     avatarUrl: string | null;
-    roleId: number | null;
+    role: string;
     createdAt: string;
 }
 

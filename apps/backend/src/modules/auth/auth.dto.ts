@@ -8,7 +8,7 @@ export interface AuthUserDTO {
     email: string;
     emailVerified: Date | null;
     avatarUrl: string | null;
-    roleId: number | null;
+    role: string;
     createdAt: Date;
 }
 
@@ -21,7 +21,7 @@ export function toAuthUserDTO(user: User): AuthUserDTO {
         email: user.email,
         emailVerified: user.emailVerified,
         avatarUrl: user.avatarUrl || null,
-        roleId: user.roleId,
+        role: (user as any).role?.name || "user",
         createdAt: user.createdAt,
     };
 }

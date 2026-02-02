@@ -86,6 +86,7 @@ export class UserRepository {
                     { username: { equals: identifier, mode: "insensitive" } },
                 ],
             },
+            include: { role: true },
         });
     }
 
