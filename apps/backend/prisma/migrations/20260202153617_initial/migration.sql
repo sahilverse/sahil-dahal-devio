@@ -44,9 +44,6 @@ CREATE TYPE "Difficulty" AS ENUM ('EASY', 'MEDIUM', 'HARD');
 CREATE TYPE "SubmissionStatus" AS ENUM ('PENDING', 'RUNNING', 'ACCEPTED', 'WRONG_ANSWER', 'TIME_LIMIT', 'MEMORY_LIMIT', 'RUNTIME_ERROR', 'COMPILE_ERROR');
 
 -- CreateEnum
-CREATE TYPE "CyberRoomDifficulty" AS ENUM ('EASY', 'MEDIUM', 'HARD', 'INSANE');
-
--- CreateEnum
 CREATE TYPE "VMStatus" AS ENUM ('PENDING', 'RUNNING', 'STOPPED', 'TERMINATED');
 
 -- CreateEnum
@@ -500,7 +497,7 @@ CREATE TABLE "CyberRoom" (
     "title" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "difficulty" "CyberRoomDifficulty" NOT NULL,
+    "difficulty" "Difficulty" NOT NULL,
     "image_url" TEXT,
     "estimated_time" INTEGER,
     "points_reward" INTEGER NOT NULL DEFAULT 0,

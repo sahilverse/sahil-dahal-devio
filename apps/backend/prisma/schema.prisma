@@ -768,13 +768,6 @@ model Submission {
   @@index([createdAt])
 }
 
-enum CyberRoomDifficulty {
-  EASY
-  MEDIUM
-  HARD
-  INSANE
-}
-
 enum VMStatus {
   PENDING
   RUNNING
@@ -783,11 +776,11 @@ enum VMStatus {
 }
 
 model CyberRoom {
-  id          String              @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
-  slug        String              @unique
+  slug        String     @unique
   description String
-  difficulty  CyberRoomDifficulty
+  difficulty  Difficulty
 
   imageUrl      String? @map("image_url")
   estimatedTime Int?    @map("estimated_time")
