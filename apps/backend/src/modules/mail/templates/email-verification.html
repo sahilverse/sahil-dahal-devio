@@ -1,151 +1,153 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Devio — Email Verification</title>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        background: #f7f7f8;
-      }
-      .container {
-        max-width: 600px;
-        margin: 24px auto;
-        background: #fff;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
-        font-family: Arial, sans-serif;
-        color: #333;
-      }
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Devio — Email Verification</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f7f7f8;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    .pad {
+      padding: 28px;
+    }
+
+    h2 {
+      margin: 0 0 12px 0;
+      color: #222;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 12px 0;
+      line-height: 1.5;
+    }
+
+    .code {
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: 6px;
+      color: #0b6ef6;
+      margin: 12px 0;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      background: #0b6ef6;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .muted {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .footer {
+      padding: 18px 28px;
+      background: #fafafa;
+      color: #777;
+      font-size: 12px;
+    }
+
+    .small {
+      font-size: 12px;
+    }
+
+    @media (max-width: 420px) {
       .pad {
-        padding: 28px;
+        padding: 16px;
       }
-      h2 {
-        margin: 0 0 12px 0;
-        color: #222;
-        font-size: 20px;
-      }
-      p {
-        margin: 12px 0;
-        line-height: 1.5;
-      }
+
       .code {
-        font-weight: 700;
-        font-size: 24px;
-        letter-spacing: 6px;
-        color: #0b6ef6;
-        margin: 12px 0;
+        font-size: 20px;
+        letter-spacing: 4px;
       }
-      .btn {
-        display: inline-block;
-        text-decoration: none;
-        padding: 12px 20px;
-        border-radius: 6px;
-        background: #0b6ef6;
-        color: #fff;
-        font-weight: 600;
-      }
-      .muted {
-        color: #777;
-        font-size: 13px;
-      }
-      .footer {
-        padding: 18px 28px;
-        background: #fafafa;
-        color: #777;
-        font-size: 12px;
-      }
-      .small {
-        font-size: 12px;
-      }
-      @media (max-width: 420px) {
-        .pad {
-          padding: 16px;
-        }
-        .code {
-          font-size: 20px;
-          letter-spacing: 4px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container" role="article" aria-label="Email verification">
-      <div class="pad">
-        <h2>Email Verification — Devio</h2>
-        <p class="muted">Hi there —</p>
-        <p>
-          Thanks for signing up. To finish creating your Devio account, please
-          verify your email address using the code below or by clicking the
-          button.
-        </p>
+    }
+  </style>
+</head>
 
-        <div class="code" aria-hidden="true">{{VERIFICATION_CODE}}</div>
+<body>
+  <div class="container" role="article" aria-label="Email verification">
+    <div class="pad">
+      <h2>Email Verification — Devio</h2>
+      <p class="muted">Hi there —</p>
+      <p>
+        Thanks for signing up. To finish creating your Devio account, please
+        verify your email address using the code below or by clicking the
+        button.
+      </p>
 
-        <p class="small">
-          Enter the verification code in the app or click the button below to
-          verify automatically:
-        </p>
+      <div class="code" aria-hidden="true">{{VERIFICATION_CODE}}</div>
 
-        <p>
-          <a
-            href="{{VERIFICATION_LINK}}"
-            class="btn"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Verify Email</a
-          >
-        </p>
+      <p class="small">
+        Enter the verification code in the app or click the button below to
+        verify automatically:
+      </p>
 
-        <p class="muted small">
-          This code will expire in <strong>10 minutes</strong>. Do not share
-          this code with anyone. If you didn't request this, you can safely
-          ignore this email.
-        </p>
+      <p>
+        <a href="{{VERIFICATION_LINK}}" class="btn" target="_blank" rel="noopener noreferrer"
+          style="text-decoration: none; color: #fff">Verify Email</a>
+      </p>
 
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0" />
+      <p class="muted small">
+        This code will expire in <strong>10 minutes</strong>. Do not share
+        this code with anyone. If you didn't request this, you can safely
+        ignore this email.
+      </p>
 
-        <p class="muted small">
-          If the button doesn't work, copy and paste this link into your
-          browser:
-        </p>
-        <p class="muted small">
-          <a
-            href="{{VERIFICATION_LINK}}"
-            target="_blank"
-            rel="noopener noreferrer"
-            >{{VERIFICATION_LINK}}</a
-          >
-        </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0" />
 
-        <p style="margin-top: 18px" class="muted small">
-          Need help? Contact
-          <a href="mailto:support@devio.com">support@devio.com</a>.
-        </p>
-      </div>
+      <p class="muted small">
+        If the button doesn't work, copy and paste this link into your
+        browser:
+      </p>
+      <p class="muted small">
+        <a href="{{VERIFICATION_LINK}}" target="_blank" rel="noopener noreferrer">{{VERIFICATION_LINK}}</a>
+      </p>
 
-      <div class="footer">
-        <p style="margin: 0">
-          This is an automated message — please do not reply to this email.
-        </p>
-      </div>
+      <p style="margin-top: 18px" class="muted small">
+        Need help? Contact
+        <a href="mailto:support@devio.com">support@devio.com</a>.
+      </p>
     </div>
 
-    <!-- Plain-text fallback (for clients that render HTML poorly) -->
-    <div
-      style="
+    <div class="footer">
+      <p style="margin: 0">
+        This is an automated message — please do not reply to this email.
+      </p>
+    </div>
+  </div>
+
+  <!-- Plain-text fallback (for clients that render HTML poorly) -->
+  <div style="
         display: none;
         white-space: pre;
         font-family: monospace;
         font-size: 12px;
-      "
-    >
-      Verification code: {{VERIFICATION_CODE}} Verify: {{VERIFICATION_LINK}}
-      This code expires in 10 minutes. If you did not request this, ignore this
-      message.
-    </div>
-  </body>
+      ">
+    Verification code: {{VERIFICATION_CODE}} Verify: {{VERIFICATION_LINK}}
+    This code expires in 10 minutes. If you did not request this, ignore this
+    message.
+  </div>
+</body>
+
 </html>
