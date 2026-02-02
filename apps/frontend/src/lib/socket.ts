@@ -27,6 +27,7 @@ export default class SocketService {
             this.socket = io(SOCKET_URL, {
                 auth: { token: token || getAccessToken() },
                 withCredentials: true,
+                transports: ["websocket"],
             });
             this.setupEventHandlers();
         }
