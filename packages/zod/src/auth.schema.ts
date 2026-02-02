@@ -27,14 +27,15 @@ export const registerSchema = z.object({
     email: z
         .email("Invalid email format")
         .min(1, "Email is required")
-        .transform(val => val.trim().toLowerCase()),
+        .toLowerCase(),
 
     username: z
         .string()
         .min(3, "Username must be at least 3 characters")
         .max(20, "Username is too long")
         .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscore, and hyphen allowed")
-        .trim(),
+        .trim()
+        .toLowerCase(),
 
     password: passwordRules,
     confirmPassword: confirmPasswordRule,
@@ -48,8 +49,6 @@ export const registerSchema = z.object({
     );
 
 
-
-
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -60,7 +59,8 @@ export const onboardingSchema = z.object({
         .min(3, "Username must be at least 3 characters")
         .max(30, "Username is too long")
         .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscore, and hyphen allowed")
-        .trim(),
+        .trim()
+        .toLowerCase(),
 
     firstName: z
         .string()
