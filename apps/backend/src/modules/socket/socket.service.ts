@@ -31,7 +31,7 @@ export class SocketService {
                 credentials: true,
             },
             adapter: createAdapter(pubClient, subClient),
-            transports: ["websocket", "polling"],
+            transports: ["websocket"],
         });
 
         this.setupMiddleware();
