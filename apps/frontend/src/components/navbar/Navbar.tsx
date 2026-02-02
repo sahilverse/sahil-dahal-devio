@@ -5,7 +5,7 @@ import { toggleSidebar } from "@/slices/ui/uiSlice";
 import Link from "next/link";
 import ThemeToggle from "../ThemeToggle";
 import { Bell, Menu, MessageSquareText, Plus, Search, MoreVertical, Monitor, Sun, Moon, LogIn } from "lucide-react";
-import { useAuthModal } from "../auth/AuthModalContext";
+import { useAuthModal } from "../../contexts/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
 import UserMenu from "./UserMenu";
 import Image from "next/image";

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type AuthView = 'login' | 'register' | 'forgot-password';
+type AuthView = 'login' | 'register' | 'forgot-password' | 'verify-email';
 
 interface AuthModalContextType {
     isOpen: boolean;
@@ -13,6 +13,7 @@ interface AuthModalContextType {
     switchToRegister: () => void;
     switchToLogin: () => void;
     switchToForgotPassword: () => void;
+    switchToVerifyEmail: () => void;
 }
 
 const AuthModalContext = createContext<AuthModalContextType | undefined>(undefined);
@@ -36,6 +37,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
     const switchToRegister = () => setView('register');
     const switchToLogin = () => setView('login');
     const switchToForgotPassword = () => setView('forgot-password');
+    const switchToVerifyEmail = () => setView('verify-email');
 
     return (
         <AuthModalContext.Provider value={{
@@ -46,7 +48,8 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
             close,
             switchToRegister,
             switchToLogin,
-            switchToForgotPassword
+            switchToForgotPassword,
+            switchToVerifyEmail
         }}>
             {children}
         </AuthModalContext.Provider>

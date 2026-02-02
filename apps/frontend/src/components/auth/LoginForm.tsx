@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthModal } from "./AuthModalContext";
+import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { login } from "@/slices/auth";
 import { toast } from "sonner";

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthModal } from "./AuthModalContext";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { forgotPassword, verifyResetToken, resetPassword } from "@/slices/auth";
 import { toast } from "sonner";

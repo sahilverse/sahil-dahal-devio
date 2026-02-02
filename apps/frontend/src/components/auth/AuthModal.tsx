@@ -1,10 +1,11 @@
 "use client";
 
-import { useAuthModal } from "./AuthModalContext";
+import { useAuthModal } from "../../contexts/AuthModalContext";
 import { X } from "lucide-react";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
+import { EmailVerificationForm } from "./EmailVerificationForm";
 
 export function AuthModal() {
     const { isOpen, close, view } = useAuthModal();
@@ -31,6 +32,7 @@ export function AuthModal() {
                 {view === 'login' && <LoginForm />}
                 {view === 'register' && <RegisterForm />}
                 {view === 'forgot-password' && <ForgotPasswordForm />}
+                {view === 'verify-email' && <EmailVerificationForm />}
             </div>
         </div>
     );

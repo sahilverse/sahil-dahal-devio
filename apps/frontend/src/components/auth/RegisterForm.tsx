@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthModal } from "./AuthModalContext";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { register as registerUser, sendVerificationEmail, login } from "@/slices/auth";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import { registerSchema, RegisterInput } from "@devio/zod-utils";
 
 export function RegisterForm() {
     const [step, setStep] = useState(1);
-    const { switchToLogin, close } = useAuthModal();
+    const { switchToLogin, close, switchToVerifyEmail } = useAuthModal();
     const dispatch = useAppDispatch();
     const { status } = useAppSelector((state) => state.auth);
     const isLoading = status === "loading";
@@ -70,7 +70,7 @@ export function RegisterForm() {
 
             await dispatch(sendVerificationEmail(data.email)).unwrap();
 
-            close();
+            switchToVerifyEmail();
         } catch (err: any) {
             console.log(err);
             const { fieldErrors, errorMessage } = err || {};
