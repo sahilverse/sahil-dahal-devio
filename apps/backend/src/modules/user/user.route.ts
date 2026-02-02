@@ -59,4 +59,95 @@ router.patch(
     userController.completeOnboarding
 );
 
+/**
+ * @swagger
+ * /user/{username}:
+ *   get:
+ *     summary: Get user profile by username
+ *     description: Returns public profile for everyone, private profile for owner.
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile fetched successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/:username",
+    authMiddleware.extractUser,
+    userController.getProfile
+);
+
+/**
+ * @swagger
+ * /user/{username}/follow:
+ *   post:
+ *     summary: Follow a user
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Followed successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       409:
+ *         description: Already following
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+    "/:username/follow",
+    authMiddleware.guard,
+    userController.followUser
+);
+
+/**
+ * @swagger
+ * /user/{username}/follow:
+ *   delete:
+ *     summary: Unfollow a user
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Unfollowed successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete(
+    "/:username/follow",
+    authMiddleware.guard,
+    userController.unfollowUser
+);
+
 export { router };

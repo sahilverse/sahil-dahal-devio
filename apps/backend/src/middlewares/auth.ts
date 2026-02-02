@@ -57,7 +57,41 @@ export class AuthMiddleware {
 
         } catch (error: any) {
             logger.error('Auth Middleware Error:', error);
-            return ResponseHandler.sendError(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+            next(error);
+        }
+    }
+
+    extractUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const authHeader = req.headers['authorization'];
+            const token = this.extractTokenFromHeader(authHeader);
+            if (!token) {
+                return next();
+            }
+
+            let decoded: JwtPayload;
+            try {
+                decoded = JwtManager.verifyAccessToken(token) as JwtPayload;
+            } catch {
+                return next();
+            }
+
+            const userId = decoded.sub as string;
+            const user = await this.userRepository.findById(userId);
+
+            if (user && user.accountStatus === AccountStatus.ACTIVE) {
+                req.user = {
+                    id: user.id,
+                    email: user.email,
+                    roleId: user.roleId,
+                    username: user.username,
+                    accountStatus: user.accountStatus,
+                    emailVerified: user.emailVerified,
+                } as ReqUser;
+            }
+            next();
+        } catch (error: any) {
+            next();
         }
     }
 
@@ -87,7 +121,7 @@ export class AuthMiddleware {
             next();
         } catch (error: any) {
             logger.error('Auth Middleware Error:', error);
-            return ResponseHandler.sendError(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+            next(error);
         }
     };
 

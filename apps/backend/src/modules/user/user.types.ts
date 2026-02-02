@@ -1,4 +1,5 @@
 import { AccountStatus, ProviderType } from "../../generated/prisma/client";
+import { Prisma } from "../../generated/prisma/client";
 
 export interface CreateUserPayload {
     firstName: string | null;
@@ -35,3 +36,27 @@ export interface OnboardingPayload {
     firstName: string;
     lastName: string;
 }
+
+
+export type UserProfile = Prisma.UserGetPayload<{
+    include: {
+        profile: true;
+        role: true;
+        userStreak: true;
+        experiences: true;
+        educations: true;
+        certifications: true;
+        projects: true;
+        skills: true;
+        userAchievements: { include: { achievement: true } };
+        activityLogs: true;
+        _count: {
+            select: {
+                followers: true;
+                following: true;
+                submissions: true;
+                cyberRoomEnrollments: true;
+            };
+        };
+    };
+}>;

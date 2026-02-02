@@ -202,4 +202,69 @@ export class UserRepository {
     }
 
 
+    async findProfileByUsername(username: string): Promise<User | null> {
+        return await this.prisma.user.findFirst({
+            where: {
+                username: {
+                    equals: username,
+                    mode: "insensitive"
+                }
+            },
+            include: {
+                profile: true,
+                role: true,
+                userStreak: true,
+                experiences: { orderBy: { startDate: 'desc' } },
+                educations: { orderBy: { startDate: 'desc' } },
+                certifications: { orderBy: { issueDate: 'desc' } },
+                projects: { orderBy: { startDate: 'desc' } },
+                skills: true,
+                userAchievements: { include: { achievement: true } },
+                activityLogs: {
+                    where: {
+                        date: {
+                            gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) 
+                        }
+                    },
+                    orderBy: { date: 'asc' }
+                },
+                _count: {
+                    select: {
+                        followers: true,
+                        following: true,
+                        submissions: { where: { status: "ACCEPTED" } }, 
+                        cyberRoomEnrollments: { where: { completedAt: { not: null } } } 
+                    }
+                }
+            }
+        });
+    }
+
+    async followUser(followerId: string, followingId: string): Promise<void> {
+        await this.prisma.follow.create({
+            data: {
+                followerId,
+                followingId
+            }
+        });
+    }
+
+    async unfollowUser(followerId: string, followingId: string): Promise<void> {
+        await this.prisma.follow.deleteMany({
+            where: {
+                followerId,
+                followingId
+            }
+        });
+    }
+
+    async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+        const count = await this.prisma.follow.count({
+            where: {
+                followerId,
+                followingId
+            }
+        });
+        return count > 0;
+    }
 }
