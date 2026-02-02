@@ -43,15 +43,16 @@ export default class SocketService {
         if (!this.socket) return;
 
         this.socket.on("connect", () => {
-            logger.info(`Socket connected: ${this.socket?.id}`);
+            logger.info({ socketId: this.socket?.id }, "Socket connected");
+
         });
 
         this.socket.on("disconnect", (reason) => {
-            logger.info(`Socket disconnected: ${reason}`);
+            logger.warn({ reason }, "Socket disconnected");
         });
 
         this.socket.on("connect_error", async (error: any) => {
-            logger.error(`Socket connection error: ${error?.message || error}`);
+            logger.error({ error: error?.message || error }, "Socket connection error");
 
             const tokenErrors = ["INVALID_TOKEN", "NO_TOKEN_PROVIDED"];
             if (!tokenErrors.includes(error?.message)) return;
