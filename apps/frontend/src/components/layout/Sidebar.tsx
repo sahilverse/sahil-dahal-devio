@@ -61,7 +61,7 @@ export default function Sidebar() {
 
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 lg:z-0 lg:sticky lg:top-[57px] flex flex-col h-screen lg:h-[calc(100vh-57px)] bg-white dark:bg-[#0B0B0F] lg:dark:bg-transparent border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl lg:shadow-none pt-[57px] lg:pt-0",
+                    "fixed inset-y-0 left-0 z-40 lg:z-0 lg:sticky lg:top-14.25 flex flex-col h-screen lg:h-[calc(100vh-57px)] bg-white dark:bg-bg-dark lg:dark:bg-transparent border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl lg:shadow-none pt-14.25 lg:pt-0",
                     isSidebarOpen ? "w-64 translate-x-0 pr-4" : "w-64 -translate-x-full lg:translate-x-0 lg:w-0 lg:px-4"
                 )}
             >
@@ -93,7 +93,7 @@ export default function Sidebar() {
                                 )}
                                 title={!isSidebarOpen ? item.name : undefined}
                             >
-                                <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive(item.href) ? "text-brand-primary" : "text-gray-500")} />
+                                <item.icon className={cn("w-5 h-5 shrink-0", isActive(item.href) ? "text-brand-primary" : "text-gray-500")} />
                                 {isSidebarOpen && <span>{item.name}</span>}
                             </Link>
                         ))}

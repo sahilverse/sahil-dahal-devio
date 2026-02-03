@@ -31,7 +31,7 @@ export default function Navbar() {
     // Mobile Search Overlay
     if (showMobileSearch) {
         return (
-            <div className="sticky top-0 z-50 bg-white dark:bg-[#0B0B0F] border-b border-gray-300 dark:border-gray-700">
+            <div className="sticky top-0 z-50 bg-white dark:bg-bg-dark border-b border-gray-300 dark:border-gray-700">
                 <div className="flex items-center gap-3 p-2">
                     <button
                         onClick={() => setShowMobileSearch(false)}
@@ -53,7 +53,7 @@ export default function Navbar() {
     }
 
     return (
-        <div className="sticky top-0 z-50 bg-white dark:bg-[#0B0B0F] flex justify-between items-center py-2 px-4 border-b border-gray-300 dark:border-gray-700">
+        <div className="sticky top-0 z-50 bg-white dark:bg-bg-dark flex justify-between items-center py-2 px-4 border-b border-gray-300 dark:border-gray-700">
             <div className="flex items-center gap-1">
                 <button
                     onClick={() => dispatch(toggleSidebar())}
@@ -67,7 +67,7 @@ export default function Navbar() {
                 </Link>
 
                 <Link href="/" className="lg:hidden">
-                    <Image src="/devio-logo.png" width={28} height={28} alt="Dev.io" />
+                    <Image src="/devio-logo.png" width={28} height={28} alt="Dev.io" loading="eager" />
                 </Link>
             </div>
 
@@ -75,7 +75,7 @@ export default function Navbar() {
                 <NavbarSearch />
             </div>
 
-            <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 lg:gap-3 shrink-0">
                 {user ? (
                     <>
                         {/* Mobile Search */}
@@ -128,13 +128,13 @@ export default function Navbar() {
                                         <MoreVertical className="w-5 h-5" />
                                     </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 p-2 space-y-1 bg-white dark:bg-[#0B0B0F] border border-gray-200 dark:border-gray-800 shadow-lg rounded-xl">
+                                <DropdownMenuContent align="end" className="w-56 p-2 space-y-1 bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800 shadow-lg rounded-xl">
                                     <DropdownMenuSub>
                                         <DropdownMenuSubTrigger className="cursor-pointer py-2.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                                             <Monitor className="mr-3 h-4 w-4 text-gray-500" />
                                             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Display Mode</span>
                                         </DropdownMenuSubTrigger>
-                                        <DropdownMenuSubContent className="bg-white dark:bg-[#0B0B0F] border border-gray-200 dark:border-gray-800">
+                                        <DropdownMenuSubContent className="bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800">
                                             <DropdownMenuItem onClick={() => dispatch(setTheme("light"))} className="cursor-pointer py-2">
                                                 <Sun className="mr-2 h-4 w-4" />
                                                 <span className="font-medium">Light</span>

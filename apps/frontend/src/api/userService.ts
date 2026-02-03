@@ -1,5 +1,5 @@
 import api from "./axios";
-import type { UserProfile } from "@/types/user";
+import type { UserProfile } from "@/types/profile";
 
 export const UserService = {
     getProfile: async (username: string): Promise<UserProfile> => {

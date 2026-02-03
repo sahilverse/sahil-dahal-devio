@@ -55,7 +55,7 @@ export default function DesktopUserMenu({ user, onLogout }: DesktopUserMenuProps
                 <DropdownMenuItem className="p-0 focus:bg-transparent cursor-pointer" asChild>
                     <Link href={`/u/${user.username}`}>
                         <div className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full">
-                            <div className="relative flex-shrink-0">
+                            <div className="relative shrink-0">
                                 <UserAvatar user={user} size="md" />
                                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full" />
                             </div>

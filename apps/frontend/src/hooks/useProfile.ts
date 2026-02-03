@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserService } from "@/api/userService";
-import type { UserProfile } from "@/types/user";
+import type { UserProfile } from "@/types/profile";
 import { toast } from "sonner";
 
 export const USER_QUERY_KEYS = {

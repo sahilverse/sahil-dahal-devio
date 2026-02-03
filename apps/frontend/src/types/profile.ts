@@ -11,7 +11,7 @@ export interface UserProfile {
     socials: Record<string, string> | null;
 
     auraPoints: number;
-    cipherPoints?: number; // Added for owner view
+    cipherPoints?: number;
     followersCount: number;
     followingCount: number;
     joinedAt: string;
