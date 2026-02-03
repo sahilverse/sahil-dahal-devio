@@ -131,7 +131,7 @@ export default function ProfileHeader({
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={onTabChange}>
-                    <TabsList className="bg-transparent p-0 h-auto gap-0 w-full overflow-x-auto flex justify-start lg:justify-center">
+                    <TabsList className="bg-transparent p-0 h-auto gap-0 w-full overflow-x-auto flex justify-start">
                         {["Overview", "Posts", "Comments", "About"].map((tab) => {
                             const isSelected = activeTab === tab.toLowerCase();
                             return (
