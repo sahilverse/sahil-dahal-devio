@@ -32,7 +32,6 @@ export function LoginForm() {
             await dispatch(login({ identifier: data.identifier, password: data.password })).unwrap();
             toast.success("Logged in successfully!");
             close();
-            // OnboardingWatcher will automatically open the onboarding modal if needed
         } catch (err: any) {
             console.log(err);
             const { fieldErrors, errorMessage } = err;
