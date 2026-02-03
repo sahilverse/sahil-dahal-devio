@@ -1,28 +1,40 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAppSelector } from "@/store/hooks";
 import Sidebar from "./Sidebar";
-import { cn } from "@/lib/utils";
-
-import VisitorSidebar from "./VisitorSidebar";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
     const { isSidebarOpen } = useAppSelector((state) => state.ui);
-    const { user } = useAppSelector((state) => state.auth);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(max-width: 1023px)");
+
+        const updateOverflow = () => {
+            if (isSidebarOpen && mediaQuery.matches) {
+                document.body.style.overflow = "hidden";
+            } else {
+                document.body.style.overflow = "";
+            }
+        };
+
+        updateOverflow();
+        mediaQuery.addEventListener("change", updateOverflow);
+
+        return () => {
+            document.body.style.overflow = "";
+            mediaQuery.removeEventListener("change", updateOverflow);
+        };
+    }, [isSidebarOpen]);
 
     return (
-        <div className="px-4">
-            <div
-                className={cn(
-                    "grid gap-6 transition-all duration-300 ease-in-out",
-                    isSidebarOpen ? "grid-cols-1 md:grid-cols-[240px_1fr]" : "grid-cols-1 md:grid-cols-[0px_1fr]"
-                )}
-            >
-                {user ? <Sidebar /> : <VisitorSidebar />}
-                <main className="min-w-0 py-6">
+        <div className="flex">
+            <Sidebar />
+            <main className="flex-1 min-w-0 py-6 px-4 lg:px-8">
+                <div className="max-w-3xl mx-auto">
                     {children}
-                </main>
-            </div>
+                </div>
+            </main>
         </div>
     );
 }

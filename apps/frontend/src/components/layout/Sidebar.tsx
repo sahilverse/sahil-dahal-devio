@@ -27,9 +27,11 @@ export default function Sidebar() {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
     const { isSidebarOpen } = useAppSelector((state) => state.ui);
+    const { user } = useAppSelector((state) => state.auth);
     const [isResourcesOpen, setIsResourcesOpen] = useState(true);
 
     const isActive = (path: string) => pathname === path;
+    const isAuthenticated = !!user;
 
     const navItems = [
         { name: "Home", href: "/", icon: Home },
@@ -38,6 +40,7 @@ export default function Sidebar() {
     ];
 
     const resources = [
+        ...(isAuthenticated ? [] : [{ name: "About Devio", href: "/about", icon: BookOpen }]),
         { name: "Code Playground", href: "/playground", icon: SquareTerminal },
         { name: "Problems", href: "/problems", icon: Code },
         { name: "Cyber Labs", href: "/labs", icon: Shield },
@@ -48,27 +51,34 @@ export default function Sidebar() {
 
     return (
         <>
-
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 z-30 bg-black/50 lg:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => dispatch(toggleSidebar())}
+                />
+            )}
 
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 md:z-0 md:sticky md:top-[73px] flex flex-col h-screen md:h-[calc(100vh-73px)] bg-white dark:bg-[#0B0B0F] md:dark:bg-transparent border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl md:shadow-none pt-[73px] md:pt-0",
-                    isSidebarOpen ? "w-64 translate-x-0 pr-4" : "w-64 -translate-x-full md:translate-x-0 md:w-0 md:px-4"
+                    "fixed inset-y-0 left-0 z-40 lg:z-0 lg:sticky lg:top-[57px] flex flex-col h-screen lg:h-[calc(100vh-57px)] bg-white dark:bg-[#0B0B0F] lg:dark:bg-transparent border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl lg:shadow-none pt-[57px] lg:pt-0",
+                    isSidebarOpen ? "w-64 translate-x-0 pr-4" : "w-64 -translate-x-full lg:translate-x-0 lg:w-0 lg:px-4"
                 )}
             >
-                {/* Toggle Button*/}
+                {/* Toggle Button */}
                 <button
                     onClick={() => dispatch(toggleSidebar())}
-                    className="hidden md:flex absolute -right-4 top-6 z-10 w-8 h-8 items-center justify-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-200 shadow-sm cursor-pointer"
+                    className="hidden lg:flex absolute -right-4 top-6 z-10 w-8 h-8 items-center justify-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-200 shadow-sm cursor-pointer"
                 >
                     <Menu className="w-4 h-4" />
                 </button>
 
-                {/* Top Navigation */}
+                {/* Navigation */}
                 <nav className={cn(
-                    "flex-1 px-3 md:py-6 overflow-y-auto transition-opacity duration-200",
+                    "flex-1 px-3 py-6 overflow-y-auto transition-opacity duration-200",
                     isSidebarOpen ? "opacity-100 visible" : "opacity-0 invisible w-0 px-0 overflow-hidden"
                 )}>
+                    {/* Main Navigation */}
                     <div className="space-y-1 mb-6">
                         {navItems.map((item) => (
                             <Link
@@ -144,47 +154,50 @@ export default function Sidebar() {
                                 ))}
                             </div>
                         )}
-
                     </div>
 
-                    <hr className="border-gray-200 dark:border-gray-800 my-4" />
+                    {/* Communities - Only for authenticated users */}
+                    {isAuthenticated && (
+                        <>
+                            <hr className="border-gray-200 dark:border-gray-800 my-4" />
 
-                    {/* Communities */}
-                    <div className="mb-6">
-                        {isSidebarOpen ? (
-                            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                                Communities
+                            <div className="mb-6">
+                                {isSidebarOpen ? (
+                                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                                        Communities
+                                    </div>
+                                ) : null}
+
+                                <div className="space-y-1">
+                                    <button
+                                        className={cn(
+                                            "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left",
+                                            !isSidebarOpen && "justify-center px-0"
+                                        )}
+                                        title={!isSidebarOpen ? "Start a Community" : undefined}
+                                    >
+                                        <Plus className="w-5 h-5 text-gray-500" />
+                                        {isSidebarOpen && "Start a Community"}
+                                    </button>
+                                    <button
+                                        className={cn(
+                                            "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left",
+                                            !isSidebarOpen && "justify-center px-0"
+                                        )}
+                                        title={!isSidebarOpen ? "Manage Communities" : undefined}
+                                    >
+                                        <Users className="w-5 h-5 text-gray-500" />
+                                        {isSidebarOpen && "Manage Communities"}
+                                    </button>
+                                </div>
                             </div>
-                        ) : null}
-
-                        <div className="space-y-1">
-                            <button
-                                className={cn(
-                                    "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left",
-                                    !isSidebarOpen && "justify-center px-0"
-                                )}
-                                title={!isSidebarOpen ? "Start a Community" : undefined}
-                            >
-                                <Plus className="w-5 h-5 text-gray-500" />
-                                {isSidebarOpen && "Start a Community"}
-                            </button>
-                            <button
-                                className={cn(
-                                    "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left",
-                                    !isSidebarOpen && "justify-center px-0"
-                                )}
-                                title={!isSidebarOpen ? "Manage Communities" : undefined}
-                            >
-                                <Users className="w-5 h-5 text-gray-500" />
-                                {isSidebarOpen && "Manage Communities"}
-                            </button>
-                        </div>
-                    </div>
+                        </>
+                    )}
                 </nav>
 
                 {/* Footer Links */}
                 {isSidebarOpen && (
-                    <div className="px-3 mt-8">
+                    <div className="px-3 mt-8 mb-3">
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
                             <Link href="#" className="hover:underline">About</Link>
                             <Link href="#" className="hover:underline">Careers</Link>
@@ -193,7 +206,6 @@ export default function Sidebar() {
                         </div>
                     </div>
                 )}
-
             </aside>
         </>
     );

@@ -34,24 +34,24 @@ export default function Navbar() {
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => dispatch(toggleSidebar())}
-                    className="md:hidden flex items-center justify-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-200 cursor-pointer"
+                    className="lg:hidden flex items-center justify-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-200 cursor-pointer"
                 >
                     <Menu className="w-5 h-5" />
                 </button>
 
-                <Link href="/" className="hidden md:block">
+                <Link href="/" className="hidden lg:block">
                     <p className="text-2xl font-bold">
                         Dev.io
                     </p>
                 </Link>
 
-                <Link href="/" className="md:hidden">
+                <Link href="/" className="lg:hidden">
                     <Image src="/devio-logo.png" width={28} height={28} alt="Dev.io" />
                 </Link>
             </div>
 
             {/* Search Bar - Desktop */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
                 <NavbarSearch />
             </div>
 
@@ -82,7 +82,7 @@ export default function Navbar() {
                     </>
                 ) : (
                     <>
-                        <div className="hidden md:flex items-center gap-4">
+                        <div className="hidden lg:flex items-center gap-4">
                             <ThemeToggle />
                             <button
                                 onClick={openLogin}
@@ -93,7 +93,7 @@ export default function Navbar() {
                         </div>
 
                         {/* Mobile Guest View */}
-                        <div className="md:hidden flex items-center gap-2">
+                        <div className="lg:hidden flex items-center gap-2">
                             <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors">
                                 <Search className="w-5 h-5" />
                             </button>
