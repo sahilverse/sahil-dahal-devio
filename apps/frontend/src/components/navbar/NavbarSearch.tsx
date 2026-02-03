@@ -16,7 +16,7 @@ export default function NavbarSearch() {
 
     return (
         <div
-            className={`flex items-center gap-2 border rounded-full px-3 py-1.5 w-full max-w-[600px] mx-4 transition-colors
+            className={`flex items-center gap-2 border rounded-full px-4 py-2 w-full max-w-[700px] mx-4 transition-colors
             ${isFocused ? "border-brand-primary ring-1 ring-brand-primary" : "border-gray-300 dark:border-gray-700"}`}
         >
             <Image src="/devio-logo.png" width={28} height={28} alt="Search" />
@@ -24,7 +24,7 @@ export default function NavbarSearch() {
             <input
                 ref={inputRef}
                 type="text"
-                placeholder="Search"
+                placeholder="Find anything"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setIsFocused(true)}

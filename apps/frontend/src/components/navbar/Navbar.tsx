@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/slices/ui/uiSlice";
 import Link from "next/link";
 import ThemeToggle from "../ThemeToggle";
-import { Bell, Menu, MessageSquareText, Plus, Search, MoreVertical, Monitor, Sun, Moon, LogIn } from "lucide-react";
+import { Bell, Menu, MessageSquareText, Plus, Search, MoreVertical, Monitor, Sun, Moon, LogIn, ArrowLeft } from "lucide-react";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
 import UserMenu from "./UserMenu";
@@ -21,28 +22,48 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-
 export default function Navbar() {
-
     const { user } = useAppSelector((state) => state.auth);
     const dispatch = useAppDispatch();
     const { openLogin } = useAuthModal();
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+    // Mobile Search Overlay
+    if (showMobileSearch) {
+        return (
+            <div className="sticky top-0 z-50 bg-white dark:bg-[#0B0B0F] border-b border-gray-300 dark:border-gray-700">
+                <div className="flex items-center gap-3 p-2">
+                    <button
+                        onClick={() => setShowMobileSearch(false)}
+                        className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div className="flex-1">
+                        <input
+                            type="text"
+                            placeholder="Find anything"
+                            autoFocus
+                            className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-primary text-gray-900 dark:text-gray-100 placeholder:text-gray-500"
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="sticky top-0 z-50 bg-white dark:bg-[#0B0B0F] flex justify-between items-center py-2 px-4 border-b border-gray-300 dark:border-gray-700">
-            {/* Logo*/}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
                 <button
                     onClick={() => dispatch(toggleSidebar())}
-                    className="lg:hidden flex items-center justify-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-200 cursor-pointer"
+                    className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-200 cursor-pointer"
                 >
                     <Menu className="w-5 h-5" />
                 </button>
 
                 <Link href="/" className="hidden lg:block">
-                    <p className="text-2xl font-bold">
-                        Dev.io
-                    </p>
+                    <p className="text-2xl font-bold">Dev.io</p>
                 </Link>
 
                 <Link href="/" className="lg:hidden">
@@ -50,34 +71,35 @@ export default function Navbar() {
                 </Link>
             </div>
 
-            {/* Search Bar - Desktop */}
             <div className="hidden lg:block">
                 <NavbarSearch />
             </div>
 
-            {/* Auth Actions */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-
+            <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
                 {user ? (
                     <>
-                        {/* Notifications */}
-                        <button className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-950"></span>
+                        {/* Mobile Search */}
+                        <button
+                            onClick={() => setShowMobileSearch(true)}
+                            className="lg:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer"
+                        >
+                            <Search className="w-5 h-5" />
                         </button>
 
-                        {/* Messages */}
                         <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
                             <MessageSquareText className="w-5 h-5" />
                         </button>
 
-                        {/* Create Button */}
-                        <button className="flex items-center gap-1.5 bg-brand-primary text-white px-4 py-1.5 rounded-full hover:bg-brand-pressed transition-colors font-medium text-sm cursor-pointer">
-                            <Plus className="w-4 h-4" />
-                            <span>Create</span>
+                        <button className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
+                            <Bell className="w-5 h-5" />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-950"></span>
                         </button>
 
-                        {/* User Avatar Dropdown */}
+                        <button className="flex items-center gap-1.5 bg-brand-primary text-white px-3 lg:px-4 py-1.5 rounded-full hover:bg-brand-pressed transition-colors font-medium text-sm cursor-pointer">
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden lg:inline">Create</span>
+                        </button>
+
                         <UserMenu user={user} />
                     </>
                 ) : (
@@ -92,15 +114,17 @@ export default function Navbar() {
                             </button>
                         </div>
 
-                        {/* Mobile Guest View */}
-                        <div className="lg:hidden flex items-center gap-2">
-                            <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors">
+                        <div className="lg:hidden flex items-center gap-1">
+                            <button
+                                onClick={() => setShowMobileSearch(true)}
+                                className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer"
+                            >
                                 <Search className="w-5 h-5" />
                             </button>
 
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors">
+                                    <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
                                         <MoreVertical className="w-5 h-5" />
                                     </button>
                                 </DropdownMenuTrigger>
