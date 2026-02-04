@@ -18,7 +18,6 @@ interface ImageUploadModalProps {
     title?: string;
     accept?: string;
 
-    // optional: show placeholder image in fallback
     fallbackImageSrc?: string;
 }
 
