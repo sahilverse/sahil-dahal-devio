@@ -55,8 +55,8 @@ export default function TestProfilePage() {
                         )}
                     </div>
                 </div>
-                <div className="self-start">
-                    <div className="fixed">
+                <div className="hidden lg:block">
+                    <div className="fixed w-80">
                         <ProfileSidebar profile={profile} isCurrentUser={isCurrentUser} />
                     </div>
                 </div>
