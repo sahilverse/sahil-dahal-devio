@@ -58,7 +58,7 @@ export class UserService {
             lastName: user.lastName,
             avatarUrl: user.avatarUrl,
             bannerUrl: user.bannerUrl,
-            bio: user.profile?.bio || null,
+            title: user.profile?.title || null,
             city: user.profile?.city || null,
             country: user.profile?.country || null,
             socials: user.profile?.socials,
