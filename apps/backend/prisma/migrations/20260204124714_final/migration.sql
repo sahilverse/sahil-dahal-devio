@@ -117,7 +117,6 @@ CREATE TABLE "Profile" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "title" TEXT,
-    "bio" TEXT,
     "city" TEXT,
     "country" TEXT,
     "socials" JSONB,
@@ -851,7 +850,6 @@ CREATE TABLE "Skill" (
 CREATE TABLE "UserSkill" (
     "user_id" TEXT NOT NULL,
     "skill_id" TEXT NOT NULL,
-    "endorsements" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "UserSkill_pkey" PRIMARY KEY ("user_id","skill_id")
 );

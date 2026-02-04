@@ -71,8 +71,8 @@ model User {
   role   Role? @relation(fields: [roleId], references: [id])
   roleId Int?  @default(0) @map("role_id")
 
-  following          Follow[]            @relation("following")
-  followers          Follow[]            @relation("follower")
+  followers          Follow[]            @relation("following")
+  following          Follow[]            @relation("follower")
   userStreak         UserStreak?
   activityLogs       ActivityLog[]
   auraTransactions   AuraTransaction[]
