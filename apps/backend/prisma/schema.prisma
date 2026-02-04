@@ -124,6 +124,7 @@ model User {
   notifications          Notification[]
   triggeredNotifications Notification[]   @relation("notification_actor")
   jobs                   Job[]
+  savePosts              SavePost[]
 
   @@index([username])
   @@index([email])
@@ -476,12 +477,30 @@ model Post {
   votes          PostVote[]
   media          Media[]     @relation("post_media")
   topics         PostTopic[]
+  savePosts      SavePost[]
 
   @@index([authorId])
   @@index([communityId])
   @@index([type])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+model SavePost {
+  id String @id @default(cuid())
+
+  postId String @map("post_id")
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
 }
 
 model Comment {
