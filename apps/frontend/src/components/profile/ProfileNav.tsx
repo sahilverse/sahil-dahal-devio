@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 interface ProfileNavProps {
     isCurrentUser?: boolean;
@@ -13,7 +14,13 @@ export default function ProfileNav({
 }: ProfileNavProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const activeItem = searchParams.get("view")?.toLowerCase() || "overview";
+    const currentView = searchParams.get("view")?.toLowerCase() || "overview";
+
+    const [activeView, setActiveView] = useState(currentView);
+
+    useEffect(() => {
+        setActiveView(currentView);
+    }, [currentView]);
 
     const navItems = ["Overview", "Posts", "Saved", "About"];
 
@@ -22,9 +29,10 @@ export default function ProfileNav({
         : navItems.filter(item => item !== "Saved");
 
     const handleSelect = (item: string) => {
-        const params = new URLSearchParams(searchParams.toString());
         const value = item.toLowerCase();
+        setActiveView(value);
 
+        const params = new URLSearchParams(searchParams.toString());
         if (value === "overview") {
             params.delete("view");
         } else {
@@ -37,7 +45,7 @@ export default function ProfileNav({
     return (
         <div className="flex items-center gap-1 border-b border-border/50 px-2 lg:px-6 pt-2">
             {visibleItems.map((item) => {
-                const isActive = activeItem === item.toLowerCase();
+                const isActive = activeView === item.toLowerCase();
 
                 return (
                     <button
