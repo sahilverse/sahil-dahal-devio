@@ -43,7 +43,7 @@ export default function ProfileNav({
     };
 
     return (
-        <div className="flex items-center gap-1 border-b border-border/50 px-2 lg:px-6 pt-2">
+        <div className="flex items-center gap-1 border-b border-border/50 px-2 lg:px-6">
             {visibleItems.map((item) => {
                 const isActive = activeView === item.toLowerCase();
 

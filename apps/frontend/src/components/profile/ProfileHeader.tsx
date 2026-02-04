@@ -111,12 +111,12 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                         <div>
                             <h1 className="text-lg font-bold">{fullName}</h1>
                             {location ? (
-                                <p className="text-muted-foreground tracking-wider text-xs whitespace-nowrap">
+                                <p className="text-muted-foreground tracking-wider text-xs whitespace-nowrap mt-1">
                                     {location}
                                 </p>
                             ) : isCurrentUser && (
                                 <button
-                                    className="mt-2 text-muted-foreground/50 hover:text-primary tracking-wider text-xs cursor-pointer flex items-center gap-1 transition-colors mt-0.5"
+                                    className="mt-2 text-muted-foreground/50 hover:text-primary tracking-wider text-xs cursor-pointer flex items-center gap-1 transition-colors"
                                     type="button"
                                 >
                                     <Plus className="w-3 h-3" /> Add Location
