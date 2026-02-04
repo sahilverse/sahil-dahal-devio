@@ -9,6 +9,8 @@ import ProfileAchievements from "./ProfileAchievements";
 import ProfileSocials from "./ProfileSocials";
 import ProfileSettingsSection from "./ProfileSettingsSection";
 import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAppSelector } from "@/store/hooks";
 
 interface ProfileSidebarProps {
     profile: UserProfile;
@@ -17,6 +19,10 @@ interface ProfileSidebarProps {
 
 export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSidebarProps) {
     const [hasCopied, setHasCopied] = useState(false);
+
+    const { user } = useAppSelector((state) => state.auth);
+    const isAuthenticated = !!user;
+    const { openLogin } = useAuthModal();
 
     const { mutate: followUser, isPending: isFollowPending } = useFollowUser(profile.username);
     const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
@@ -30,11 +36,23 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
     };
 
     const handleFollow = () => {
+        if (!isAuthenticated) {
+            openLogin();
+            return;
+        }
         if (profile.isFollowing) {
             unfollowUser();
         } else {
             followUser();
         }
+    };
+
+    const handleMessage = () => {
+        if (!isAuthenticated) {
+            openLogin();
+            return;
+        }
+        // TODO: Implement messaging logic
     };
 
     return (
@@ -51,7 +69,7 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
                             </Button>
                         ) : (
                             <div className="hidden lg:block">
-                                <ProfileActionsDropdown onShare={handleShare}>
+                                <ProfileActionsDropdown onShare={handleShare} isAuthenticated={isAuthenticated} openLogin={openLogin}>
                                     <Button variant="ghost" size="icon" className="shrink-0 cursor-pointer text-muted-foreground hover:text-foreground">
                                         <MoreHorizontal className="w-5 h-5" />
                                     </Button>
@@ -61,10 +79,10 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
                     </div>
 
                     {!isCurrentUser && (
-                        <div className="hidden lg:flex items-center gap-2">
+                        <div className="hidden lg:grid grid-cols-2 gap-2">
                             <Button
                                 disabled={isPending}
-                                className={`flex-1 font-semibold cursor-pointer text-xs ${profile.isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
+                                className={`font-semibold cursor-pointer text-xs ${profile.isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
                                 variant={profile.isFollowing ? "secondary" : "brand"}
                                 onClick={handleFollow}
                             >
@@ -74,12 +92,15 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
                                     <span className="flex items-center gap-2"><Plus className="w-4 h-4" /> Follow</span>
                                 )}
                             </Button>
-                            <Button
-                                className="flex-1 font-semibold cursor-pointer text-xs"
-                                variant="secondary"
-                            >
-                                <span className="flex items-center gap-2"><MessageCircle className="w-4 h-4" /> Start Chat</span>
-                            </Button>
+                            {isAuthenticated && (
+                                <Button
+                                    className="font-semibold cursor-pointer text-xs"
+                                    variant="secondary"
+                                    onClick={handleMessage}
+                                >
+                                    <span className="flex items-center gap-2"><MessageCircle className="w-4 h-4" /> Start Chat</span>
+                                </Button>
+                            )}
                         </div>
                     )}
                 </div>

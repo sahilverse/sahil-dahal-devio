@@ -12,6 +12,8 @@ import ProfileActionsDropdown from "./ProfileActionsDropdown";
 import ProfileMobileAccordion from "./ProfileMobileAccordion";
 import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
 import ProfileNav from "./ProfileNav";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAppSelector } from "@/store/hooks";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
@@ -25,6 +27,10 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
 
+    const { user } = useAppSelector((state) => state.auth);
+    const isAuthenticated = !!user;
+    const { openLogin } = useAuthModal();
+
     const { mutate: followUser, isPending: isFollowPending } = useFollowUser(profile.username);
     const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
     const isPending = isFollowPending || isUnfollowPending;
@@ -34,6 +40,10 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
     };
 
     const handleFollow = () => {
+        if (!isAuthenticated) {
+            openLogin();
+            return;
+        }
         if (profile.isFollowing) {
             unfollowUser();
         } else {
@@ -131,11 +141,13 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                                     )}
                                 </Button>
 
-                                <Button variant="secondary" size="icon-sm" className="h-8 w-8 cursor-pointer rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                                    <MessageCircle className="w-4 h-4" />
-                                </Button>
+                                {isAuthenticated && (
+                                    <Button variant="secondary" size="icon-sm" className="h-8 w-8 cursor-pointer rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                                        <MessageCircle className="w-4 h-4" />
+                                    </Button>
+                                )}
 
-                                <ProfileActionsDropdown onShare={handleShare}>
+                                <ProfileActionsDropdown onShare={handleShare} isAuthenticated={isAuthenticated} openLogin={openLogin}>
                                     <Button variant="ghost" size="icon-sm" className="h-8 w-8 cursor-pointer">
                                         <MoreHorizontal className="w-5 h-5" />
                                     </Button>
