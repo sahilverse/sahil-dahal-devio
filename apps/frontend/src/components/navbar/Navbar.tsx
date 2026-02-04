@@ -5,9 +5,10 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/slices/ui/uiSlice";
 import Link from "next/link";
 import ThemeToggle from "../ThemeToggle";
-import { Bell, Menu, MessageSquareText, Plus, Search, MoreVertical, Monitor, Sun, Moon, LogIn, ArrowLeft } from "lucide-react";
+import { Bell, Menu, MessageSquareText, Plus, MoreVertical, Monitor, Sun, Moon, LogIn, ArrowLeft } from "lucide-react";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
+import MobileSearchButton from "./MobileSearchButton";
 import UserMenu from "./UserMenu";
 import Image from "next/image";
 import { setTheme } from "@/slices/theme";
@@ -76,16 +77,11 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+                {/* Mobile Search - Always visible on mobile */}
+                <MobileSearchButton onClick={() => setShowMobileSearch(true)} />
+
                 {user ? (
                     <>
-                        {/* Mobile Search */}
-                        <button
-                            onClick={() => setShowMobileSearch(true)}
-                            className="lg:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer"
-                        >
-                            <Search className="w-5 h-5" />
-                        </button>
-
                         <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
                             <MessageSquareText className="w-5 h-5" />
                         </button>
@@ -114,14 +110,7 @@ export default function Navbar() {
                             </button>
                         </div>
 
-                        <div className="lg:hidden flex items-center gap-1">
-                            <button
-                                onClick={() => setShowMobileSearch(true)}
-                                className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer"
-                            >
-                                <Search className="w-5 h-5" />
-                            </button>
-
+                        <div className="lg:hidden">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
