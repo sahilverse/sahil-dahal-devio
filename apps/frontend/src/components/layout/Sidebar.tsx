@@ -59,9 +59,17 @@ export default function Sidebar() {
                 />
             )}
 
+            {/* Placeholder for fixed sidebar on desktop */}
+            <div
+                className={cn(
+                    "hidden lg:block shrink-0 transition-all duration-300",
+                    isSidebarOpen ? "w-64" : "w-0"
+                )}
+            />
+
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 lg:z-0 lg:sticky lg:top-14.25 flex flex-col h-screen lg:h-[calc(100vh-57px)] bg-white dark:bg-bg-dark lg:dark:bg-transparent border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl lg:shadow-none pt-14.25 lg:pt-0",
+                    "fixed inset-y-0 left-0 z-40 lg:top-14.25 lg:bottom-0 flex flex-col h-screen lg:h-auto bg-white dark:bg-bg-dark lg:dark:bg-transparent border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl lg:shadow-none pt-14.25 lg:pt-0",
                     isSidebarOpen ? "w-64 translate-x-0 pr-4" : "w-64 -translate-x-full lg:translate-x-0 lg:w-0 lg:px-4"
                 )}
             >
