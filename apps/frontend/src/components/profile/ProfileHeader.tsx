@@ -5,12 +5,11 @@ import { UserProfile } from "@/types/profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { ImagePlus, MapPin, MoreHorizontal, MessageCircle, UserMinus, Plus, ChevronDown } from "lucide-react";
+import { ImagePlus, MoreHorizontal, MessageCircle, UserMinus, Plus } from "lucide-react";
 import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
-import ProfileStats from "./ProfileStats";
 import ProfileActionsDropdown from "./ProfileActionsDropdown";
-import ProfileAchievements from "./ProfileAchievements";
+import ProfileMobileAccordion from "./ProfileMobileAccordion";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
@@ -28,8 +27,6 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
     const handleSave = (file: File) => {
         console.log("Selected file:", file);
     };
-
-    const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
     const handleFollow = () => {
         setIsFollowing(!isFollowing);
@@ -137,28 +134,7 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     <p className="text-muted-foreground max-w-md">{profile.bio}</p>
 
                     {/* Mobile Stats Accordion */}
-                    <div className="lg:hidden rounded-lg overflow-hidden border bg-card">
-                        <button
-                            onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                            className="flex justify-between items-center w-full p-4 font-semibold hover:bg-accent/50 transition-colors cursor-pointer text-left"
-                        >
-                            <span>u/{profile.username}</span>
-                            <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isAccordionOpen ? "rotate-180" : ""}`} />
-                        </button>
-
-                        <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isAccordionOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-                            <div className="overflow-hidden">
-                                <div className="p-4 pt-0 border-t bg-accent/20">
-                                    <div className="pt-4 space-y-4 divide-y">
-                                        <ProfileStats profile={profile} isCurrentUser={isCurrentUser} />
-                                        <div>
-                                            <ProfileAchievements achievements={profile.achievements} isCurrentUser={isCurrentUser} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <ProfileMobileAccordion profile={profile} isCurrentUser={isCurrentUser} />
 
 
                 </div>
