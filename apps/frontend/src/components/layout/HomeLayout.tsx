@@ -31,7 +31,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
         <div className="flex">
             <Sidebar />
             <main className="flex-1 min-w-0 p-2 lg:py-4 md:px-4">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-5xl mx-auto">
                     {children}
                 </div>
             </main>

@@ -73,7 +73,7 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     <div className="relative inline-block shrink-0">
                         <Avatar className="h-24 w-24 border-2 border-card bg-card ring-2 ring-primary/10">
                             <AvatarImage src={profile.avatarUrl ?? undefined} className="object-cover" />
-                            <AvatarFallback className="text-3xl font-bold dark:bg-gray-900 bg-gray-300 flex items-center justify-center">
+                            <AvatarFallback className="text-2xl font-bold dark:bg-gray-900 bg-gray-300 flex items-center justify-center">
                                 <Image src="/devio-logo.png" alt="Avatar" width={64} height={64} />
                             </AvatarFallback>
                         </Avatar>
@@ -93,9 +93,9 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
 
                     <div className="flex justify-between items-start gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold">{fullName}</h1>
+                            <h1 className="text-lg font-bold">{fullName}</h1>
                             {location && (
-                                <p className="text-muted-foreground tracking-wider font-semibold whitespace-nowrap">
+                                <p className="text-muted-foreground tracking-wider text-xs whitespace-nowrap">
                                     {location}
                                 </p>
                             )}
@@ -103,9 +103,9 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
 
                         {/* Mobile Actions (< 1024px) */}
                         {!isCurrentUser && (
-                            <div className="flex lg:hidden items-center gap-4 mt-1">
+                            <div className="flex lg:hidden items-center gap-2 mt-1">
                                 <Button
-                                    className={`h-8 px-3 font-semibold cursor-pointer ${isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
+                                    className={`h-8 px-3 font-semibold cursor-pointer text-xs ${isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
                                     variant={isFollowing ? "secondary" : "brand"}
                                     size="sm"
                                     onClick={handleFollow}
@@ -131,7 +131,7 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     </div>
 
 
-                    <p className="text-muted-foreground max-w-md">{profile.bio}</p>
+                    <p className="text-muted-foreground max-w-md text-xs">{profile.bio}</p>
 
                     {/* Mobile Stats Accordion */}
                     <ProfileMobileAccordion profile={profile} isCurrentUser={isCurrentUser} />

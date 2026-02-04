@@ -14,7 +14,7 @@ export default function ProfileStats({ profile, isCurrentUser }: ProfileStatsPro
     return (
         <div className="flex flex-col gap-4 pb-4">
             {/* Follow Stats */}
-            <div className="grid grid-cols-2 gap-3 text-sm pb-2 border-b">
+            <div className="grid grid-cols-2 gap-3 text-xs pb-2 border-b">
                 <span className="cursor-pointer flex gap-1">
                     <span className="text-foreground">{profile.followersCount.toLocaleString()}</span>
                     <span className="text-muted-foreground font-semibold">follower{profile.followersCount !== 1 ? "s" : ""}</span>
@@ -34,7 +34,7 @@ export default function ProfileStats({ profile, isCurrentUser }: ProfileStatsPro
 
                 <StatCard
                     label="Contributions"
-                    value={profile.contributions.total.toLocaleString()}
+                    value={profile.contributions?.total?.toLocaleString() || 0}
                     onClick={() => setIsContributionsOpen(true)}
                     isInteractive
                 />

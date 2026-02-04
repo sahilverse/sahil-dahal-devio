@@ -22,7 +22,7 @@ export default function ProfileAchievements({ achievements, isCurrentUser }: Pro
     }
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-4">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Achievements</h3>
 
             <div className="flex gap-2 items-center">
@@ -41,7 +41,7 @@ export default function ProfileAchievements({ achievements, isCurrentUser }: Pro
                     )}
                 </div>
 
-                <p className="text-xs ">
+                <p className="text-[12px] max-w-42 ">
                     {summaryText}
                 </p>
             </div>
@@ -52,7 +52,7 @@ export default function ProfileAchievements({ achievements, isCurrentUser }: Pro
                         {achievements.length} unlocked
                     </span>
 
-                    <Button variant="outline" size="sm" className="h-8 rounded-full px-4 text-xs font-semibold cursor-pointer">
+                    <Button variant="secondary" size="sm" className="h-8 px-4 rounded-full text-xs font-semibold cursor-pointer">
                         View All
                     </Button>
                 </div>
