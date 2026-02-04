@@ -22,6 +22,12 @@ export interface UserProfile {
     longestStreak: number;
     activityMap: Array<{ date: string; count: number }>;
 
+    contributions: {
+        total: number,
+        posts: number,
+        comments: number,
+    }
+
     achievements: Array<{
         id: string;
         name: string;

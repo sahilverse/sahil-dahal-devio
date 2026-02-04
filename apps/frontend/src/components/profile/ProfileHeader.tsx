@@ -10,13 +10,10 @@ import { MapPin } from "lucide-react";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
-    isCurrentUser?: boolean;
-    onFollow?: () => void;
-    onEdit?: () => void;
 }
 
 
-export default function ProfileHeader({ profile, isCurrentUser, onFollow, onEdit }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile }: ProfileHeaderProps) {
     const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
     const location = [profile.city, profile.country].filter(Boolean).join(", ");
 
@@ -74,29 +71,24 @@ export default function ProfileHeader({ profile, isCurrentUser, onFollow, onEdit
                             <ImagePlus className="h-4 w-4" />
                         </button>
                     </div>
-
-                    <div className="flex gap-2 mb-2">
-                        {onEdit && (
-                            <button
-                                onClick={onEdit}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
-                            >
-                                Edit Profile
-                            </button>
-                        )}
-                    </div>
                 </div>
 
 
-                <div className="flex flex-col mt-3 gap-1">
-                    <h1 className="text-2xl font-bold">{fullName}</h1>
-                    <p className="text-muted-foreground tracking-wider font-semibold">u/{profile.username}</p>
-                    <div className="flex flex-col mt-2 gap-1">
-                        <p className="text-muted-foreground">{profile.bio}</p>
-                        <p className="text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-4 w-4" /> {location}
-                        </p>
+                <div className="flex flex-col gap-2">
+
+                    <div>
+                        <h1 className="text-2xl font-bold">{fullName}</h1>
+                        {
+                            location && <p className="text-muted-foreground tracking-wider font-semibold">
+                                {location}
+                            </p>
+                        }
                     </div>
+
+
+                    <p className="text-muted-foreground max-w-md">{profile.bio}</p>
+
+
                 </div>
 
             </div>
