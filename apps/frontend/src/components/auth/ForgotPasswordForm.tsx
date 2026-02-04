@@ -59,10 +59,28 @@ export function ForgotPasswordForm() {
         register: registerReset,
         handleSubmit: handleSubmitReset,
         setError: setErrorReset,
+        watch: watchReset,
+        trigger: triggerReset,
         formState: { errors: errorsReset },
     } = useForm<ResetPasswordInput>({
         resolver: zodResolver(resetPasswordSchema),
+        mode: "onTouched",
     });
+
+    const newPassword = watchReset("newPassword");
+    const confirmNewPassword = watchReset("confirmNewPassword");
+
+    const handleNewPasswordBlur = async () => {
+        if (confirmNewPassword) {
+            await triggerReset("confirmNewPassword");
+        }
+    };
+
+    const handleConfirmNewPasswordBlur = async () => {
+        if (newPassword && confirmNewPassword) {
+            await triggerReset("confirmNewPassword");
+        }
+    };
 
     const onIdentifierSubmit = async (data: IdentifierInput) => {
         try {
@@ -178,7 +196,7 @@ export function ForgotPasswordForm() {
                         type="password"
                         placeholder="New Password"
                         error={errorsReset.newPassword?.message}
-                        {...registerReset("newPassword")}
+                        {...registerReset("newPassword", { onBlur: handleNewPasswordBlur })}
                         disabled={isLoading}
                         autoFocus
                     />
@@ -187,7 +205,7 @@ export function ForgotPasswordForm() {
                         type="password"
                         placeholder="Confirm Password"
                         error={errorsReset.confirmNewPassword?.message}
-                        {...registerReset("confirmNewPassword")}
+                        {...registerReset("confirmNewPassword", { onBlur: handleConfirmNewPasswordBlur })}
                         disabled={isLoading}
                     />
                     {errorsReset.root?.message && (
