@@ -25,14 +25,14 @@ export default function NotFound() {
                 <Button
                     variant="outline"
                     size="lg"
-                    className="rounded-full font-semibold px-8 gap-2 cursor-pointer"
+                    className="rounded-full font-semibold h-11 px-8 gap-2 w-48"
                     onClick={() => router.back()}
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Go Back
                 </Button>
 
-                <Button asChild size="lg" className="rounded-full font-semibold px-4 gap-2">
+                <Button asChild size="lg" className="rounded-full font-semibold h-11 px-8 gap-2 w-48">
                     <Link href="/">
                         <Home className="w-4 h-4" />
                         Go Back Home
