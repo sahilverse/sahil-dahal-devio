@@ -65,8 +65,7 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
                 <button
-                    className="absolute top-2 right-2 z-20 bg-[#262626] dark:text-primary text-white 
-               rounded-full p-2 shadow cursor-pointer dark:bg-gray-800"
+                    className="absolute top-2 right-2 z-20 bg-gray-500 dark:bg-gray-800 dark:text-primary text-white rounded-full p-2 shadow cursor-pointer"
                     type="button"
                     onClick={() => setIsBannerModalOpen(true)}
                 >
@@ -100,10 +99,17 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     <div className="flex justify-between items-start gap-4">
                         <div>
                             <h1 className="text-lg font-bold">{fullName}</h1>
-                            {location && (
+                            {location ? (
                                 <p className="text-muted-foreground tracking-wider text-xs whitespace-nowrap">
                                     {location}
                                 </p>
+                            ) : isCurrentUser && (
+                                <button
+                                    className="mt-2 text-muted-foreground/50 hover:text-primary tracking-wider text-xs cursor-pointer flex items-center gap-1 transition-colors mt-0.5"
+                                    type="button"
+                                >
+                                    <Plus className="w-3 h-3" /> Add Location
+                                </button>
                             )}
                         </div>
 
@@ -138,7 +144,16 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     </div>
 
 
-                    <p className="text-muted-foreground max-w-md text-xs">{profile.title}</p>
+                    {profile.title ? (
+                        <p className="text-muted-foreground max-w-md text-xs">{profile.title}</p>
+                    ) : isCurrentUser && (
+                        <button
+                            className="text-muted-foreground/50 hover:text-primary text-xs cursor-pointer flex items-center gap-1 transition-colors w-fit"
+                            type="button"
+                        >
+                            <Plus className="w-3 h-3" /> Add Title
+                        </button>
+                    )}
 
                     {/* Mobile Stats Accordion */}
                     <ProfileMobileAccordion profile={profile} isCurrentUser={isCurrentUser} />
