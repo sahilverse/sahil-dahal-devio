@@ -135,7 +135,6 @@ model Profile {
   userId String @unique @map("user_id")
 
   title   String?
-  bio     String?
   city    String?
   country String?
 
