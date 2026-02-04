@@ -1332,8 +1332,6 @@ model UserSkill {
   userId  String @map("user_id")
   skillId String @map("skill_id")
 
-  endorsements Int @default(0)
-
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
