@@ -285,4 +285,33 @@ export class UserRepository {
         });
         return count > 0;
     }
+    async getWeeklyContributions(userId: string): Promise<{ total: number; posts: number; comments: number }> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const [posts, comments] = await Promise.all([
+            this.prisma.post.count({
+                where: {
+                    authorId: userId,
+                    createdAt: {
+                        gte: sevenDaysAgo
+                    }
+                }
+            }),
+            this.prisma.comment.count({
+                where: {
+                    authorId: userId,
+                    createdAt: {
+                        gte: sevenDaysAgo
+                    }
+                }
+            })
+        ]);
+
+        return {
+            total: posts + comments,
+            posts,
+            comments
+        };
+    }
 }

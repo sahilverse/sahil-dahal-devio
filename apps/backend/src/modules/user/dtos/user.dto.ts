@@ -18,6 +18,12 @@ export interface PublicProfileDTO {
     followingCount: number;
     joinedAt: Date;
 
+    contributions: {
+        total: number;
+        posts: number;
+        comments: number;
+    };
+
     // Computed in Service
     devioAge: string;
     isFollowing: boolean;

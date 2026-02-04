@@ -49,6 +49,7 @@ export class UserService {
         const diffTime = Math.abs(now.getTime() - joinedAt.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const devioAge = this.formatDevioAge(diffDays);
+        const weeklyContributions = await this.userRepository.getWeeklyContributions(user.id);
 
         const baseProfile: PublicProfileDTO = {
             id: user.id,
@@ -61,6 +62,7 @@ export class UserService {
             city: user.profile?.city || null,
             country: user.profile?.country || null,
             socials: user.profile?.socials,
+            contributions: weeklyContributions,
 
             auraPoints: user.auraPoints,
             followersCount: user._count.followers,
@@ -125,21 +127,21 @@ export class UserService {
     private formatDevioAge(days: number): string {
         if (days === 0) return "Just joined";
 
-        if (days < 30) return `${days}d`;
+        if (days < 30) return `${days} d`;
 
         const months = Math.floor(days / 30);
         if (months < 12) {
-            return `${months}m`;
+            return `${months} m`;
         }
 
         const years = Math.floor(months / 12);
         const remainingMonths = months % 12;
 
         if (remainingMonths === 0) {
-            return `${years}y`;
+            return `${years} y`;
         }
 
-        return `${years}y ${remainingMonths}m`;
+        return `${years} y ${remainingMonths} m`;
     }
 
     private calculateProblemStats(submissions: any[]) {
