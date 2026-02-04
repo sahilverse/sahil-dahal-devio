@@ -7,6 +7,8 @@ import HomeLayout from "@/components/layout/HomeLayout";
 import "./globals.css";
 
 
+import NextTopLoader from "nextjs-toploader";
+
 export const metadata: Metadata = {
   title: "Devio",
   description: "An Unified IT Community Platform",
@@ -49,6 +51,7 @@ export default async function RootLayout({
         />
       </head>
       <body>
+        <NextTopLoader color="#5865F2" showSpinner={false} />
         <Providers token={token}>
           <ThemeWatcher />
           <Navbar />
