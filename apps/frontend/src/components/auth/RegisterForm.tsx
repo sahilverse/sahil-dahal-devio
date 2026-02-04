@@ -12,28 +12,43 @@ import { toast } from "sonner";
 import { OAuthButton } from "./OAuthButton";
 import { ChevronLeft } from "lucide-react";
 import { registerSchema, RegisterInput } from "@devio/zod-utils";
+import { useOAuthHandlers } from "@/hooks/useOAuthHandlers";
 
 export function RegisterForm() {
     const [step, setStep] = useState(1);
-    const { switchToLogin, close, switchToVerifyEmail } = useAuthModal();
+    const { switchToLogin, switchToVerifyEmail } = useAuthModal();
     const dispatch = useAppDispatch();
     const { status } = useAppSelector((state) => state.auth);
     const isLoading = status === "loading";
+    const { handleGoogleLogin, handleGithubLogin } = useOAuthHandlers();
 
     const {
         register,
         handleSubmit,
         trigger,
-        watch,
         setError,
-        formState: { errors, isValid },
+        clearErrors,
+        getValues,
+        formState: { errors, isValid, dirtyFields },
     } = useForm<RegisterInput>({
         resolver: zodResolver(registerSchema),
-        mode: "onChange",
+        mode: "onTouched",
     });
 
-    const email = watch("email");
-    const username = watch("username");
+    const handlePasswordBlur = async () => {
+        const confirmPassword = getValues("confirmPassword");
+        if (confirmPassword) {
+            await trigger("confirmPassword");
+        }
+    };
+
+    const handleConfirmPasswordBlur = async () => {
+        const password = getValues("password");
+        const confirmPassword = getValues("confirmPassword");
+        if (password && confirmPassword) {
+            await trigger("confirmPassword");
+        }
+    };
 
     const handleNext = async () => {
         let fieldsToValidate: (keyof RegisterInput)[] = [];
@@ -42,7 +57,15 @@ export function RegisterForm() {
 
         const isStepValid = await trigger(fieldsToValidate);
         if (isStepValid) {
+            clearErrors();
             setStep((prev) => prev + 1);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" && step !== 3) {
+            e.preventDefault();
+            handleNext();
         }
     };
 
@@ -104,34 +127,6 @@ export function RegisterForm() {
         }
     };
 
-    const handleGoogleLogin = () => {
-        const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-        const options = {
-            redirect_uri: `${window.location.origin}/auth/google/callback`,
-            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
-            access_type: "offline",
-            response_type: "code",
-            prompt: "consent",
-            scope: [
-                "https://www.googleapis.com/auth/userinfo.profile",
-                "https://www.googleapis.com/auth/userinfo.email",
-            ].join(" "),
-        };
-        const qs = new URLSearchParams(options);
-        window.location.assign(`${rootUrl}?${qs.toString()}`);
-    };
-
-    const handleGithubLogin = () => {
-        const rootUrl = "https://github.com/login/oauth/authorize";
-        const options = {
-            client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID as string,
-            redirect_uri: `${window.location.origin}/auth/github/callback`,
-            scope: "user:email",
-        };
-        const qs = new URLSearchParams(options);
-        window.location.assign(`${rootUrl}?${qs.toString()}`);
-    };
-
     return (
         <div className="space-y-4">
             <div className="space-y-2">
@@ -170,7 +165,7 @@ export function RegisterForm() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown} className="space-y-3">
                 {errors.root?.message && (
                     <div className="p-3 bg-destructive/15 border border-destructive/50 rounded-md text-xs text-destructive text-center font-medium">
                         {errors.root.message}
@@ -191,7 +186,7 @@ export function RegisterForm() {
                         <Button
                             type="button"
                             onClick={handleNext}
-                            disabled={!email || !!errors.email}
+                            disabled={!dirtyFields.email || !!errors.email}
                             className="w-full bg-brand-primary hover:bg-brand-pressed text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Continue
@@ -212,7 +207,7 @@ export function RegisterForm() {
                         <Button
                             type="button"
                             onClick={handleNext}
-                            disabled={!username || !!errors.username}
+                            disabled={!dirtyFields.username || !!errors.username}
                             className="w-full bg-brand-primary hover:bg-brand-pressed text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Continue
@@ -245,7 +240,7 @@ export function RegisterForm() {
                             type="password"
                             placeholder="Password"
                             error={errors.password?.message}
-                            {...register("password")}
+                            {...register("password", { onBlur: handlePasswordBlur })}
                             disabled={isLoading}
                         />
                         <Input
@@ -253,7 +248,7 @@ export function RegisterForm() {
                             type="password"
                             placeholder="Confirm Password"
                             error={errors.confirmPassword?.message}
-                            {...register("confirmPassword")}
+                            {...register("confirmPassword", { onBlur: handleConfirmPasswordBlur })}
                             disabled={isLoading}
                         />
 
