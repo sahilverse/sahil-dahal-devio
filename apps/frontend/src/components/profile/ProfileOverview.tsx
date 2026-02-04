@@ -2,6 +2,7 @@
 
 import { UserProfile } from "@/types/profile";
 import ProfileHeatmap from "./ProfileHeatmap";
+import ProfileActivityStats from "./ProfileActivityStats";
 import { motion } from "motion/react";
 
 interface ProfileOverviewProps {
@@ -17,6 +18,10 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
             className="space-y-6"
         >
             <ProfileHeatmap data={profile.activityMap} />
+            <ProfileActivityStats
+                problemStats={profile.problemStats}
+                roomStats={profile.roomStats}
+            />
         </motion.div>
     );
 }
