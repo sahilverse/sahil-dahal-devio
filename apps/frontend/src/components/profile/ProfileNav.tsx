@@ -23,7 +23,14 @@ export default function ProfileNav({
 
     const handleSelect = (item: string) => {
         const params = new URLSearchParams(searchParams.toString());
-        params.set("view", item.toLowerCase());
+        const value = item.toLowerCase();
+
+        if (value === "overview") {
+            params.delete("view");
+        } else {
+            params.set("view", value);
+        }
+
         router.replace(`?${params.toString()}`, { scroll: false });
     };
 
