@@ -14,8 +14,7 @@ export default function TestProfilePage() {
 
     const { data: profile, isLoading, isError } = useUserProfile(username);
 
-    const isCurrentUser = username === user?.username;
-
+    const isCurrentUser = profile?.id === user?.id;
 
     if (isLoading) return <ProfileSkeleton />;
     if (!profile) return notFound();
