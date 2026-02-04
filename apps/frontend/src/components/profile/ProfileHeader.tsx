@@ -10,10 +10,11 @@ import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
 import ProfileStats from "./ProfileStats";
 import ProfileActionsDropdown from "./ProfileActionsDropdown";
+import ProfileAchievements from "./ProfileAchievements";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
-    isCurrentUser?: boolean;
+    isCurrentUser: boolean;
 }
 
 export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderProps) {
@@ -32,6 +33,8 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
 
     const handleFollow = () => {
         setIsFollowing(!isFollowing);
+
+        // TODO: Implement follow/unfollow logic
     };
 
     const handleShare = () => {
@@ -95,7 +98,7 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                         <div>
                             <h1 className="text-2xl font-bold">{fullName}</h1>
                             {location && (
-                                <p className="text-muted-foreground tracking-wider font-semibold">
+                                <p className="text-muted-foreground tracking-wider font-semibold whitespace-nowrap">
                                     {location}
                                 </p>
                             )}
@@ -143,13 +146,18 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                             <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isAccordionOpen ? "rotate-180" : ""}`} />
                         </button>
 
-                        {isAccordionOpen && (
-                            <div className="p-4 pt-0 border-t bg-accent/20">
-                                <div className="pt-4">
-                                    <ProfileStats profile={profile} isCurrentUser={isCurrentUser} />
+                        <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isAccordionOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                            <div className="overflow-hidden">
+                                <div className="p-4 pt-0 border-t bg-accent/20">
+                                    <div className="pt-4 space-y-4 divide-y">
+                                        <ProfileStats profile={profile} isCurrentUser={isCurrentUser} />
+                                        <div>
+                                            <ProfileAchievements achievements={profile.achievements} isCurrentUser={isCurrentUser} />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
 
 

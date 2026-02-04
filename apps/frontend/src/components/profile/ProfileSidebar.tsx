@@ -5,10 +5,11 @@ import { Check, Share2, Plus, UserMinus, MessageCircle, MoreHorizontal } from "l
 import ProfileActionsDropdown from "./ProfileActionsDropdown";
 import { toast } from "sonner";
 import ProfileStats from "./ProfileStats";
+import ProfileAchievements from "./ProfileAchievements";
 
 interface ProfileSidebarProps {
     profile: UserProfile;
-    isCurrentUser?: boolean;
+    isCurrentUser: boolean;
 }
 
 export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSidebarProps) {
@@ -27,7 +28,7 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
     };
 
     return (
-        <div className="flex-col gap-6 w-full hidden lg:flex">
+        <div className="flex-col gap-6 w-full hidden lg:flex divide-y-1 border border-card rounded-lg p-4 pt-2 dark:border-secondary border-gray-700/20">
             {/* Username & Actions */}
             <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
@@ -71,6 +72,7 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
             </div>
 
             <ProfileStats profile={profile} isCurrentUser={isCurrentUser} />
+            <ProfileAchievements achievements={profile.achievements} isCurrentUser={isCurrentUser} />
         </div >
     );
 }

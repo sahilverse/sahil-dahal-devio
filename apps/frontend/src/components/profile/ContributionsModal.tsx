@@ -14,7 +14,9 @@ export default function ContributionsModal({ isOpen, onClose, contributions }: C
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200
+        
+        p-2 md:p-0">
             <div className="relative w-full max-w-md bg-card border rounded-lg shadow-lg p-6 animate-in zoom-in-95 duration-200">
                 <button
                     onClick={onClose}
@@ -45,7 +47,7 @@ export default function ContributionsModal({ isOpen, onClose, contributions }: C
                 </div>
             </div>
 
-            {/* Backdrop click to close */}
+            {/* Backdrop*/}
             <div className="absolute inset-0 -z-10" onClick={onClose} />
         </div>
     );
