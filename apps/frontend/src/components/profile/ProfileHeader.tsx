@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import ProfileActionsDropdown from "./ProfileActionsDropdown";
 import ProfileMobileAccordion from "./ProfileMobileAccordion";
 import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
+import ProfileNav from "./ProfileNav";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
@@ -162,6 +163,10 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                 </div>
 
             </div>
+
+            <ProfileNav
+                isCurrentUser={isCurrentUser}
+            />
 
             <ImageUploadModal
                 isOpen={isAvatarModalOpen}

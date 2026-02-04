@@ -24,7 +24,10 @@ export default function TestProfilePage() {
         <div>
             <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
                 <div className="min-w-0">
-                    <ProfileHeader profile={profile} isCurrentUser={isCurrentUser} />
+                    <ProfileHeader
+                        profile={profile}
+                        isCurrentUser={isCurrentUser}
+                    />
                 </div>
                 <div>
                     <ProfileSidebar profile={profile} isCurrentUser={isCurrentUser} />
