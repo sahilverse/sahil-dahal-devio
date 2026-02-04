@@ -5,7 +5,7 @@ export interface UserProfile {
     lastName: string | null;
     avatarUrl: string | null;
     bannerUrl: string | null;
-    bio: string | null;
+    title: string | null;
     city: string | null;
     country: string | null;
     socials: Record<string, string> | null;

@@ -131,7 +131,7 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     </div>
 
 
-                    <p className="text-muted-foreground max-w-md text-xs">{profile.bio}</p>
+                    <p className="text-muted-foreground max-w-md text-xs">{profile.title}</p>
 
                     {/* Mobile Stats Accordion */}
                     <ProfileMobileAccordion profile={profile} isCurrentUser={isCurrentUser} />
