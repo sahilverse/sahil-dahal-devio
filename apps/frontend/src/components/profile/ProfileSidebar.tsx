@@ -8,6 +8,7 @@ import ProfileStats from "./ProfileStats";
 import ProfileAchievements from "./ProfileAchievements";
 import ProfileSocials from "./ProfileSocials";
 import ProfileSettingsSection from "./ProfileSettingsSection";
+import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
 
 interface ProfileSidebarProps {
     profile: UserProfile;
@@ -15,8 +16,11 @@ interface ProfileSidebarProps {
 }
 
 export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSidebarProps) {
-    const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
     const [hasCopied, setHasCopied] = useState(false);
+
+    const { mutate: followUser, isPending: isFollowPending } = useFollowUser(profile.username);
+    const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
+    const isPending = isFollowPending || isUnfollowPending;
 
     const handleShare = () => {
         navigator.clipboard.writeText(window.location.href);
@@ -26,7 +30,11 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
     };
 
     const handleFollow = () => {
-        setIsFollowing(!isFollowing);
+        if (profile.isFollowing) {
+            unfollowUser();
+        } else {
+            followUser();
+        }
     };
 
     return (
@@ -55,11 +63,12 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
                     {!isCurrentUser && (
                         <div className="hidden lg:flex items-center gap-2">
                             <Button
-                                className={`flex-1 font-semibold cursor-pointer text-xs ${isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
-                                variant={isFollowing ? "secondary" : "brand"}
+                                disabled={isPending}
+                                className={`flex-1 font-semibold cursor-pointer text-xs ${profile.isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
+                                variant={profile.isFollowing ? "secondary" : "brand"}
                                 onClick={handleFollow}
                             >
-                                {isFollowing ? (
+                                {profile.isFollowing ? (
                                     <span className="flex items-center gap-2"><UserMinus className="w-4 h-4" /> Unfollow</span>
                                 ) : (
                                     <span className="flex items-center gap-2"><Plus className="w-4 h-4" /> Follow</span>

@@ -10,6 +10,7 @@ import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
 import ProfileActionsDropdown from "./ProfileActionsDropdown";
 import ProfileMobileAccordion from "./ProfileMobileAccordion";
+import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
@@ -20,18 +21,23 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
     const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
     const location = [profile.city, profile.country].filter(Boolean).join(", ");
 
-    const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+
+    const { mutate: followUser, isPending: isFollowPending } = useFollowUser(profile.username);
+    const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
+    const isPending = isFollowPending || isUnfollowPending;
 
     const handleSave = (file: File) => {
         console.log("Selected file:", file);
     };
 
     const handleFollow = () => {
-        setIsFollowing(!isFollowing);
-
-        // TODO: Implement follow/unfollow logic
+        if (profile.isFollowing) {
+            unfollowUser();
+        } else {
+            followUser();
+        }
     };
 
     const handleShare = () => {
@@ -105,12 +111,13 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                         {!isCurrentUser && (
                             <div className="flex lg:hidden items-center gap-2 mt-1">
                                 <Button
-                                    className={`h-8 px-3 font-semibold cursor-pointer text-xs ${isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
-                                    variant={isFollowing ? "secondary" : "brand"}
+                                    disabled={isPending}
+                                    className={`h-8 px-3 font-semibold cursor-pointer text-xs ${profile.isFollowing ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""}`}
+                                    variant={profile.isFollowing ? "secondary" : "brand"}
                                     size="sm"
                                     onClick={handleFollow}
                                 >
-                                    {isFollowing ? (
+                                    {profile.isFollowing ? (
                                         <span className="flex items-center gap-1.5"><UserMinus className="w-3.5 h-3.5" /> Unfollow</span>
                                     ) : (
                                         <span className="flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> Follow</span>

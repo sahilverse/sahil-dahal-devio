@@ -46,7 +46,7 @@ export function useFollowUser(username: string) {
             }
         },
         onSuccess: () => {
-            toast.success(`Followed @${username}`);
+            toast.success(`Followed u/${username}`);
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
     });
@@ -81,7 +81,7 @@ export function useUnfollowUser(username: string) {
             }
         },
         onSuccess: () => {
-            toast.success(`Unfollowed @${username}`);
+            toast.success(`Unfollowed u/${username}`);
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
     });
