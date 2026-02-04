@@ -55,8 +55,10 @@ export default function TestProfilePage() {
                         )}
                     </div>
                 </div>
-                <div>
-                    <ProfileSidebar profile={profile} isCurrentUser={isCurrentUser} />
+                <div className="self-start">
+                    <div className="fixed">
+                        <ProfileSidebar profile={profile} isCurrentUser={isCurrentUser} />
+                    </div>
                 </div>
             </div>
         </div>
