@@ -33,6 +33,7 @@ export function LoginForm() {
         try {
             await dispatch(login({ identifier: data.identifier, password: data.password })).unwrap();
             toast.success("Logged in successfully!");
+            window.location.reload();
             close();
         } catch (err: any) {
             console.log(err);
