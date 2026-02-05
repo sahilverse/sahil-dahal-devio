@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import Cropper, { Area, Point } from "react-easy-crop";
 import { getCroppedImg } from "@/utils/cropImage";
@@ -21,7 +21,6 @@ export default function ImageUploadModal({
     isOpen,
     onClose,
     onSave,
-    currentUrl,
     variant,
     title,
     accept = "image/*",
