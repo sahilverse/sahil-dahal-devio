@@ -93,7 +93,10 @@ export class UserService {
                 return new Date(log.date) >= oneYearAgo;
             }),
 
-            achievements: user.userAchievements.map((ua: any) => ua.achievement),
+            achievements: {
+                latest: user.userAchievements.map((ua: any) => ua.achievement),
+                other: Math.max(0, user._count.userAchievements - 3),
+            },
 
             problemStats: this.calculateProblemStats(user.submissions),
             roomStats: this.calculateRoomStats(user.cyberRoomEnrollments),

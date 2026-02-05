@@ -219,7 +219,11 @@ export class UserRepository {
                 certifications: { orderBy: { issueDate: 'desc' } },
                 projects: { orderBy: { startDate: 'desc' } },
                 skills: true,
-                userAchievements: { include: { achievement: true } },
+                userAchievements: {
+                    include: { achievement: true },
+                    orderBy: { unlockedAt: 'desc' },
+                    take: 3
+                },
                 activityLogs: {
                     where: {
                         date: {
@@ -231,7 +235,8 @@ export class UserRepository {
                 _count: {
                     select: {
                         followers: true,
-                        following: true
+                        following: true,
+                        userAchievements: true
                     }
                 },
                 submissions: {

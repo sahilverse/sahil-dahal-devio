@@ -54,6 +54,7 @@ export type UserProfile = Prisma.UserGetPayload<{
             select: {
                 followers: true;
                 following: true;
+                userAchievements: true;
             };
         };
         submissions: {

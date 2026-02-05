@@ -103,7 +103,10 @@ export interface PublicProfileDTO {
     longestStreak: number;
     activityMap: ActivityLogDTO[];
 
-    achievements: AchievementDTO[];
+    achievements: {
+        latest: AchievementDTO[];
+        other: number;
+    };
 
     problemStats: {
         total: number;
