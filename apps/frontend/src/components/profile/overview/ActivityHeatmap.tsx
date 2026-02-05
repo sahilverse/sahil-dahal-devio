@@ -120,7 +120,7 @@ export default function ActivityHeatmap({ username }: ActivityHeatmapProps) {
             </div>
 
             {/* Calendar */}
-            <div className="overflow-x-auto min-h-45">
+            <div className="overflow-x-auto min-h-30">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">Loading activity...</div>
                 ) : isError ? (
