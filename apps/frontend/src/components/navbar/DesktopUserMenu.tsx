@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FileText, Settings, LogOut, Sun, Moon, Monitor, Trophy, LucideIcon } from "lucide-react";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setTheme } from "@/slices/theme";
 import { AuthUser } from "@/slices/auth/authTypes";
 import UserAvatar from "./UserAvatar";
@@ -43,6 +43,7 @@ const THEME_OPTIONS = [
 
 export default function DesktopUserMenu({ user, onLogout }: DesktopUserMenuProps) {
     const dispatch = useAppDispatch();
+    const { theme } = useAppSelector((state) => state.theme);
 
     return (
         <DropdownMenu>
@@ -51,10 +52,10 @@ export default function DesktopUserMenu({ user, onLogout }: DesktopUserMenuProps
                     <UserAvatar user={user} size="md" />
                 </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 p-2 space-y-2" align="end">
+            <DropdownMenuContent className="w-72 p-2 space-y-2 bg-card" align="end">
                 <DropdownMenuItem className="p-0 focus:bg-transparent cursor-pointer" asChild>
                     <Link href={`/u/${user.username}`}>
-                        <div className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full">
+                        <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors w-full">
                             <div className="relative shrink-0">
                                 <UserAvatar user={user} size="md" />
                                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full" />
@@ -84,9 +85,13 @@ export default function DesktopUserMenu({ user, onLogout }: DesktopUserMenuProps
                             <Monitor className="mr-3 h-6 w-6 text-gray-500" />
                             <span className="text-sm font-medium">Display Mode</span>
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
+                        <DropdownMenuSubContent className="bg-card">
                             {THEME_OPTIONS.map(({ value, icon: Icon, label }) => (
-                                <DropdownMenuItem key={value} onClick={() => dispatch(setTheme(value))} className="cursor-pointer">
+                                <DropdownMenuItem
+                                    key={value}
+                                    onClick={() => dispatch(setTheme(value))}
+                                    className={`cursor-pointer ${theme === value ? "text-brand-primary bg-muted/50" : ""}`}
+                                >
                                     <Icon className="mr-2 h-4 w-4" />
                                     <span className="font-medium">{label}</span>
                                 </DropdownMenuItem>

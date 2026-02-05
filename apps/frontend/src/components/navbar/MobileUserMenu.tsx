@@ -53,59 +53,59 @@ export default function MobileUserMenu({ user, onClose, onLogout }: MobileUserMe
                 onClick={handleClose}
             />
             <div
-                className={`fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white dark:bg-[#0B0B0F] z-50 lg:hidden overflow-y-auto transition-transform duration-300 ease-out ${isVisible ? "translate-x-0" : "translate-x-full"}`}
+                className={`fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-card border-l border-border z-50 lg:hidden overflow-y-auto transition-transform duration-300 ease-out ${isVisible ? "translate-x-0" : "translate-x-full"}`}
             >
                 <div className="p-4">
-                    <button onClick={handleClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-                        <X className="w-5 h-5 text-gray-500" />
+                    <button onClick={handleClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted/50 transition-colors cursor-pointer">
+                        <X className="w-5 h-5 text-muted-foreground" />
                     </button>
 
-                    <Link href={`/u/${user.username}`} onClick={handleClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <Link href={`/u/${user.username}`} onClick={handleClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="relative">
                             <UserAvatar user={user} size="lg" />
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full" />
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 dark:text-gray-100">View Profile</span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">u/{user.username}</span>
+                            <span className="font-semibold text-foreground">View Profile</span>
+                            <span className="text-sm text-muted-foreground">u/{user.username}</span>
                         </div>
                     </Link>
 
-                    <div className="h-px bg-gray-200 dark:bg-gray-800 my-3" />
+                    <div className="h-px bg-border my-3" />
 
                     <div className="space-y-1">
                         {MENU_ITEMS.map(({ icon: Icon, label, href }) => (
-                            <Link key={label} href={href} onClick={handleClose} className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                                <Icon className="w-6 h-6 text-gray-500" />
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                            <Link key={label} href={href} onClick={handleClose} className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-muted/50 transition-colors">
+                                <Icon className="w-6 h-6 text-muted-foreground" />
+                                <span className="font-medium text-foreground">{label}</span>
                             </Link>
                         ))}
                     </div>
 
-                    <div className="h-px bg-gray-200 dark:bg-gray-800 my-3" />
+                    <div className="h-px bg-border my-3" />
 
                     <div className="flex items-center justify-between px-3 py-3 rounded-lg">
                         <div className="flex items-center gap-4">
-                            <Monitor className="w-6 h-6 text-gray-500" />
-                            <span className="font-medium text-gray-900 dark:text-gray-100">Display Mode</span>
+                            <Monitor className="w-6 h-6 text-muted-foreground" />
+                            <span className="font-medium text-foreground">Display Mode</span>
                         </div>
-                        <div className="flex bg-gray-200 dark:bg-gray-800 rounded-full p-0.5">
+                        <div className="flex bg-muted rounded-full p-0.5">
                             {THEME_OPTIONS.map(({ value, icon: Icon }) => (
                                 <button
                                     key={value}
                                     onClick={() => dispatch(setTheme(value))}
-                                    className={`p-2 rounded-full transition-colors cursor-pointer ${theme === value ? "bg-white dark:bg-gray-600 shadow-sm" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
+                                    className={`p-2 rounded-full transition-colors cursor-pointer ${theme === value ? "bg-background shadow-sm text-brand-primary" : "hover:bg-muted/50 text-muted-foreground"}`}
                                     aria-label={`${value} mode`}
                                 >
-                                    <Icon className={`w-4 h-4 ${theme === value ? "text-brand-primary" : "text-gray-500 dark:text-gray-400"}`} />
+                                    <Icon className="w-4 h-4" />
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="h-px bg-gray-200 dark:bg-gray-800 my-3" />
+                    <div className="h-px bg-border my-3" />
 
-                    <button onClick={onLogout} className="w-full flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-red-600 dark:text-red-400 cursor-pointer">
+                    <button onClick={onLogout} className="w-full flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-muted/50 transition-colors text-red-600 dark:text-red-400 cursor-pointer">
                         <LogOut className="w-6 h-6" />
                         <span className="font-medium">Log Out</span>
                     </button>

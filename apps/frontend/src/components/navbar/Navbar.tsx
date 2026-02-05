@@ -25,6 +25,7 @@ import {
 
 export default function Navbar() {
     const { user } = useAppSelector((state) => state.auth);
+    const { theme } = useAppSelector((state) => state.theme);
     const dispatch = useAppDispatch();
     const { openLogin } = useAuthModal();
     const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -117,31 +118,40 @@ export default function Navbar() {
                                         <MoreVertical className="w-5 h-5" />
                                     </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56 p-2 space-y-1 bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800 shadow-lg rounded-xl">
+                                <DropdownMenuContent align="end" className="w-56 p-2 space-y-1 bg-card">
                                     <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger className="cursor-pointer py-2.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                                            <Monitor className="mr-3 h-4 w-4 text-gray-500" />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Display Mode</span>
+                                        <DropdownMenuSubTrigger className="cursor-pointer py-2.5 px-3 rounded-lg">
+                                            <Monitor className="mr-3 h-4 w-4 text-muted-foreground" />
+                                            <span className="text-sm font-medium">Display Mode</span>
                                         </DropdownMenuSubTrigger>
-                                        <DropdownMenuSubContent className="bg-white dark:bg-bg-dark border border-gray-200 dark:border-gray-800">
-                                            <DropdownMenuItem onClick={() => dispatch(setTheme("light"))} className="cursor-pointer py-2">
+                                        <DropdownMenuSubContent className="bg-card">
+                                            <DropdownMenuItem
+                                                onClick={() => dispatch(setTheme("light"))}
+                                                className={`cursor-pointer py-2 ${theme === "light" ? "text-brand-primary bg-muted/50" : ""}`}
+                                            >
                                                 <Sun className="mr-2 h-4 w-4" />
                                                 <span className="font-medium">Light</span>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => dispatch(setTheme("dark"))} className="cursor-pointer py-2">
+                                            <DropdownMenuItem
+                                                onClick={() => dispatch(setTheme("dark"))}
+                                                className={`cursor-pointer py-2 ${theme === "dark" ? "text-brand-primary bg-muted/50" : ""}`}
+                                            >
                                                 <Moon className="mr-2 h-4 w-4" />
                                                 <span className="font-medium">Dark</span>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => dispatch(setTheme("system"))} className="cursor-pointer py-2">
+                                            <DropdownMenuItem
+                                                onClick={() => dispatch(setTheme("system"))}
+                                                className={`cursor-pointer py-2 ${theme === "system" ? "text-brand-primary bg-muted/50" : ""}`}
+                                            >
                                                 <Monitor className="mr-2 h-4 w-4" />
                                                 <span className="font-medium">System</span>
                                             </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                     </DropdownMenuSub>
 
-                                    <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800" />
+                                    <DropdownMenuSeparator />
 
-                                    <DropdownMenuItem onClick={openLogin} className="cursor-pointer py-2.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    <DropdownMenuItem onClick={openLogin} className="cursor-pointer py-2.5 px-3 rounded-lg">
                                         <LogIn className="mr-3 h-4 w-4 text-brand-primary" />
                                         <span className="text-sm font-medium text-brand-primary">Log In</span>
                                     </DropdownMenuItem>
