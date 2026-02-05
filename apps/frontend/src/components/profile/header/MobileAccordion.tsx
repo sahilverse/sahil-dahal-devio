@@ -26,7 +26,7 @@ export default function MobileAccordion({ profile, isCurrentUser }: MobileAccord
                     <div className="p-4 pt-0 border-t bg-accent/20">
                         <div className="pt-4 space-y-4 divide-y">
                             <Stats profile={profile} isCurrentUser={isCurrentUser} />
-                            <Socials socials={profile.socials} isCurrentUser={isCurrentUser} />
+                            <Socials profile={profile} isCurrentUser={isCurrentUser} />
                             <SettingsSection isCurrentUser={isCurrentUser} />
                         </div>
                     </div>

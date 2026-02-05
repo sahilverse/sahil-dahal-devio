@@ -110,7 +110,7 @@ export default function Sidebar({ profile, isCurrentUser }: SidebarProps) {
 
                     <Stats profile={profile} isCurrentUser={isCurrentUser} />
                     <Achievements achievements={profile.achievements} isCurrentUser={isCurrentUser} />
-                    <Socials socials={profile.socials} isCurrentUser={isCurrentUser} />
+                    <Socials profile={profile} isCurrentUser={isCurrentUser} />
                     <SettingsSection isCurrentUser={isCurrentUser} />
                 </div>
             </div >

@@ -1,5 +1,11 @@
 import * as z from "zod";
 
+const socialUrlSchema = z
+    .url("Invalid URL")
+    .or(z.literal(""))
+    .nullable()
+    .transform((val) => (val === "" ? null : val));
+
 export const updateProfileSchema = z.object({
     title: z
         .string()
@@ -28,13 +34,13 @@ export const updateProfileSchema = z.object({
         .nullable(),
     socials: z
         .object({
-            github: z.url().optional().nullable(),
-            linkedin: z.url().optional().nullable(),
-            twitter: z.url().optional().nullable(),
-            facebook: z.url().optional().nullable(),
-            instagram: z.url().optional().nullable(),
-            youtube: z.url().optional().nullable(),
-            website: z.url().optional().nullable(),
+            github: socialUrlSchema,
+            linkedin: socialUrlSchema,
+            twitter: socialUrlSchema,
+            facebook: socialUrlSchema,
+            instagram: socialUrlSchema,
+            youtube: socialUrlSchema,
+            website: socialUrlSchema,
         })
         .optional()
         .nullable(),
@@ -83,6 +89,20 @@ export const updateProfileLocationSchema = z
             path: ["city"],
         }
     );
+
+export const updateProfileSocialsSchema = z.object({
+    socials: z.object({
+        github: socialUrlSchema,
+        linkedin: socialUrlSchema,
+        twitter: socialUrlSchema,
+        facebook: socialUrlSchema,
+        instagram: socialUrlSchema,
+        youtube: socialUrlSchema,
+        website: socialUrlSchema,
+    }).optional(),
+});
+
+export type UpdateProfileSocialsInput = z.infer<typeof updateProfileSocialsSchema>;
 
 export const updateNamesSchema = z.object({
     firstName: z

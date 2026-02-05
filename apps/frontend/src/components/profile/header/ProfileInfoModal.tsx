@@ -113,11 +113,11 @@ export default function ProfileInfoModal({
                                     </span>
                                 </div>
                                 <div className="relative group">
-                                    <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors z-10" />
+                                    <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60 dark:text-muted-foreground/40 group-focus-within:text-primary dark:group-focus-within:text-foreground transition-colors duration-200 z-10" />
                                     <Textarea
                                         id="title"
                                         placeholder="e.g. Senior Software Engineer"
-                                        className="pl-10 min-h-[44px] max-h-[300px] h-[44px] bg-muted/20 border-muted/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm py-3 resize-none overflow-hidden"
+                                        className="pl-10 min-h-[44px] max-h-[300px] h-[44px] bg-muted/60 dark:bg-muted/20 border-muted dark:border-muted/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm py-3 resize-none overflow-hidden"
                                         {...titleRegisterProps}
                                         ref={(e) => {
                                             formTitleRef(e);
@@ -175,11 +175,11 @@ export default function ProfileInfoModal({
                                         City
                                     </Label>
                                     <div className="relative group">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 dark:text-muted-foreground/40 group-focus-within:text-primary dark:group-focus-within:text-foreground transition-colors duration-200" />
                                         <Input
                                             id="city"
                                             placeholder="e.g. London"
-                                            className="pl-10 h-11 bg-muted/20 border-muted/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm"
+                                            className="pl-10 h-11 bg-muted/60 dark:bg-muted/20 border-muted dark:border-muted/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm"
                                             {...register("city")}
                                             autoFocus
                                         />
@@ -196,11 +196,11 @@ export default function ProfileInfoModal({
                                         Country
                                     </Label>
                                     <div className="relative group">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 dark:text-muted-foreground/40 group-focus-within:text-primary dark:group-focus-within:text-foreground transition-colors duration-200" />
                                         <Input
                                             id="country"
                                             placeholder="e.g. UK"
-                                            className="pl-10 h-11 bg-muted/20 border-muted/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm"
+                                            className="pl-10 h-11 bg-muted/60 dark:bg-muted/20 border-muted dark:border-muted/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm"
                                             {...register("country")}
                                         />
                                     </div>
