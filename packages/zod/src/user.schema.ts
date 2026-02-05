@@ -25,13 +25,13 @@ export const updateProfileSchema = z.object({
         .nullable(),
     socials: z
         .object({
-            github: z.string().url().optional().nullable(),
-            linkedin: z.string().url().optional().nullable(),
-            twitter: z.string().url().optional().nullable(),
-            facebook: z.string().url().optional().nullable(),
-            instagram: z.string().url().optional().nullable(),
-            youtube: z.string().url().optional().nullable(),
-            website: z.string().url().optional().nullable(),
+            github: z.url().optional().nullable(),
+            linkedin: z.url().optional().nullable(),
+            twitter: z.url().optional().nullable(),
+            facebook: z.url().optional().nullable(),
+            instagram: z.url().optional().nullable(),
+            youtube: z.url().optional().nullable(),
+            website: z.url().optional().nullable(),
         })
         .optional()
         .nullable(),
