@@ -1,21 +1,19 @@
 import { Project } from "@/types/profile";
 import { formatDateRange } from "@/lib/date";
 import { FolderGit2, ExternalLink } from "lucide-react";
-import AboutSection from "./AboutSection";
-import ExpandableText from "./ExpandableText";
+import AboutSection from "../AboutSection";
+import ExpandableText from "../ExpandableText";
 
 interface ProjectSectionProps {
     projects: Project[];
     isCurrentUser?: boolean;
     onAdd?: () => void;
-    onEdit?: () => void;
 }
 
 export default function ProjectSection({
     projects,
     isCurrentUser,
     onAdd,
-    onEdit,
 }: ProjectSectionProps) {
     return (
         <AboutSection
@@ -25,7 +23,6 @@ export default function ProjectSection({
             emptyMessage="No projects added yet"
             isCurrentUser={isCurrentUser}
             onAdd={onAdd}
-            onEdit={onEdit}
         >
             {projects.map((project) => (
                 <div key={project.id} className="flex gap-4">

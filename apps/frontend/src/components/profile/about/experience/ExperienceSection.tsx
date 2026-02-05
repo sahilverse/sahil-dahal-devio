@@ -1,8 +1,8 @@
 import { Experience } from "@/types/profile";
 import { formatDateRange, calculateDuration } from "@/lib/date";
 import { Briefcase, MapPin, Pencil } from "lucide-react";
-import AboutSection from "./AboutSection";
-import ExpandableText from "./ExpandableText";
+import AboutSection from "../AboutSection";
+import ExpandableText from "../ExpandableText";
 import { EMPLOYMENT_TYPE_LABELS } from "@/lib/constants";
 
 interface ExperienceSectionProps {

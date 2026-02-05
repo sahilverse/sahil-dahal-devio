@@ -1,20 +1,18 @@
 import { Certification } from "@/types/profile";
 import { formatDate } from "@/lib/date";
 import { Award, ExternalLink } from "lucide-react";
-import AboutSection from "./AboutSection";
+import AboutSection from "../AboutSection";
 
 interface CertificationSectionProps {
     certifications: Certification[];
     isCurrentUser?: boolean;
     onAdd?: () => void;
-    onEdit?: () => void;
 }
 
 export default function CertificationSection({
     certifications,
     isCurrentUser,
     onAdd,
-    onEdit,
 }: CertificationSectionProps) {
     return (
         <AboutSection
@@ -24,7 +22,6 @@ export default function CertificationSection({
             emptyMessage="No certifications added yet"
             isCurrentUser={isCurrentUser}
             onAdd={onAdd}
-            onEdit={onEdit}
         >
             {certifications.map((cert) => (
                 <div key={cert.id} className="flex gap-4">

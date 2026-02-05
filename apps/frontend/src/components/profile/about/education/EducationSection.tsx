@@ -1,20 +1,18 @@
 import { Education } from "@/types/profile";
 import { formatDateRange } from "@/lib/date";
 import { GraduationCap } from "lucide-react";
-import AboutSection from "./AboutSection";
+import AboutSection from "../AboutSection";
 
 interface EducationSectionProps {
     educations: Education[];
     isCurrentUser?: boolean;
     onAdd?: () => void;
-    onEdit?: () => void;
 }
 
 export default function EducationSection({
     educations,
     isCurrentUser,
     onAdd,
-    onEdit,
 }: EducationSectionProps) {
     return (
         <AboutSection
@@ -24,7 +22,6 @@ export default function EducationSection({
             emptyMessage="No education added yet"
             isCurrentUser={isCurrentUser}
             onAdd={onAdd}
-            onEdit={onEdit}
         >
             {educations.map((edu) => (
                 <div key={edu.id} className="flex gap-4">

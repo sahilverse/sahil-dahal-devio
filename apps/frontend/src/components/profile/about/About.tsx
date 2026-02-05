@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { UserProfile, Experience } from "@/types/profile";
 import { motion } from "motion/react";
-import ExperienceSection from "./ExperienceSection";
-import EducationSection from "./EducationSection";
-import CertificationSection from "./CertificationSection";
-import ProjectSection from "./ProjectSection";
-import SkillsSection from "./SkillsSection";
-import ExperienceModal from "./ExperienceModal";
+import ExperienceSection from "./experience/ExperienceSection";
+import EducationSection from "./education/EducationSection";
+import CertificationSection from "./certifications/CertificationSection";
+import ProjectSection from "./projects/ProjectSection";
+import SkillsSection from "./skills/SkillsSection";
+import ExperienceModal from "./experience/ExperienceModal";
 import { useManageExperience } from "@/hooks/useExperience";
 import { logger } from "@/lib/logger";
 
@@ -83,28 +83,24 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
                 educations={profile.educations}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAdd("education")}
-                onEdit={handleEdit("education")}
             />
 
             <SkillsSection
                 skills={profile.skills}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAdd("skills")}
-                onEdit={handleEdit("skills")}
             />
 
             <CertificationSection
                 certifications={profile.certifications}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAdd("certification")}
-                onEdit={handleEdit("certification")}
             />
 
             <ProjectSection
                 projects={profile.projects}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAdd("project")}
-                onEdit={handleEdit("project")}
             />
 
             {/* Experience Modal */}
