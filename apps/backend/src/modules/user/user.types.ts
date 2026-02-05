@@ -43,11 +43,11 @@ export type UserProfile = Prisma.UserGetPayload<{
         profile: true;
         role: true;
         userStreak: true;
-        experiences: true;
+        experiences: { include: { company: true } };
         educations: true;
         certifications: true;
         projects: true;
-        skills: true;
+        skills: { include: { skill: true } };
         userAchievements: { include: { achievement: true } };
         activityLogs: true;
         _count: {

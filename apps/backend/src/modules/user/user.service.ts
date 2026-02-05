@@ -61,7 +61,7 @@ export class UserService {
             title: user.profile?.title || null,
             city: user.profile?.city || null,
             country: user.profile?.country || null,
-            socials: user.profile?.socials,
+            socials: (user.profile?.socials as Record<string, string>) || null,
             contributions: weeklyContributions,
 
             auraPoints: user.auraPoints,
@@ -73,7 +73,11 @@ export class UserService {
 
             currentStreak: user.userStreak?.currentStreak || 0,
             longestStreak: user.userStreak?.longestStreak || 0,
-            activityMap: user.activityLogs,
+            activityMap: user.activityLogs.filter((log) => {
+                const oneYearAgo = new Date();
+                oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                return new Date(log.date) >= oneYearAgo;
+            }),
 
             achievements: user.userAchievements.map((ua: any) => ua.achievement),
 
@@ -81,11 +85,26 @@ export class UserService {
             roomStats: this.calculateRoomStats(user.cyberRoomEnrollments),
             recentActivity: this.getRecentActivity(user.submissions, user.cyberRoomEnrollments),
 
-            experiences: user.experiences,
+            experiences: user.experiences.map((exp) => ({
+                id: exp.id,
+                title: exp.title,
+                companyName: exp.companyName,
+                companyLogoUrl: exp.company?.logoUrl || null,
+                location: exp.location,
+                type: exp.type,
+                startDate: exp.startDate,
+                endDate: exp.endDate,
+                isCurrent: exp.isCurrent,
+                description: exp.description,
+            })),
             educations: user.educations,
             certifications: user.certifications,
             projects: user.projects,
-            skills: user.skills,
+            skills: user.skills.map((us) => ({
+                id: us.skill.id,
+                name: us.skill.name,
+                slug: us.skill.slug,
+            })),
         };
 
         if (isOwner) {

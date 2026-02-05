@@ -1,8 +1,80 @@
-import { AccountStatus } from "../../../generated/prisma/client";
+import { AccountStatus, Difficulty } from "../../../generated/prisma/client";
+
+export interface ActivityLogDTO {
+    date: Date;
+    count: number;
+}
+
+export interface AchievementDTO {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    iconUrl: string | null;
+}
+
+export interface ExperienceDTO {
+    id: string;
+    title: string;
+    companyName: string;
+    companyLogoUrl: string | null;
+    location: string | null;
+    type: string | null;
+    startDate: Date;
+    endDate: Date | null;
+    isCurrent: boolean;
+    description: string | null;
+}
+
+export interface EducationDTO {
+    id: string;
+    school: string;
+    degree: string | null;
+    fieldOfStudy: string | null;
+    startDate: Date;
+    endDate: Date | null;
+    grade: string | null;
+}
+
+export interface CertificationDTO {
+    id: string;
+    name: string;
+    issuingOrg: string;
+    issueDate: Date;
+    expirationDate: Date | null;
+    credentialId: string | null;
+    credentialUrl: string | null;
+}
+
+export interface ProjectDTO {
+    id: string;
+    title: string;
+    description: string | null;
+    url: string | null;
+    startDate: Date | null;
+    endDate: Date | null;
+    skills: string[];
+}
+
+export interface SkillDTO {
+    id: string;
+    name: string;
+    slug: string;
+}
+
+export interface RecentActivityDTO {
+    id: string;
+    title: string;
+    slug: string;
+    difficulty: Difficulty;
+    completedAt: Date;
+    type: "PROBLEM" | "ROOM";
+}
+
 
 export interface PublicProfileDTO {
     id: string;
-    username: string; // Guaranteed to be present on profile
+    username: string;
     firstName: string | null;
     lastName: string | null;
     avatarUrl: string | null;
@@ -10,9 +82,8 @@ export interface PublicProfileDTO {
     title: string | null;
     city: string | null;
     country: string | null;
-    socials: any;
+    socials: Record<string, string> | null;
 
-    // Stats
     auraPoints: number;
     followersCount: number;
     followingCount: number;
@@ -24,19 +95,15 @@ export interface PublicProfileDTO {
         comments: number;
     };
 
-    // Computed in Service
     devioAge: string;
     isFollowing: boolean;
 
-    // Activity & Streaks
     currentStreak: number;
     longestStreak: number;
-    activityMap: any[]; // { date: string, count: number }
+    activityMap: ActivityLogDTO[];
 
-    // Achievements
-    achievements: any[];
+    achievements: AchievementDTO[];
 
-    // Detailed Stats
     problemStats: {
         total: number;
         easy: number;
@@ -50,21 +117,14 @@ export interface PublicProfileDTO {
         hard: number;
     };
 
-    recentActivity: {
-        id: string;
-        title: string;
-        slug: string;
-        difficulty: string;
-        completedAt: Date;
-        type: 'PROBLEM' | 'ROOM';
-    }[];
+    recentActivity: RecentActivityDTO[];
 
-    // Professional
-    experiences: any[];
-    educations: any[];
-    certifications: any[];
-    projects: any[];
-    skills: any[];
+
+    experiences: ExperienceDTO[];
+    educations: EducationDTO[];
+    certifications: CertificationDTO[];
+    projects: ProjectDTO[];
+    skills: SkillDTO[];
 }
 
 export interface PrivateProfileDTO extends PublicProfileDTO {
