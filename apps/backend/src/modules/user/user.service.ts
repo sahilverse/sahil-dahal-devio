@@ -80,7 +80,7 @@ export class UserService {
             title: user.profile?.title || null,
             city: user.profile?.city || null,
             country: user.profile?.country || null,
-            socials: (user.profile?.socials as Record<string, string>) || null,
+            socials: user.profile?.socials ? this._filterSocials(user.profile.socials as Record<string, string | null>) : null,
             contributions: weeklyContributions,
 
             auraPoints: user.auraPoints,
@@ -302,6 +302,10 @@ export class UserService {
             throw new ApiError("User not found", StatusCodes.NOT_FOUND);
         }
 
+        if (payload.socials) {
+            payload.socials = this._filterSocials(payload.socials);
+        }
+
         await this.userRepository.updateProfileDetails(userId, payload);
     }
 
@@ -312,5 +316,11 @@ export class UserService {
         }
 
         await this.userRepository.updateUserProfile(userId, payload);
+    }
+
+    private _filterSocials(socials: Record<string, any>): Record<string, string> {
+        return Object.fromEntries(
+            Object.entries(socials).filter(([_, value]) => value !== null && value !== "")
+        );
     }
 }
