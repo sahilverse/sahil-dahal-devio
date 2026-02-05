@@ -89,7 +89,8 @@ export function RegisterForm() {
                 password: data.password
             })).unwrap();
 
-            toast.success("Account created!");
+            toast.success("Signed in successfully!");
+            window.location.reload();
 
             await dispatch(sendVerificationEmail(data.email)).unwrap();
 
