@@ -17,7 +17,7 @@ export default function Overview({ profile }: OverviewProps) {
             transition={{ duration: 0.4 }}
             className="space-y-6"
         >
-            <ActivityHeatmap data={profile.activityMap} />
+            <ActivityHeatmap username={profile.username} />
             <ActivityStats
                 problemStats={profile.problemStats}
                 roomStats={profile.roomStats}

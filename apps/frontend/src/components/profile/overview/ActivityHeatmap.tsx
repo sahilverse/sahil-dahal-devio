@@ -8,8 +8,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
+import { useActivity } from "@/hooks/useActivity";
+
 interface ActivityHeatmapProps {
-    data: { date: string; count: number }[];
+    username: string;
 }
 
 function calculateLevel(count: number, maxCount: number): 0 | 1 | 2 | 3 | 4 {
@@ -66,13 +68,18 @@ const brandTheme: ThemeInput = {
     ],
 };
 
-export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
+
+export default function ActivityHeatmap({ username }: ActivityHeatmapProps) {
     const { actualTheme } = useSelector((state: RootState) => state.theme);
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
 
+    const { data, isLoading, isError } = useActivity(username, selectedYear);
+
+    // Prepare calendar data
     const calendarData = useMemo(() => {
-        const fullYearData = generateFullYearData(data, selectedYear);
+        if (!data) return [];
+        const fullYearData = generateFullYearData(data.activityMap, selectedYear);
         const maxCount = Math.max(...fullYearData.map((d) => d.count), 1);
         return fullYearData.map((item) => ({
             date: item.date,
@@ -113,25 +120,31 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
             </div>
 
             {/* Calendar */}
-            <div className="overflow-x-auto">
-                <ActivityCalendar
-                    data={calendarData}
-                    theme={brandTheme}
-                    colorScheme={actualTheme}
-                    blockSize={12}
-                    blockMargin={4}
-                    blockRadius={2}
-                    fontSize={12}
-                    showWeekdayLabels
-                    renderBlock={(block, activity) => (
-                        <g data-tooltip-id="heatmap-tooltip" data-tooltip-content={`${activity.count} events on ${activity.date}`}>
-                            {block}
-                        </g>
-                    )}
-                    labels={{
-                        totalCount: `{{count}} activities in ${selectedYear}`,
-                    }}
-                />
+            <div className="overflow-x-auto min-h-45">
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">Loading activity...</div>
+                ) : isError ? (
+                    <div className="flex items-center justify-center h-32 text-sm text-destructive">Failed to load activity.</div>
+                ) : (
+                    <ActivityCalendar
+                        data={calendarData}
+                        theme={brandTheme}
+                        colorScheme={actualTheme}
+                        blockSize={7.5}
+                        blockMargin={4}
+                        blockRadius={2}
+                        fontSize={10}
+                        showWeekdayLabels
+                        renderBlock={(block, activity) => (
+                            <g data-tooltip-id="heatmap-tooltip" data-tooltip-content={`${activity.count} events on ${activity.date}`}>
+                                {block}
+                            </g>
+                        )}
+                        labels={{
+                            totalCount: `{{count}} activities in ${selectedYear}`,
+                        }}
+                    />
+                )}
             </div>
 
             {/* Tooltip */}
