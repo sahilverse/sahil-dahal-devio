@@ -2,20 +2,18 @@
 
 import { UserProfile } from "@/types/profile";
 import { motion } from "motion/react";
-import {
-    ExperienceSection,
-    EducationSection,
-    CertificationSection,
-    ProjectSection,
-    SkillsSection,
-} from "./about";
+import ExperienceSection from "./ExperienceSection";
+import EducationSection from "./EducationSection";
+import CertificationSection from "./CertificationSection";
+import ProjectSection from "./ProjectSection";
+import SkillsSection from "./SkillsSection";
 
-interface ProfileAboutProps {
+interface AboutProps {
     profile: UserProfile;
     isCurrentUser?: boolean;
 }
 
-export default function ProfileAbout({ profile, isCurrentUser = false }: ProfileAboutProps) {
+export default function About({ profile, isCurrentUser = false }: AboutProps) {
     // Placeholder handlers - will be implemented later with modals
     const handleAdd = (section: string) => () => {
         console.log(`Add ${section}`);

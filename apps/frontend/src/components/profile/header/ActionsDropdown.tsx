@@ -7,14 +7,14 @@ import {
 import { Share2, Ban, ShieldAlert } from "lucide-react";
 import { ReactNode } from "react";
 
-interface ProfileActionsDropdownProps {
+interface ActionsDropdownProps {
     onShare: () => void;
     children: ReactNode;
     isAuthenticated?: boolean;
     openLogin?: () => void;
 }
 
-export default function ProfileActionsDropdown({ onShare, children, isAuthenticated = false, openLogin }: ProfileActionsDropdownProps) {
+export default function ActionsDropdown({ onShare, children, isAuthenticated = false, openLogin }: ActionsDropdownProps) {
     const handleBlockUser = () => {
         if (!isAuthenticated && openLogin) {
             openLogin();

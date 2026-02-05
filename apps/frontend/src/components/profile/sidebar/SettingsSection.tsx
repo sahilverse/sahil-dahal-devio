@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { User, Settings } from "lucide-react";
 import Link from "next/link";
 
-interface ProfileSettingsSectionProps {
+interface SettingsSectionProps {
     isCurrentUser: boolean;
 }
 
-export default function ProfileSettingsSection({ isCurrentUser }: ProfileSettingsSectionProps) {
+export default function SettingsSection({ isCurrentUser }: SettingsSectionProps) {
     if (!isCurrentUser) return null;
 
     return (

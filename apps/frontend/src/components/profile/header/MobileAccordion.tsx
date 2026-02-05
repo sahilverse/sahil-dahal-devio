@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { UserProfile } from "@/types/profile";
 import { ChevronDown } from "lucide-react";
-import ProfileStats from "./ProfileStats";
-import ProfileSocials from "./ProfileSocials";
-import ProfileSettingsSection from "./ProfileSettingsSection";
+import { Stats, Socials, SettingsSection } from "../sidebar";
 
-interface ProfileMobileAccordionProps {
+interface MobileAccordionProps {
     profile: UserProfile;
     isCurrentUser: boolean;
 }
 
-export default function ProfileMobileAccordion({ profile, isCurrentUser }: ProfileMobileAccordionProps) {
+export default function MobileAccordion({ profile, isCurrentUser }: MobileAccordionProps) {
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
     return (
@@ -27,9 +25,9 @@ export default function ProfileMobileAccordion({ profile, isCurrentUser }: Profi
                 <div className="overflow-hidden">
                     <div className="p-4 pt-0 border-t bg-accent/20">
                         <div className="pt-4 space-y-4 divide-y">
-                            <ProfileStats profile={profile} isCurrentUser={isCurrentUser} />
-                            <ProfileSocials socials={profile.socials} isCurrentUser={isCurrentUser} />
-                            <ProfileSettingsSection isCurrentUser={isCurrentUser} />
+                            <Stats profile={profile} isCurrentUser={isCurrentUser} />
+                            <Socials socials={profile.socials} isCurrentUser={isCurrentUser} />
+                            <SettingsSection isCurrentUser={isCurrentUser} />
                         </div>
                     </div>
                 </div>

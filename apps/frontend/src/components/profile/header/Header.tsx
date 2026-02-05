@@ -8,19 +8,19 @@ import Image from "next/image";
 import { ImagePlus, MoreHorizontal, MessageCircle, UserMinus, Plus } from "lucide-react";
 import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
-import ProfileActionsDropdown from "./ProfileActionsDropdown";
-import ProfileMobileAccordion from "./ProfileMobileAccordion";
+import ActionsDropdown from "./ActionsDropdown";
+import MobileAccordion from "./MobileAccordion";
 import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
-import ProfileNav from "./ProfileNav";
+import Nav from "./Nav";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppSelector } from "@/store/hooks";
 
-interface ProfileHeaderProps {
+interface HeaderProps {
     profile: UserProfile;
     isCurrentUser: boolean;
 }
 
-export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderProps) {
+export default function Header({ profile, isCurrentUser }: HeaderProps) {
     const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
     const location = [profile.city, profile.country].filter(Boolean).join(", ");
 
@@ -147,11 +147,11 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                                     </Button>
                                 )}
 
-                                <ProfileActionsDropdown onShare={handleShare} isAuthenticated={isAuthenticated} openLogin={openLogin}>
+                                <ActionsDropdown onShare={handleShare} isAuthenticated={isAuthenticated} openLogin={openLogin}>
                                     <Button variant="ghost" size="icon-sm" className="h-8 w-8 cursor-pointer">
                                         <MoreHorizontal className="w-5 h-5" />
                                     </Button>
-                                </ProfileActionsDropdown>
+                                </ActionsDropdown>
                             </div>
                         )}
                     </div>
@@ -169,16 +169,14 @@ export default function ProfileHeader({ profile, isCurrentUser }: ProfileHeaderP
                     )}
 
                     {/* Mobile Stats Accordion */}
-                    <ProfileMobileAccordion profile={profile} isCurrentUser={isCurrentUser} />
+                    <MobileAccordion profile={profile} isCurrentUser={isCurrentUser} />
 
 
                 </div>
 
             </div>
 
-            <ProfileNav
-                isCurrentUser={isCurrentUser}
-            />
+            <Nav isCurrentUser={isCurrentUser} />
 
             <ImageUploadModal
                 isOpen={isAvatarModalOpen}

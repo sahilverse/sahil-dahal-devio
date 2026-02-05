@@ -3,12 +3,12 @@ import { UserProfile } from "@/types/profile";
 import { Award, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
-interface ProfileAchievementsProps {
+interface AchievementsProps {
     achievements: UserProfile["achievements"];
     isCurrentUser: boolean;
 }
 
-export default function ProfileAchievements({ achievements, isCurrentUser }: ProfileAchievementsProps) {
+export default function Achievements({ achievements, isCurrentUser }: AchievementsProps) {
     if (!achievements || achievements.length === 0) return null;
 
     const displayCount = 3;

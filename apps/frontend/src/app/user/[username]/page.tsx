@@ -1,10 +1,10 @@
 "use client";
 
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfileSidebar from "@/components/profile/ProfileSidebar";
+import { Header } from "@/components/profile/header";
+import { Sidebar } from "@/components/profile/sidebar";
+import { Overview } from "@/components/profile/overview";
+import { About } from "@/components/profile/about";
 import ProfileSkeleton from "@/components/profile/ProfileSkeleton";
-import ProfileOverview from "@/components/profile/ProfileOverview";
-import ProfileAbout from "@/components/profile/ProfileAbout";
 import { notFound } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { useUserProfile } from "@/hooks/useProfile";
@@ -15,7 +15,6 @@ export default function UserProfilePage() {
     const { user } = useAppSelector((state) => state.auth);
     const searchParams = useSearchParams();
     const activeTab = searchParams.get("view")?.toLowerCase() || "overview";
-
 
     const { data: profile, isLoading, isError } = useUserProfile(username);
 
@@ -29,15 +28,10 @@ export default function UserProfilePage() {
         <div>
             <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
                 <div className="min-w-0">
-                    <ProfileHeader
-                        profile={profile}
-                        isCurrentUser={isCurrentUser}
-                    />
+                    <Header profile={profile} isCurrentUser={isCurrentUser} />
 
                     <div className="mt-4">
-                        {activeTab === "overview" && (
-                            <ProfileOverview profile={profile} />
-                        )}
+                        {activeTab === "overview" && <Overview profile={profile} />}
 
                         {activeTab === "posts" && (
                             <div className="p-12 border rounded-xl bg-card border-dashed text-center">
@@ -50,13 +44,13 @@ export default function UserProfilePage() {
                             </div>
                         )}
                         {activeTab === "about" && (
-                            <ProfileAbout profile={profile} isCurrentUser={isCurrentUser} />
+                            <About profile={profile} isCurrentUser={isCurrentUser} />
                         )}
                     </div>
                 </div>
                 <div className="hidden lg:block">
                     <div className="fixed w-80">
-                        <ProfileSidebar profile={profile} isCurrentUser={isCurrentUser} />
+                        <Sidebar profile={profile} isCurrentUser={isCurrentUser} />
                     </div>
                 </div>
             </div>

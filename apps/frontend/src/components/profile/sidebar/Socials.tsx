@@ -3,12 +3,12 @@ import { UserProfile } from "@/types/profile";
 import { Github, Linkedin, Twitter, Globe, Link as LinkIcon, Facebook, Instagram, Youtube, Plus } from "lucide-react";
 import Link from "next/link";
 
-interface ProfileSocialsProps {
+interface SocialsProps {
     socials: UserProfile["socials"];
     isCurrentUser: boolean;
 }
 
-export default function ProfileSocials({ socials, isCurrentUser }: ProfileSocialsProps) {
+export default function Socials({ socials, isCurrentUser }: SocialsProps) {
     const hasSocials = socials && Object.keys(socials).length > 0;
 
     if (!hasSocials && !isCurrentUser) return null;

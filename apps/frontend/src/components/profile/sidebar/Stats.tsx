@@ -3,12 +3,12 @@ import { UserProfile } from "@/types/profile";
 import StatCard from "./StatCard";
 import ContributionsModal from "./ContributionsModal";
 
-interface ProfileStatsProps {
+interface StatsProps {
     profile: UserProfile;
     isCurrentUser?: boolean;
 }
 
-export default function ProfileStats({ profile, isCurrentUser }: ProfileStatsProps) {
+export default function Stats({ profile, isCurrentUser }: StatsProps) {
     const [isContributionsOpen, setIsContributionsOpen] = useState(false);
 
     return (

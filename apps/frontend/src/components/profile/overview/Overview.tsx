@@ -1,14 +1,15 @@
 "use client";
 
 import { UserProfile } from "@/types/profile";
-import { ActivityHeatmap, ActivityStats } from "./overview";
+import ActivityHeatmap from "./ActivityHeatmap";
+import ActivityStats from "./ActivityStats";
 import { motion } from "motion/react";
 
-interface ProfileOverviewProps {
+interface OverviewProps {
     profile: UserProfile;
 }
 
-export default function ProfileOverview({ profile }: ProfileOverviewProps) {
+export default function Overview({ profile }: OverviewProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}

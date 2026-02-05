@@ -2,22 +2,22 @@ import { useState } from "react";
 import { UserProfile } from "@/types/profile";
 import { Button } from "@/components/ui/button";
 import { Check, Share2, Plus, UserMinus, MessageCircle, MoreHorizontal } from "lucide-react";
-import ProfileActionsDropdown from "./ProfileActionsDropdown";
+import { ActionsDropdown } from "../header";
 import { toast } from "sonner";
-import ProfileStats from "./ProfileStats";
-import ProfileAchievements from "./ProfileAchievements";
-import ProfileSocials from "./ProfileSocials";
-import ProfileSettingsSection from "./ProfileSettingsSection";
+import Stats from "./Stats";
+import Achievements from "./Achievements";
+import Socials from "./Socials";
+import SettingsSection from "./SettingsSection";
 import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppSelector } from "@/store/hooks";
 
-interface ProfileSidebarProps {
+interface SidebarProps {
     profile: UserProfile;
     isCurrentUser: boolean;
 }
 
-export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSidebarProps) {
+export default function Sidebar({ profile, isCurrentUser }: SidebarProps) {
     const [hasCopied, setHasCopied] = useState(false);
 
     const { user } = useAppSelector((state) => state.auth);
@@ -69,11 +69,11 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
                             </Button>
                         ) : (
                             <div className="hidden lg:block">
-                                <ProfileActionsDropdown onShare={handleShare} isAuthenticated={isAuthenticated} openLogin={openLogin}>
+                                <ActionsDropdown onShare={handleShare} isAuthenticated={isAuthenticated} openLogin={openLogin}>
                                     <Button variant="ghost" size="icon" className="shrink-0 cursor-pointer text-muted-foreground hover:text-foreground">
                                         <MoreHorizontal className="w-5 h-5" />
                                     </Button>
-                                </ProfileActionsDropdown>
+                                </ActionsDropdown>
                             </div>
                         )}
                     </div>
@@ -107,14 +107,13 @@ export default function ProfileSidebar({ profile, isCurrentUser }: ProfileSideba
 
                 <div className="flex flex-col gap-4 divide-y-1">
 
-                    <ProfileStats profile={profile} isCurrentUser={isCurrentUser} />
-                    <ProfileAchievements achievements={profile.achievements} isCurrentUser={isCurrentUser} />
-                    <ProfileSocials socials={profile.socials} isCurrentUser={isCurrentUser} />
-                    <ProfileSettingsSection isCurrentUser={isCurrentUser} />
+                    <Stats profile={profile} isCurrentUser={isCurrentUser} />
+                    <Achievements achievements={profile.achievements} isCurrentUser={isCurrentUser} />
+                    <Socials socials={profile.socials} isCurrentUser={isCurrentUser} />
+                    <SettingsSection isCurrentUser={isCurrentUser} />
                 </div>
             </div >
 
         </>
     );
 }
-
