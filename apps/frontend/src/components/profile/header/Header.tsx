@@ -113,6 +113,7 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                         className="object-cover"
                         sizes="100vw"
                         unoptimized
+                        priority
                     />
                 ) : (
                     <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -139,7 +140,7 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                         <Avatar className="h-24 w-24 border-2 border-card bg-card ring-2 ring-primary/10">
                             <AvatarImage src={profile.avatarUrl ?? undefined} className="object-cover" />
                             <AvatarFallback className="text-2xl font-bold dark:bg-gray-900 bg-gray-300 flex items-center justify-center">
-                                <Image src="/devio-logo.png" alt="Avatar" width={64} height={64} />
+                                <Image src="/devio-logo.png" alt="Avatar" width={64} height={64} priority />
                             </AvatarFallback>
                         </Avatar>
 
