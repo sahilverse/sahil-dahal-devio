@@ -1,9 +1,8 @@
 "use client";
-
-import { useEffect, useMemo, useRef, useState } from "react";
-import { X } from "lucide-react";
-import Image from "next/image";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { X, ZoomIn, ZoomOut } from "lucide-react";
+import Cropper, { Area, Point } from "react-easy-crop";
+import { getCroppedImg } from "@/utils/cropImage";
 
 type UploadVariant = "avatar" | "banner";
 
@@ -12,12 +11,9 @@ interface ImageUploadModalProps {
     onClose: () => void;
     onSave: (file: File) => void;
     currentUrl: string | null;
-
     variant: UploadVariant;
-
     title?: string;
     accept?: string;
-
     fallbackImageSrc?: string;
 }
 
@@ -29,42 +25,55 @@ export default function ImageUploadModal({
     variant,
     title,
     accept = "image/*",
-    fallbackImageSrc = "/devio-logo.png",
 }: ImageUploadModalProps) {
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const isAvatar = variant === "avatar";
+    const aspect = isAvatar ? 1 : 1500 / 500;
 
-
-    useEffect(() => {
-        return () => {
-            if (previewUrl) URL.revokeObjectURL(previewUrl);
-        };
-    }, [previewUrl]);
-
-    const displayUrl = previewUrl || currentUrl || undefined;
+    const onCropComplete = useCallback((_preventedArea: Area, _croppedAreaPixels: Area) => {
+        setCroppedAreaPixels(_croppedAreaPixels);
+    }, []);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+            setImageSrc(reader.result as string);
+        });
+        reader.readAsDataURL(file);
     };
 
-    const handleSave = () => {
-        if (selectedFile) onSave(selectedFile);
-        handleClose();
+    const handleSave = async () => {
+        if (!imageSrc || !croppedAreaPixels) return;
+
+        try {
+            setIsProcessing(true);
+            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+            if (croppedBlob) {
+                const file = new File([croppedBlob], "image.webp", { type: "image/webp" });
+                onSave(file);
+                handleClose();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const handleClose = () => {
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(null);
-        setSelectedFile(null);
+        setImageSrc(null);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setCroppedAreaPixels(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         onClose();
     };
@@ -72,12 +81,12 @@ export default function ImageUploadModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
 
             {/* Modal */}
-            <div className="relative bg-white dark:bg-[#1a1a1b] rounded-xl shadow-xl max-w-lg w-full mx-4 p-4 sm:p-6">
+            <div className="relative bg-white dark:bg-[#1a1a1b] rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                     <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -92,63 +101,67 @@ export default function ImageUploadModal({
                     </button>
                 </div>
 
-                {/* Upload Area */}
+                {/* Upload/Crop Area */}
                 <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-brand-primary transition-colors"
+                    className={`relative border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden transition-colors ${!imageSrc ? "cursor-pointer hover:border-brand-primary" : ""
+                        }`}
+                    style={{ height: isAvatar ? "300px" : "200px" }}
+                    onClick={() => !imageSrc && fileInputRef.current?.click()}
                 >
-                    {isAvatar ? (
-                        // AVATAR PREVIEW
-                        <div className="flex flex-col items-center justify-center">
-                            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mb-4">
-                                <AvatarImage src={displayUrl} />
-                                <AvatarFallback className="bg-gray-200 dark:bg-gray-700">
-                                    <Image src={fallbackImageSrc} alt="Avatar" width={64} height={64} />
-                                </AvatarFallback>
-                            </Avatar>
-
-                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 sm:px-4 py-2 rounded-full">
+                    {!imageSrc ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                                <ZoomIn className="w-6 h-6 text-gray-400" />
+                            </div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-full">
                                 Select a new image
                             </span>
+                            <p className="text-xs text-gray-500 mt-2">JPEG, PNG or WebP</p>
                         </div>
                     ) : (
-                        // BANNER PREVIEW 
-                        <div className="flex flex-col gap-3">
-                            <div className="relative w-full h-28 sm:h-36 md:h-40 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
-                                {displayUrl ? (
-                                    <Image
-                                        src={displayUrl}
-                                        alt="Banner preview"
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 90vw, 600px"
-                                    />
-                                ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm">
-                                        No banner image
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex items-center justify-center">
-                                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 sm:px-4 py-2 rounded-full">
-                                    Select a new image
-                                </span>
-                            </div>
+                        <div className="absolute inset-0 bg-black">
+                            <Cropper
+                                image={imageSrc}
+                                crop={crop}
+                                zoom={zoom}
+                                aspect={aspect}
+                                onCropChange={setCrop}
+                                onCropComplete={onCropComplete}
+                                onZoomChange={setZoom}
+                                cropShape={isAvatar ? "round" : "rect"}
+                                showGrid={false}
+                            />
                         </div>
                     )}
                 </div>
 
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={accept}
-                    onChange={handleFileSelect}
-                    className="hidden"
-                />
+                {/* Controls */}
+                {imageSrc && (
+                    <div className="mt-4 px-2">
+                        <div className="flex items-center gap-3">
+                            <ZoomOut className="w-4 h-4 text-gray-400" />
+                            <input
+                                type="range"
+                                value={zoom}
+                                min={1}
+                                max={3}
+                                step={0.1}
+                                onChange={(e) => setZoom(Number(e.target.value))}
+                                className="flex-1 h-1 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                            />
+                            <ZoomIn className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="mt-3 text-xs font-medium text-brand-primary hover:underline cursor-pointer"
+                        >
+                            Select different photo
+                        </button>
+                    </div>
+                )}
 
                 {/* Actions */}
-                <div className="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-6">
+                <div className="flex justify-end gap-2 sm:gap-3 mt-6 sm:mt-8">
                     <button
                         onClick={handleClose}
                         className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors cursor-pointer"
@@ -159,13 +172,21 @@ export default function ImageUploadModal({
 
                     <button
                         onClick={handleSave}
-                        disabled={!selectedFile}
-                        className="px-4 py-2 text-sm font-medium text-white bg-brand-primary hover:bg-brand-pressed rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        disabled={!imageSrc || isProcessing}
+                        className="px-6 py-2 text-sm font-medium text-white bg-brand-primary hover:bg-brand-pressed rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
                         type="button"
                     >
-                        Save
+                        {isProcessing ? "Saving..." : "Save"}
                     </button>
                 </div>
+
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={accept}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                />
             </div>
         </div>
     );
