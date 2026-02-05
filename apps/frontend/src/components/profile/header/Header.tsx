@@ -5,7 +5,13 @@ import { UserProfile } from "@/types/profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { ImagePlus, MoreHorizontal, MessageCircle, UserMinus, Plus } from "lucide-react";
+import {
+    ImagePlus, MoreHorizontal,
+    Plus,
+    UserMinus,
+    MessageCircle,
+    Pencil
+} from "lucide-react";
 import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
 import ActionsDropdown from "./ActionsDropdown";
@@ -157,10 +163,13 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                             <h1 className="text-lg font-bold">{fullName}</h1>
                             {location ? (
                                 <p
-                                    className={`text-muted-foreground tracking-wider text-xs whitespace-nowrap mt-1 ${isCurrentUser ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                                    className={`group flex items-center gap-1.5 text-muted-foreground tracking-wider text-xs whitespace-nowrap mt-1 ${isCurrentUser ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
                                     onClick={() => isCurrentUser && openLocationModal()}
                                 >
                                     {location}
+                                    {isCurrentUser && (
+                                        <Pencil className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    )}
                                 </p>
                             ) : isCurrentUser && (
                                 <button
@@ -208,10 +217,13 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
 
                     {profile.title ? (
                         <p
-                            className={`text-muted-foreground max-w-md text-xs ${isCurrentUser ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                            className={`group flex items-center gap-1.5 text-muted-foreground max-w-md text-xs ${isCurrentUser ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
                             onClick={() => isCurrentUser && openTitleModal()}
                         >
-                            {profile.title}
+                            <span className="flex-1">{profile.title}</span>
+                            {isCurrentUser && (
+                                <Pencil className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                            )}
                         </p>
                     ) : isCurrentUser && (
                         <button
