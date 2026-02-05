@@ -2,7 +2,7 @@ import { Router } from "express";
 import { container } from "../../config";
 import { TYPES } from "../../types";
 import { UserController } from "./user.controller";
-import { AuthMiddleware, validateRequest } from "../../middlewares";
+import { AuthMiddleware, validateRequest, upload } from "../../middlewares";
 import { onboardingSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
@@ -148,6 +148,62 @@ router.delete(
     "/:username/follow",
     authMiddleware.guard,
     userController.unfollowUser
+);
+
+/**
+ * @swagger
+ * /users/avatar:
+ *   post:
+ *     summary: Upload user avatar
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar updated successfully
+ */
+router.post(
+    "/avatar",
+    authMiddleware.guard,
+    upload.single("file"),
+    userController.uploadAvatar
+);
+
+/**
+ * @swagger
+ * /users/banner:
+ *   post:
+ *     summary: Upload user banner
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Banner updated successfully
+ */
+router.post(
+    "/banner",
+    authMiddleware.guard,
+    upload.single("file"),
+    userController.uploadBanner
 );
 
 export { router };

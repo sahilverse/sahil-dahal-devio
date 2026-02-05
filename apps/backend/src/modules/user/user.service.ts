@@ -7,10 +7,16 @@ import type { OnboardingPayload, UserProfile } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import { PrivateProfileDTO, PublicProfileDTO } from "./dtos/user.dto";
+import { StorageService } from "../storage";
+import { v4 as uuidv4 } from "uuid";
+import { format } from "date-fns";
 
 @injectable()
 export class UserService {
-    constructor(@inject(TYPES.UserRepository) private userRepository: UserRepository) { }
+    constructor(
+        @inject(TYPES.UserRepository) private userRepository: UserRepository,
+        @inject(TYPES.StorageService) private storageService: StorageService
+    ) { }
 
     async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<User> {
         const existingUser = await this.userRepository.findByUsername(payload.username);
@@ -230,5 +236,41 @@ export class UserService {
         return [...problems, ...rooms]
             .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
             .slice(0, 5);
+    }
+
+    async updateAvatar(userId: string, file: Express.Multer.File): Promise<string> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+
+        if (user.avatarUrl) {
+            await this.storageService.deleteFile(user.avatarUrl);
+        }
+
+        const datePath = format(new Date(), "yyyy/MM/dd");
+        const filename = `${uuidv4()}.webp`;
+        const path = `avatars/${datePath}/${filename}`;
+
+        const imageUrl = await this.storageService.uploadFile(file, path);
+        await this.userRepository.updateProfilePicture(userId, imageUrl);
+
+        return imageUrl;
+    }
+
+    async updateBanner(userId: string, file: Express.Multer.File): Promise<string> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+
+        if (user.bannerUrl) {
+            await this.storageService.deleteFile(user.bannerUrl);
+        }
+
+        const datePath = format(new Date(), "yyyy/MM/dd");
+        const filename = `${uuidv4()}.webp`;
+        const path = `banners/${datePath}/${filename}`;
+
+        const imageUrl = await this.storageService.uploadFile(file, path);
+        await this.userRepository.updateBannerPicture(userId, imageUrl);
+
+        return imageUrl;
     }
 }

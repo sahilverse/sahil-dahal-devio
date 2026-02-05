@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { UserService } from "./user.service";
-import { asyncHandler, ResponseHandler } from "../../utils";
+import { asyncHandler, ResponseHandler, ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { toAuthUserDTO } from "../auth";
 
@@ -56,5 +56,29 @@ export class UserController {
 
         await this.userService.unfollowUser(username, followerId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Unfollowed successfully");
+    });
+
+    uploadAvatar = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const file = req.file;
+
+        if (!file) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "No file uploaded");
+        }
+
+        const avatarUrl = await this.userService.updateAvatar(userId, file);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Avatar updated successfully", { avatarUrl });
+    });
+
+    uploadBanner = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const file = req.file;
+
+        if (!file) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "No file uploaded");
+        }
+
+        const bannerUrl = await this.userService.updateBanner(userId, file);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Banner updated successfully", { bannerUrl });
     });
 }

@@ -10,12 +10,14 @@ import { RedisManager } from './config';
 import { PrismaClient } from './generated/prisma/client';
 import { EmailWorkerService } from './queue';
 import { SocketService } from './modules/socket';
+import { StorageService } from './modules/storage';
 
 const server = createServer(app);
 const redisManager = container.get<RedisManager>(TYPES.RedisManager);
 const prismaClient = container.get<PrismaClient>(TYPES.PrismaClient);
 const emailWorkerService = container.get<EmailWorkerService>(TYPES.EmailWorkerService);
 const socketService = container.get<SocketService>(TYPES.SocketService);
+const storageService = container.get<StorageService>(TYPES.StorageService);
 
 async function startServer() {
     try {
@@ -23,6 +25,9 @@ async function startServer() {
 
         await prismaClient.$connect();
         logger.info("Connected to the database");
+
+        await storageService.init();
+        logger.info("Storage service initialized");
 
         socketService.init(server);
 

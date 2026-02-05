@@ -11,6 +11,7 @@ import { MailService } from "../modules/mail";
 import { VerificationRepository, VerificationService } from "../modules/verification";
 import { QueueService, EmailJobService, EmailWorkerService } from "../queue";
 import { SocketService } from "../modules/socket";
+import { StorageService } from "../modules/storage";
 import { transporter } from "./transporter";
 
 
@@ -47,6 +48,7 @@ container.bind<EmailJobService>(TYPES.EmailJobService).to(EmailJobService).inSin
 container.bind<EmailWorkerService>(TYPES.EmailWorkerService).to(EmailWorkerService).inSingletonScope();
 
 container.bind(TYPES.SocketService).to(SocketService).inSingletonScope();
+container.bind<StorageService>(TYPES.StorageService).to(StorageService).inSingletonScope();
 
 
 export { container };

@@ -141,6 +141,15 @@ export class UserRepository {
         });
     }
 
+    async updateBannerPicture(userId: string, imageUrl: string): Promise<void> {
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                bannerUrl: imageUrl
+            }
+        });
+    }
+
     async deleteProfilePicture(userId: string): Promise<void> {
         await this.prisma.user.update({
             where: { id: userId },

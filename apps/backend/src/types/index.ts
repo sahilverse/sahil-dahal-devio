@@ -28,6 +28,7 @@ export const TYPES = {
     EmailWorkerService: Symbol.for("EmailWorkerService"),
 
     SocketService: Symbol.for("SocketService"),
+    StorageService: Symbol.for("StorageService"),
 };
 
 export * from "./jwt";
