@@ -1,8 +1,7 @@
 "use client";
 
 import { UserProfile } from "@/types/profile";
-import ProfileHeatmap from "./ProfileHeatmap";
-import ProfileActivityStats from "./ProfileActivityStats";
+import { ActivityHeatmap, ActivityStats } from "./overview";
 import { motion } from "motion/react";
 
 interface ProfileOverviewProps {
@@ -17,8 +16,8 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
             transition={{ duration: 0.4 }}
             className="space-y-6"
         >
-            <ProfileHeatmap data={profile.activityMap} />
-            <ProfileActivityStats
+            <ActivityHeatmap data={profile.activityMap} />
+            <ActivityStats
                 problemStats={profile.problemStats}
                 roomStats={profile.roomStats}
             />

@@ -5,8 +5,10 @@ import { ActivityCalendar, ThemeInput } from "react-activity-calendar";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
-interface ProfileHeatmapProps {
+interface ActivityHeatmapProps {
     data: { date: string; count: number }[];
 }
 
@@ -20,7 +22,6 @@ function calculateLevel(count: number, maxCount: number): 0 | 1 | 2 | 3 | 4 {
     if (percentage <= 0.75) return 3;
     return 4;
 }
-
 
 function generateFullYearData(
     activityData: { date: string; count: number }[],
@@ -65,7 +66,8 @@ const brandTheme: ThemeInput = {
     ],
 };
 
-export default function ProfileHeatmap({ data }: ProfileHeatmapProps) {
+export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
+    const { actualTheme } = useSelector((state: RootState) => state.theme);
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
 
@@ -78,10 +80,6 @@ export default function ProfileHeatmap({ data }: ProfileHeatmapProps) {
             level: calculateLevel(item.count, maxCount),
         }));
     }, [data, selectedYear]);
-
-    const totalContributions = useMemo(() => {
-        return calendarData.reduce((sum, d) => sum + d.count, 0);
-    }, [calendarData]);
 
     const canGoNext = selectedYear < currentYear;
     const canGoPrev = selectedYear > currentYear - 5;
@@ -119,7 +117,7 @@ export default function ProfileHeatmap({ data }: ProfileHeatmapProps) {
                 <ActivityCalendar
                     data={calendarData}
                     theme={brandTheme}
-                    colorScheme="dark"
+                    colorScheme={actualTheme}
                     blockSize={12}
                     blockMargin={4}
                     blockRadius={2}
