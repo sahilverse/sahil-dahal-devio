@@ -81,4 +81,16 @@ export class UserController {
         const bannerUrl = await this.userService.updateBanner(userId, file);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Banner updated successfully", { bannerUrl });
     });
+
+    removeAvatar = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        await this.userService.removeAvatar(userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Avatar removed successfully");
+    });
+
+    removeBanner = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        await this.userService.removeBanner(userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Banner removed successfully");
+    });
 }

@@ -150,11 +150,20 @@ export class UserRepository {
         });
     }
 
-    async deleteProfilePicture(userId: string): Promise<void> {
+    async removeAvatar(userId: string): Promise<void> {
         await this.prisma.user.update({
             where: { id: userId },
             data: {
                 avatarUrl: null
+            }
+        });
+    }
+
+    async removeBanner(userId: string): Promise<void> {
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                bannerUrl: null
             }
         });
     }

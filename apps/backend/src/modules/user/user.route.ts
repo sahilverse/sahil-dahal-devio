@@ -164,7 +164,7 @@ router.delete(
  *           schema:
  *             type: object
  *             properties:
- *               file:
+ *               avatar:
  *                 type: string
  *                 format: binary
  *     responses:
@@ -174,8 +174,26 @@ router.delete(
 router.post(
     "/avatar",
     authMiddleware.guard,
-    upload.single("file"),
+    upload.single("avatar"),
     userController.uploadAvatar
+);
+
+/**
+ * @swagger
+ * /users/avatar:
+ *   delete:
+ *     summary: Remove user avatar
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Avatar removed successfully
+ */
+router.delete(
+    "/avatar",
+    authMiddleware.guard,
+    userController.removeAvatar
 );
 
 /**
@@ -192,7 +210,7 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
- *               file:
+ *               banner:
  *                 type: string
  *                 format: binary
  *     responses:
@@ -202,8 +220,26 @@ router.post(
 router.post(
     "/banner",
     authMiddleware.guard,
-    upload.single("file"),
+    upload.single("banner"),
     userController.uploadBanner
+);
+
+/**
+ * @swagger
+ * /users/banner:
+ *   delete:
+ *     summary: Remove user banner
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Banner removed successfully
+ */
+router.delete(
+    "/banner",
+    authMiddleware.guard,
+    userController.removeBanner
 );
 
 export { router };

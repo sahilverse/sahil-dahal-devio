@@ -273,4 +273,26 @@ export class UserService {
 
         return imageUrl;
     }
+
+    async removeAvatar(userId: string): Promise<void> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+
+        if (user.avatarUrl) {
+            await this.storageService.deleteFile(user.avatarUrl);
+        }
+
+        await this.userRepository.removeAvatar(userId);
+    }
+
+    async removeBanner(userId: string): Promise<void> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+
+        if (user.bannerUrl) {
+            await this.storageService.deleteFile(user.bannerUrl);
+        }
+
+        await this.userRepository.removeBanner(userId);
+    }
 }
