@@ -65,6 +65,7 @@ export interface UserProfile {
     joinedAt: string;
     devioAge: string;
     isFollowing: boolean;
+    isOwner: boolean;
 
     currentStreak: number;
     longestStreak: number;

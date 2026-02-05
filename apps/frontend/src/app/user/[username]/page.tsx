@@ -7,24 +7,22 @@ import { About } from "@/components/profile/about";
 import { Button } from "@/components/ui/button";
 import ProfileSkeleton from "@/components/profile/ProfileSkeleton";
 import { notFound } from "next/navigation";
-import { useAppSelector } from "@/store/hooks";
 import { useUserProfile } from "@/hooks/useProfile";
 import { useParams, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
 export default function UserProfilePage() {
     const { username } = useParams<{ username: string }>();
-    const { user } = useAppSelector((state) => state.auth);
     const searchParams = useSearchParams();
     const activeTab = searchParams.get("view")?.toLowerCase() || "overview";
 
     const { data: profile, isLoading, isError } = useUserProfile(username);
 
-    const isCurrentUser = profile?.id === user?.id;
-
     if (isLoading) return <ProfileSkeleton />;
     if (!profile) return notFound();
     if (isError) throw new Error("Failed to load profile");
+
+    const isCurrentUser = profile.isOwner;
 
     return (
         <div>
