@@ -3,7 +3,7 @@ import { UserRepository } from "./user.repository";
 import { ApiError } from "../../utils/ApiError";
 import type { User } from "../../generated/prisma/client";
 import { AccountStatus } from "../../generated/prisma/client";
-import type { OnboardingPayload, UserProfile } from "./user.types";
+import type { OnboardingPayload, UserProfile, UpdateProfilePayload, UpdateNamesPayload } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import { PrivateProfileDTO, PublicProfileDTO } from "./dtos/user.dto";
@@ -294,5 +294,23 @@ export class UserService {
         }
 
         await this.userRepository.removeBanner(userId);
+    }
+
+    async updateProfile(userId: string, payload: UpdateProfilePayload): Promise<void> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.updateProfileDetails(userId, payload);
+    }
+
+    async updateNames(userId: string, payload: UpdateNamesPayload): Promise<void> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.updateUserProfile(userId, payload);
     }
 }

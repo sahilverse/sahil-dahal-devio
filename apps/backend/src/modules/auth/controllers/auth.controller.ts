@@ -106,7 +106,11 @@ export class AuthController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Email verified successfully");
     });
 
+    changePassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
 
-
-
+        await this.authService.changePassword(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Password changed successfully. Please log in again.");
+    });
 }

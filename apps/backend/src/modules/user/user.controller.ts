@@ -93,4 +93,20 @@ export class UserController {
         await this.userService.removeBanner(userId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Banner removed successfully");
     });
+
+    updateProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
+
+        await this.userService.updateProfile(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Profile updated successfully");
+    });
+
+    updateNames = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
+
+        await this.userService.updateNames(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Names updated successfully");
+    });
 }

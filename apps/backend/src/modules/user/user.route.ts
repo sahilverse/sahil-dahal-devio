@@ -3,7 +3,7 @@ import { container } from "../../config";
 import { TYPES } from "../../types";
 import { UserController } from "./user.controller";
 import { AuthMiddleware, validateRequest, upload } from "../../middlewares";
-import { onboardingSchema } from "@devio/zod-utils";
+import { onboardingSchema, updateProfileSchema, updateNamesSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
@@ -240,6 +240,105 @@ router.delete(
     "/banner",
     authMiddleware.guard,
     userController.removeBanner
+);
+
+/**
+ * @swagger
+ * /users/profile:
+ *   patch:
+ *     summary: Update user profile details
+ *     description: Updates the user's title, city, country, and socials.
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 100
+ *               city:
+ *                 type: string
+ *                 maxLength: 50
+ *               country:
+ *                 type: string
+ *                 maxLength: 50
+ *               socials:
+ *                 type: object
+ *                 properties:
+ *                   github:
+ *                     type: string
+ *                     format: uri
+ *                   linkedin:
+ *                     type: string
+ *                     format: uri
+ *                   twitter:
+ *                     type: string
+ *                     format: uri
+ *                   facebook:
+ *                     type: string
+ *                     format: uri
+ *                   instagram:
+ *                     type: string
+ *                     format: uri
+ *                   youtube:
+ *                     type: string
+ *                     format: uri
+ *                   website:
+ *                     type: string
+ *                     format: uri
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.patch(
+    "/profile",
+    authMiddleware.guard,
+    validateRequest(updateProfileSchema),
+    userController.updateProfile
+);
+
+/**
+ * @swagger
+ * /users/names:
+ *   patch:
+ *     summary: Update user first and last names
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Names updated successfully
+ */
+router.patch(
+    "/names",
+    authMiddleware.guard,
+    validateRequest(updateNamesSchema),
+    userController.updateNames
 );
 
 export { router };

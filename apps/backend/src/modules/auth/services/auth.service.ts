@@ -247,6 +247,28 @@ export class AuthService {
         await this.authRepository.invalidateUserSessions(user.id);
     }
 
+    async changePassword(userId: string, payload: any): Promise<void> {
+        const { oldPassword, newPassword } = payload;
+        const user = await this.userRepository.findById(userId);
+        if (!user || !user.password) {
+            throw new ApiError("User not found or password not set", StatusCodes.NOT_FOUND);
+        }
+
+        const isPasswordValid = await BcryptUtils.comparePassword(oldPassword, user.password);
+        if (!isPasswordValid) {
+            throw new ApiError("Invalid old password", StatusCodes.UNAUTHORIZED);
+        }
+
+        const hashedPassword = await BcryptUtils.hashPassword(newPassword);
+        await this.userRepository.updatePassword(user.id, hashedPassword);
+
+        // Invalidate other sessions after password change for security
+        // But keep current one? Usually better to invalidate all and re-login, 
+        // but for UX we might just invalidate others.
+        // For now, let's follow standard security and invalidate all.
+        await this.authRepository.invalidateUserSessions(user.id);
+    }
+
     async sendEmailVerificationToken(email: string): Promise<void> {
         const user = await this.userRepository.findByEmail(email);
         if (!user) throw new ApiError("User not found", StatusCodes.NOT_FOUND);

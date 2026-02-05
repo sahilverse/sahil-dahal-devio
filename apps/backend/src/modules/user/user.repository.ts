@@ -4,7 +4,8 @@ import type {
     CreateUserPayload,
     AccountStatusPayload,
     CreateOAuthUserPayload,
-    CreateAccountPayload
+    CreateAccountPayload,
+    UpdateProfilePayload
 } from "./user.types";
 import { TYPES } from "../../types";
 
@@ -216,6 +217,25 @@ export class UserRepository {
         return await this.prisma.user.update({
             where: { id: userId },
             data
+        });
+    }
+
+    async updateProfileDetails(userId: string, data: UpdateProfilePayload): Promise<void> {
+        await this.prisma.profile.upsert({
+            where: { userId },
+            create: {
+                userId,
+                title: data.title,
+                city: data.city,
+                country: data.country,
+                socials: data.socials as any,
+            },
+            update: {
+                title: data.title,
+                city: data.city,
+                country: data.country,
+                socials: data.socials as any,
+            },
         });
     }
 

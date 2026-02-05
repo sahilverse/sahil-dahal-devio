@@ -82,7 +82,15 @@ export interface PublicProfileDTO {
     title: string | null;
     city: string | null;
     country: string | null;
-    socials: Record<string, string> | null;
+    socials: {
+        github?: string | null;
+        linkedin?: string | null;
+        twitter?: string | null;
+        facebook?: string | null;
+        instagram?: string | null;
+        youtube?: string | null;
+        website?: string | null;
+    } | null;
 
     auraPoints: number;
     followersCount: number;

@@ -37,6 +37,26 @@ export interface OnboardingPayload {
     lastName: string;
 }
 
+export interface UpdateNamesPayload {
+    firstName: string;
+    lastName: string;
+}
+
+export interface UpdateProfilePayload {
+    title?: string | null;
+    city?: string | null;
+    country?: string | null;
+    socials?: {
+        github?: string | null;
+        linkedin?: string | null;
+        twitter?: string | null;
+        facebook?: string | null;
+        instagram?: string | null;
+        youtube?: string | null;
+        website?: string | null;
+    } | null;
+}
+
 
 export type UserProfile = Prisma.UserGetPayload<{
     include: {

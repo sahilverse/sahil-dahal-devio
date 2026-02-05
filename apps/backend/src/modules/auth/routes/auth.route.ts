@@ -3,7 +3,7 @@ import { container } from "../../../config";
 import { TYPES } from "../../../types";
 import { AuthController } from "../controllers";
 import { AuthMiddleware, validateRequest } from '../../../middlewares';
-import { registerSchema, loginSchema, verifyPasswordResetTokenSchema, resetPasswordSchema, verifyEmailVerificationTokenSchema } from "@devio/zod-utils";
+import { registerSchema, loginSchema, verifyPasswordResetTokenSchema, resetPasswordSchema, verifyEmailVerificationTokenSchema, changePasswordSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
@@ -304,4 +304,40 @@ router.post("/send-email-verification-token", authController.sendEmailVerificati
  *         description: Internal server error
  */
 router.post("/verify-email-verification-token", validateRequest(verifyEmailVerificationTokenSchema), authController.verifyEmailVerificationToken);
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change user password
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *               - confirmPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *               confirmPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ */
+router.post(
+    "/change-password",
+    authMiddleware.guard,
+    validateRequest(changePasswordSchema),
+    authController.changePassword
+);
+
 export { router };
