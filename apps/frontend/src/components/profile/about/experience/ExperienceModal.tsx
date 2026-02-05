@@ -29,8 +29,8 @@ export default function ExperienceModal({
 }: ExperienceModalProps) {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl bg-card">
-                <DialogHeader className="px-6 py-5 border-b bg-muted/20">
+            <DialogContent className="w-[95%] max-h-[90dvh] sm:h-auto sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl bg-card rounded-xl flex flex-col">
+                <DialogHeader className="px-4 py-4 md:px-6 md:py-5 border-b bg-muted/20 shrink-0">
                     <DialogTitle className="text-sm font-bold flex items-center gap-2 tracking-tight uppercase text-primary/80">
                         <Briefcase className="w-4 h-4" /> {initialData?.id ? "Edit Experience" : "Add Experience"}
                     </DialogTitle>

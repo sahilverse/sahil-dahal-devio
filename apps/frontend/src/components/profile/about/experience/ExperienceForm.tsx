@@ -98,8 +98,8 @@ export function ExperienceForm({
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-0 space-y-5">
-            <div className="max-h-[70vh] overflow-y-auto px-1 space-y-5 custom-scrollbar pb-1">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 pt-0 space-y-4 md:space-y-5 flex flex-col flex-1 h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-1 space-y-4 md:space-y-5 custom-scrollbar pb-1">
 
                 {/* Title */}
                 <div className="space-y-2">
@@ -118,7 +118,7 @@ export function ExperienceForm({
                 </div>
 
                 {/* Company & Type */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <CompanySearchInput
                         value={companyName}
                         onCompanySelect={handleCompanySelect}
@@ -239,14 +239,14 @@ export function ExperienceForm({
                 </div>
             </div>
 
-            <DialogFooter className="pt-6 border-t flex items-center justify-end gap-3">
+            <DialogFooter className="pt-4 md:pt-6 border-t flex items-center gap-3 shrink-0 w-full">
                 {initialData?.id && onDelete ? (
                     <Button
                         type="button"
                         variant="secondary"
                         onClick={() => setShowDeleteConfirm(true)}
                         disabled={isPending}
-                        className="h-9 min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase rounded-md text-destructive hover:text-destructive/80"
+                        className="h-11 sm:h-9 flex-1 sm:flex-none sm:min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase rounded-md text-destructive hover:text-destructive/80"
                     >
                         Delete
                     </Button>
@@ -255,7 +255,7 @@ export function ExperienceForm({
                         variant="secondary"
                         type="button"
                         onClick={onCancel}
-                        className="h-9 min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase rounded-md"
+                        className="h-11 sm:h-9 flex-1 sm:flex-none sm:min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase rounded-md"
                     >
                         Cancel
                     </Button>
@@ -264,7 +264,7 @@ export function ExperienceForm({
                     type="submit"
                     variant="brand"
                     disabled={isPending || !isDirty}
-                    className="h-9 min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase shadow-lg shadow-brand-primary/20 transition-all rounded-md"
+                    className="h-11 sm:h-9 flex-1 sm:flex-none sm:min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase shadow-lg shadow-brand-primary/20 transition-all rounded-md"
                 >
                     {isPending ? "Saving..." : "Save"}
                 </Button>
