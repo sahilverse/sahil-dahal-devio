@@ -40,6 +40,16 @@ export default function Stats({ profile, isCurrentUser }: StatsProps) {
                 />
 
                 <StatCard
+                    label="Current Streak"
+                    value={`${profile.currentStreak}`}
+                />
+
+                <StatCard
+                    label="Longest Streak"
+                    value={`${profile.longestStreak}`}
+                />
+
+                <StatCard
                     label="Devio Age"
                     value={profile.devioAge || "0 y"}
                 />
