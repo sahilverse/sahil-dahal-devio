@@ -14,7 +14,6 @@ interface AboutProps {
 }
 
 export default function About({ profile, isCurrentUser = false }: AboutProps) {
-    // Placeholder handlers - will be implemented later with modals
     const handleAdd = (section: string) => () => {
         console.log(`Add ${section}`);
     };

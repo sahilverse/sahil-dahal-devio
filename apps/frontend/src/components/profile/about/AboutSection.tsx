@@ -38,7 +38,7 @@ export default function AboutSection({
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
                                 onClick={onAdd}
                             >
                                 <Plus className="h-4 w-4" />
@@ -48,7 +48,7 @@ export default function AboutSection({
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
                                 onClick={onEdit}
                             >
                                 <Pencil className="h-4 w-4" />
@@ -65,7 +65,7 @@ export default function AboutSection({
                         <Button
                             variant="outline"
                             size="sm"
-                            className="mt-3"
+                            className="mt-3 cursor-pointer"
                             onClick={onAdd}
                         >
                             <Plus className="h-4 w-4 mr-1" />

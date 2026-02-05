@@ -68,10 +68,18 @@ export default function ExperienceSection({
             onAdd={onAdd}
             onEdit={onEdit}
         >
-            {experiences.map((exp, index) => (
+            {experiences.map((exp) => (
                 <div key={exp.id} className="relative flex gap-4">
-                    <div className="shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                        <Briefcase className="h-6 w-6 text-muted-foreground" />
+                    <div className="shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                        {exp.companyLogoUrl ? (
+                            <img
+                                src={exp.companyLogoUrl}
+                                alt={exp.companyName}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <Briefcase className="h-6 w-6 text-muted-foreground" />
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm">{exp.title}</h4>

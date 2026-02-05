@@ -2,6 +2,7 @@ export interface Experience {
     id: string;
     title: string;
     companyName: string;
+    companyLogoUrl: string | null;
     location: string | null;
     type: "FULL_TIME" | "PART_TIME" | "INTERNSHIP" | "CONTRACT" | "FREELANCE";
     startDate: string;
