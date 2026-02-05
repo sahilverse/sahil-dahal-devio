@@ -4,11 +4,13 @@ import { Header } from "@/components/profile/header";
 import { Sidebar } from "@/components/profile/sidebar";
 import { Overview } from "@/components/profile/overview";
 import { About } from "@/components/profile/about";
+import { Button } from "@/components/ui/button";
 import ProfileSkeleton from "@/components/profile/ProfileSkeleton";
 import { notFound } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { useUserProfile } from "@/hooks/useProfile";
 import { useParams, useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
 
 export default function UserProfilePage() {
     const { username } = useParams<{ username: string }>();
@@ -34,13 +36,35 @@ export default function UserProfilePage() {
                         {activeTab === "overview" && <Overview profile={profile} />}
 
                         {activeTab === "posts" && (
-                            <div className="p-12 border rounded-xl bg-card border-dashed text-center">
-                                <p className="text-muted-foreground">Posts Content Placeholder</p>
+                            <div className="p-16 border rounded-xl bg-card border-dashed text-center space-y-4">
+                                <div className="space-y-2">
+                                    <p className="text-muted-foreground">
+                                        {isCurrentUser
+                                            ? "You haven't posted anything yet"
+                                            : `u/${profile.username} hasn't posted anything yet`}
+                                    </p>
+                                    {isCurrentUser && (
+                                        <p className="text-sm text-muted-foreground/70">
+                                            Share your thoughts, projects, or questions with the community
+                                        </p>
+                                    )}
+                                </div>
+                                {isCurrentUser && (
+                                    <Button variant="brand" className="cursor-pointer">
+                                        <Plus className="size-4" />
+                                        Create Post
+                                    </Button>
+                                )}
                             </div>
                         )}
-                        {activeTab === "saved" && (
-                            <div className="p-12 border rounded-xl bg-card border-dashed text-center">
-                                <p className="text-muted-foreground">Saved Content Placeholder</p>
+                        {activeTab === "saved" && isCurrentUser && (
+                            <div className="p-16 border rounded-xl bg-card border-dashed text-center space-y-2">
+                                <p className="text-muted-foreground">
+                                    You haven't saved any posts yet
+                                </p>
+                                <p className="text-sm text-muted-foreground/70">
+                                    Posts you save will appear here for easy access
+                                </p>
                             </div>
                         )}
                         {activeTab === "about" && (

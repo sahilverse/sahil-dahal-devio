@@ -1,5 +1,4 @@
 export { default as Overview } from "./Overview";
-export { default as OverviewSkeleton } from "./OverviewSkeleton";
 export { default as ActivityHeatmap } from "./ActivityHeatmap";
 export { default as ActivityStats } from "./ActivityStats";
 export { default as ActivityStatCard } from "./ActivityStatCard";
