@@ -105,7 +105,7 @@ export interface PublicProfileDTO {
 
     achievements: {
         latest: AchievementDTO[];
-        other: number;
+        total: number;
     };
 
     problemStats: {

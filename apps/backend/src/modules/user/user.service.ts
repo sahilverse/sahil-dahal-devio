@@ -95,7 +95,7 @@ export class UserService {
 
             achievements: {
                 latest: user.userAchievements.map((ua: any) => ua.achievement),
-                other: Math.max(0, user._count.userAchievements - 3),
+                total: user._count.userAchievements,
             },
 
             problemStats: this.calculateProblemStats(user.submissions),
