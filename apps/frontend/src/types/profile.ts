@@ -1,3 +1,51 @@
+export interface Experience {
+    id: string;
+    title: string;
+    companyName: string;
+    location: string | null;
+    type: "FULL_TIME" | "PART_TIME" | "INTERNSHIP" | "CONTRACT" | "FREELANCE";
+    startDate: string;
+    endDate: string | null;
+    isCurrent: boolean;
+    description: string | null;
+}
+
+export interface Education {
+    id: string;
+    school: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: string;
+    endDate: string | null;
+    grade: string | null;
+}
+
+export interface Certification {
+    id: string;
+    name: string;
+    issuingOrg: string;
+    issueDate: string;
+    expirationDate: string | null;
+    credentialId: string | null;
+    credentialUrl: string | null;
+}
+
+export interface Project {
+    id: string;
+    title: string;
+    description: string | null;
+    url: string | null;
+    startDate: string;
+    endDate: string | null;
+    skills: string[];
+}
+
+export interface Skill {
+    id: string;
+    name: string;
+    slug: string;
+}
+
 export interface UserProfile {
     id: string;
     username: string;
@@ -57,9 +105,9 @@ export interface UserProfile {
         type: "PROBLEM" | "ROOM";
     }>;
 
-    experiences: Array<Record<string, unknown>>;
-    educations: Array<Record<string, unknown>>;
-    certifications: Array<Record<string, unknown>>;
-    projects: Array<Record<string, unknown>>;
-    skills: Array<Record<string, unknown>>;
+    experiences: Experience[];
+    educations: Education[];
+    certifications: Certification[];
+    projects: Project[];
+    skills: Skill[];
 }

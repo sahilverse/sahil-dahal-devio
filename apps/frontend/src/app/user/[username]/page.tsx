@@ -3,13 +3,14 @@
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileSidebar from "@/components/profile/ProfileSidebar";
 import ProfileSkeleton from "@/components/profile/ProfileSkeleton";
+import ProfileOverview from "@/components/profile/ProfileOverview";
+import ProfileAbout from "@/components/profile/ProfileAbout";
 import { notFound } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { useUserProfile } from "@/hooks/useProfile";
 import { useParams, useSearchParams } from "next/navigation";
-import ProfileOverview from "@/components/profile/ProfileOverview";
 
-export default function TestProfilePage() {
+export default function UserProfilePage() {
     const { username } = useParams<{ username: string }>();
     const { user } = useAppSelector((state) => state.auth);
     const searchParams = useSearchParams();
@@ -49,9 +50,7 @@ export default function TestProfilePage() {
                             </div>
                         )}
                         {activeTab === "about" && (
-                            <div className="p-12 border rounded-xl bg-card border-dashed text-center">
-                                <p className="text-muted-foreground">About Content Placeholder</p>
-                            </div>
+                            <ProfileAbout profile={profile} isCurrentUser={isCurrentUser} />
                         )}
                     </div>
                 </div>
