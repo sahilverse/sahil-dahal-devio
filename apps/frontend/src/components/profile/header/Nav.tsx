@@ -13,7 +13,7 @@ export default function Nav({ isCurrentUser = false }: NavProps) {
     const searchParams = useSearchParams();
     const currentView = searchParams.get("view")?.toLowerCase() || "overview";
 
-    const navItems = ["Overview", "Posts", "Saved", "About"];
+    const navItems = ["Overview", "About", "Posts", "Saved",];
 
     const visibleItems = isCurrentUser
         ? navItems
