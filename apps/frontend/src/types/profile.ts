@@ -59,7 +59,7 @@ export interface UserProfile {
     socials: Record<string, string> | null;
 
     auraPoints: number;
-    cipherPoints?: number;
+    cipherBalance?: number;
     followersCount: number;
     followingCount: number;
     joinedAt: string;

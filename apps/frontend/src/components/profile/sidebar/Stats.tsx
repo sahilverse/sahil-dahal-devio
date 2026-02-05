@@ -47,7 +47,7 @@ export default function Stats({ profile, isCurrentUser }: StatsProps) {
                 {isCurrentUser && (
                     <StatCard
                         label="Cipher"
-                        value={(profile.cipherPoints ?? 0).toLocaleString()}
+                        value={(profile.cipherBalance ?? 0).toLocaleString()}
                     />
                 )}
             </div>
