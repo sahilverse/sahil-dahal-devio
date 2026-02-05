@@ -1,4 +1,5 @@
 import { Experience } from "@/types/profile";
+import { formatDateRange, calculateDuration } from "@/lib/date";
 import { Briefcase, MapPin } from "lucide-react";
 import AboutSection from "./AboutSection";
 import ExpandableText from "./ExpandableText";
@@ -17,40 +18,6 @@ const TYPE_LABELS: Record<Experience["type"], string> = {
     CONTRACT: "Contract",
     FREELANCE: "Freelance",
 };
-
-function formatDateRange(startDate: string, endDate: string | null, isCurrent: boolean): string {
-    const start = new Date(startDate);
-    const startStr = start.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-
-    if (isCurrent) {
-        return `${startStr} - Present`;
-    }
-
-    if (endDate) {
-        const end = new Date(endDate);
-        const endStr = end.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-        return `${startStr} - ${endStr}`;
-    }
-
-    return startStr;
-}
-
-function calculateDuration(startDate: string, endDate: string | null): string {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
-
-    const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-    const years = Math.floor(months / 12);
-    const remainingMonths = months % 12;
-
-    if (years > 0 && remainingMonths > 0) {
-        return `${years} yr ${remainingMonths} mo`;
-    } else if (years > 0) {
-        return `${years} yr`;
-    } else {
-        return `${remainingMonths} mo`;
-    }
-}
 
 export default function ExperienceSection({
     experiences,
@@ -87,7 +54,7 @@ export default function ExperienceSection({
                             {exp.companyName} · {TYPE_LABELS[exp.type]}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatDateRange(exp.startDate, exp.endDate, exp.isCurrent)} · {calculateDuration(exp.startDate, exp.endDate)}
+                            {formatDateRange(exp.startDate, exp.endDate, { isCurrent: exp.isCurrent })} · {calculateDuration(exp.startDate, exp.endDate)}
                         </p>
                         {exp.location && (
                             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">

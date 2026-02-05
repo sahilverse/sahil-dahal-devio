@@ -1,4 +1,5 @@
 import { Project } from "@/types/profile";
+import { formatDateRange } from "@/lib/date";
 import { FolderGit2, ExternalLink } from "lucide-react";
 import AboutSection from "./AboutSection";
 import ExpandableText from "./ExpandableText";
@@ -8,19 +9,6 @@ interface ProjectSectionProps {
     isCurrentUser?: boolean;
     onAdd?: () => void;
     onEdit?: () => void;
-}
-
-function formatDateRange(startDate: string, endDate: string | null): string {
-    const start = new Date(startDate);
-    const startStr = start.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-
-    if (endDate) {
-        const end = new Date(endDate);
-        const endStr = end.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-        return `${startStr} - ${endStr}`;
-    }
-
-    return `${startStr} - Present`;
 }
 
 export default function ProjectSection({

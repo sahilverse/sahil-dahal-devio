@@ -1,4 +1,5 @@
 import { Certification } from "@/types/profile";
+import { formatDate } from "@/lib/date";
 import { Award, ExternalLink } from "lucide-react";
 import AboutSection from "./AboutSection";
 
@@ -7,11 +8,6 @@ interface CertificationSectionProps {
     isCurrentUser?: boolean;
     onAdd?: () => void;
     onEdit?: () => void;
-}
-
-function formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
 export default function CertificationSection({

@@ -1,4 +1,5 @@
 import { Education } from "@/types/profile";
+import { formatDateRange } from "@/lib/date";
 import { GraduationCap } from "lucide-react";
 import AboutSection from "./AboutSection";
 
@@ -7,19 +8,6 @@ interface EducationSectionProps {
     isCurrentUser?: boolean;
     onAdd?: () => void;
     onEdit?: () => void;
-}
-
-function formatDateRange(startDate: string, endDate: string | null): string {
-    const start = new Date(startDate);
-    const startYear = start.getFullYear();
-
-    if (endDate) {
-        const end = new Date(endDate);
-        const endYear = end.getFullYear();
-        return `${startYear} - ${endYear}`;
-    }
-
-    return `${startYear} - Present`;
 }
 
 export default function EducationSection({
@@ -49,7 +37,7 @@ export default function EducationSection({
                             {edu.degree}, {edu.fieldOfStudy}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatDateRange(edu.startDate, edu.endDate)}
+                            {formatDateRange(edu.startDate, edu.endDate, { showMonth: false })}
                         </p>
                         {edu.grade && (
                             <p className="text-xs text-muted-foreground mt-0.5">
