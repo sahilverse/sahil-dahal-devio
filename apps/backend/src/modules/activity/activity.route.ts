@@ -41,7 +41,7 @@ const activityController = container.get<ActivityController>(TYPES.ActivityContr
  *                 message:
  *                   type: string
  *                   example: Activity data fetched successfully
- *                 data:
+ *                 result:
  *                   type: object
  *                   properties:
  *                     year:
@@ -97,7 +97,7 @@ router.get("/:username", activityController.getActivityByYear);
  *                 message:
  *                   type: string
  *                   example: Available years fetched successfully
- *                 data:
+ *                 result:
  *                   type: object
  *                   properties:
  *                     years:
