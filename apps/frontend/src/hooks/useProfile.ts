@@ -86,3 +86,63 @@ export function useUnfollowUser(username: string) {
         },
     });
 }
+
+export function useUploadAvatar(username: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (file: File) => UserService.uploadAvatar(file),
+        onSuccess: () => {
+            toast.success("Avatar updated successfully");
+            queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
+        },
+        onError: () => {
+            toast.error("Failed to update avatar");
+        },
+    });
+}
+
+export function useUploadBanner(username: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (file: File) => UserService.uploadBanner(file),
+        onSuccess: () => {
+            toast.success("Banner updated successfully");
+            queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
+        },
+        onError: () => {
+            toast.error("Failed to update banner");
+        },
+    });
+}
+
+export function useRemoveAvatar(username: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () => UserService.removeAvatar(),
+        onSuccess: () => {
+            toast.success("Avatar removed successfully");
+            queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
+        },
+        onError: () => {
+            toast.error("Failed to remove avatar");
+        },
+    });
+}
+
+export function useRemoveBanner(username: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () => UserService.removeBanner(),
+        onSuccess: () => {
+            toast.success("Banner removed successfully");
+            queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
+        },
+        onError: () => {
+            toast.error("Failed to remove banner");
+        },
+    });
+}

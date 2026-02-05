@@ -10,7 +10,14 @@ import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
 import ActionsDropdown from "./ActionsDropdown";
 import MobileAccordion from "./MobileAccordion";
-import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
+import {
+    useFollowUser,
+    useUnfollowUser,
+    useUploadAvatar,
+    useUploadBanner,
+    useRemoveAvatar,
+    useRemoveBanner
+} from "@/hooks/useProfile";
 import Nav from "./Nav";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppSelector } from "@/store/hooks";
@@ -36,8 +43,25 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
     const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
     const isPending = isFollowPending || isUnfollowPending;
 
-    const handleSave = (file: File) => {
-        console.log("Selected file:", file);
+    const { mutate: uploadAvatar } = useUploadAvatar(profile.username);
+    const { mutate: uploadBanner } = useUploadBanner(profile.username);
+    const { mutate: removeAvatar } = useRemoveAvatar(profile.username);
+    const { mutate: removeBanner } = useRemoveBanner(profile.username);
+
+    const handleAvatarSave = (file: File) => {
+        uploadAvatar(file);
+    };
+
+    const handleBannerSave = (file: File) => {
+        uploadBanner(file);
+    };
+
+    const handleAvatarRemove = () => {
+        removeAvatar();
+    };
+
+    const handleBannerRemove = () => {
+        removeBanner();
     };
 
     const handleFollow = () => {
@@ -77,13 +101,15 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-                <button
-                    className="absolute top-2 right-2 z-20 bg-gray-500 dark:bg-gray-800 dark:text-primary text-white rounded-full p-2 shadow cursor-pointer"
-                    type="button"
-                    onClick={() => setIsBannerModalOpen(true)}
-                >
-                    <ImagePlus className="h-3.5 w-3.5" />
-                </button>
+                {isCurrentUser && (
+                    <button
+                        className="absolute top-2 right-2 z-20 bg-gray-500 dark:bg-gray-800 dark:text-primary text-white rounded-full p-2 shadow cursor-pointer"
+                        type="button"
+                        onClick={() => setIsBannerModalOpen(true)}
+                    >
+                        <ImagePlus className="h-3.5 w-3.5" />
+                    </button>
+                )}
             </div>
 
             <div className=" px-3 lg:px-6 pb-6">
@@ -96,13 +122,15 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                             </AvatarFallback>
                         </Avatar>
 
-                        <button
-                            className="absolute bottom-1 right-1 z-20 bg-[#262626] dark:text-primary text-white rounded-full p-1.5 shadow cursor-pointer bg-gray-500 dark:bg-gray-800"
-                            type="button"
-                            onClick={() => setIsAvatarModalOpen(true)}
-                        >
-                            <ImagePlus className="h-4 w-4" />
-                        </button>
+                        {isCurrentUser && (
+                            <button
+                                className="absolute bottom-1 right-1 z-20 bg-[#262626] dark:text-primary text-white rounded-full p-1.5 shadow cursor-pointer bg-gray-500 dark:bg-gray-800"
+                                type="button"
+                                onClick={() => setIsAvatarModalOpen(true)}
+                            >
+                                <ImagePlus className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -183,7 +211,8 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
             <ImageUploadModal
                 isOpen={isAvatarModalOpen}
                 onClose={() => setIsAvatarModalOpen(false)}
-                onSave={handleSave}
+                onSave={handleAvatarSave}
+                onRemove={handleAvatarRemove}
                 currentUrl={profile.avatarUrl}
                 variant="avatar"
             />
@@ -191,7 +220,8 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
             <ImageUploadModal
                 isOpen={isBannerModalOpen}
                 onClose={() => setIsBannerModalOpen(false)}
-                onSave={handleSave}
+                onSave={handleBannerSave}
+                onRemove={handleBannerRemove}
                 currentUrl={profile.bannerUrl}
                 variant="banner"
             />
