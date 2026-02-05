@@ -78,13 +78,16 @@ export interface UserProfile {
         comments: number,
     }
 
-    achievements: Array<{
-        id: string;
-        name: string;
-        slug: string;
-        description: string;
-        iconUrl: string | null;
-    }>;
+    achievements: {
+        latest: Array<{
+            id: string;
+            name: string;
+            slug: string;
+            description: string;
+            iconUrl: string | null;
+        }>;
+        total: number;
+    };
 
     problemStats: {
         total: number;

@@ -9,16 +9,15 @@ interface AchievementsProps {
 }
 
 export default function Achievements({ achievements, isCurrentUser }: AchievementsProps) {
-    if (!achievements || achievements.length === 0) return null;
+    if (!achievements || achievements.latest.length === 0) return null;
 
-    const displayCount = 3;
-    const visibleAchievements = achievements.slice(0, displayCount);
-    const remainingCount = Math.max(0, achievements.length - displayCount);
-
-    const names = visibleAchievements.map(a => a.name);
+    const { latest, total } = achievements;
+    const names = latest.map(a => a.name);
     let summaryText = names.join(", ");
-    if (remainingCount > 0) {
-        summaryText += `, +${remainingCount} more`;
+
+    const otherCount = total - latest.length;
+    if (otherCount > 0) {
+        summaryText += `, +${otherCount} more`;
     }
 
     return (
@@ -27,8 +26,8 @@ export default function Achievements({ achievements, isCurrentUser }: Achievemen
 
             <div className="flex gap-2 items-center">
                 <div className="flex -space-x-4 shrink-0">
-                    {visibleAchievements.map((achv, i) => (
-                        <div key={achv.id} className="relative w-10 h-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center overflow-hidden z-[3-i]">
+                    {latest.map((achv, i) => (
+                        <div key={achv.id} className="relative w-10 h-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center overflow-hidden z-[10-i]">
                             {achv.iconUrl ? (
                                 <Image src={achv.iconUrl} alt={achv.name} fill className="object-cover" />
                             ) : (
@@ -36,12 +35,9 @@ export default function Achievements({ achievements, isCurrentUser }: Achievemen
                             )}
                         </div>
                     ))}
-                    {remainingCount > 0 && visibleAchievements.length < 3 && (
-                        null
-                    )}
                 </div>
 
-                <p className="text-[12px] max-w-42 ">
+                <p className="text-[12px] max-w-42">
                     {summaryText}
                 </p>
             </div>
@@ -49,7 +45,7 @@ export default function Achievements({ achievements, isCurrentUser }: Achievemen
             {
                 isCurrentUser && <div className="flex justify-between items-center mt-1">
                     <span className="text-sm font-semibold text-muted-foreground">
-                        {achievements.length} unlocked
+                        {total} unlocked
                     </span>
 
                     <Button variant="secondary" size="sm" className="h-8 px-4 rounded-full text-xs font-semibold cursor-pointer">
