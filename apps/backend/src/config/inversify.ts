@@ -3,6 +3,7 @@ import { TYPES } from "../types";
 import { RedisManager } from "./redis";
 import { AuthService, AuthController, AuthRepository, TokenService, OAuthService, OAuthController } from "../modules/auth";
 import { UserRepository, UserService, UserController } from "../modules/user";
+import { CompanyRepository, CompanyService, CompanyController } from "../modules/company";
 import { ActivityRepository, ActivityService, ActivityController } from "../modules/activity";
 import { prisma } from "./prisma";
 import { AuthMiddleware } from "../middlewares";
@@ -39,6 +40,10 @@ container.bind<UserController>(TYPES.UserController).to(UserController).inSingle
 container.bind<ActivityRepository>(TYPES.ActivityRepository).to(ActivityRepository).inSingletonScope();
 container.bind<ActivityService>(TYPES.ActivityService).to(ActivityService).inSingletonScope();
 container.bind<ActivityController>(TYPES.ActivityController).to(ActivityController).inSingletonScope();
+
+container.bind<CompanyRepository>(TYPES.CompanyRepository).to(CompanyRepository).inSingletonScope();
+container.bind<CompanyService>(TYPES.CompanyService).to(CompanyService).inSingletonScope();
+container.bind<CompanyController>(TYPES.CompanyController).to(CompanyController).inSingletonScope();
 
 container.bind(TYPES.VerificationRepository).to(VerificationRepository).inSingletonScope();
 container.bind(TYPES.VerificationService).to(VerificationService).inSingletonScope();

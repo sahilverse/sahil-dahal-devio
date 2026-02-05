@@ -5,7 +5,9 @@ import type {
     AccountStatusPayload,
     CreateOAuthUserPayload,
     CreateAccountPayload,
-    UpdateProfilePayload
+    UpdateProfilePayload,
+    CreateExperiencePayload,
+    UpdateExperiencePayload
 } from "./user.types";
 import { TYPES } from "../../types";
 
@@ -252,7 +254,7 @@ export class UserRepository {
                 profile: true,
                 role: true,
                 userStreak: true,
-                experiences: { orderBy: { startDate: 'desc' } },
+                experiences: { orderBy: { startDate: 'desc' }, include: { company: true } },
                 educations: { orderBy: { startDate: 'desc' } },
                 certifications: { orderBy: { issueDate: 'desc' } },
                 projects: { orderBy: { startDate: 'desc' } },
@@ -356,5 +358,39 @@ export class UserRepository {
             posts,
             comments
         };
+    }
+
+    async createExperience(userId: string, data: CreateExperiencePayload): Promise<any> {
+        return this.prisma.userExperience.create({
+            data: {
+                ...data,
+                userId
+            }
+        });
+    }
+
+    async updateExperience(userId: string, experienceId: string, data: UpdateExperiencePayload): Promise<any> {
+        return this.prisma.userExperience.update({
+            where: {
+                id: experienceId,
+                userId
+            },
+            data
+        });
+    }
+
+    async deleteExperience(userId: string, experienceId: string): Promise<void> {
+        await this.prisma.userExperience.delete({
+            where: {
+                id: experienceId,
+                userId
+            }
+        });
+    }
+
+    async findExperienceById(experienceId: string): Promise<any | null> {
+        return this.prisma.userExperience.findUnique({
+            where: { id: experienceId }
+        });
     }
 }

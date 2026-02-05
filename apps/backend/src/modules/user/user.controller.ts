@@ -109,4 +109,29 @@ export class UserController {
         await this.userService.updateNames(userId, payload);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Names updated successfully");
     });
+
+    addExperience = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
+
+        const experience = await this.userService.addExperience(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Experience added successfully", experience);
+    });
+
+    updateExperience = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const payload = req.body;
+
+        const experience = await this.userService.updateExperience(userId, id, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Experience updated successfully", experience);
+    });
+
+    removeExperience = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.userService.deleteExperience(userId, id);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Experience removed successfully");
+    });
 }

@@ -3,7 +3,14 @@ import { UserRepository } from "./user.repository";
 import { ApiError } from "../../utils/ApiError";
 import type { User } from "../../generated/prisma/client";
 import { AccountStatus } from "../../generated/prisma/client";
-import type { OnboardingPayload, UserProfile, UpdateProfilePayload, UpdateNamesPayload } from "./user.types";
+import type {
+    OnboardingPayload,
+    UserProfile,
+    UpdateProfilePayload,
+    UpdateNamesPayload,
+    CreateExperiencePayload,
+    UpdateExperiencePayload
+} from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import { PrivateProfileDTO, PublicProfileDTO } from "./dtos/user.dto";
@@ -316,6 +323,28 @@ export class UserService {
         }
 
         await this.userRepository.updateUserProfile(userId, payload);
+    }
+
+    async addExperience(userId: string, data: CreateExperiencePayload): Promise<any> {
+        return this.userRepository.createExperience(userId, data);
+    }
+
+    async updateExperience(userId: string, experienceId: string, data: UpdateExperiencePayload): Promise<any> {
+        const experience = await this.userRepository.findExperienceById(experienceId);
+        if (!experience) {
+            throw new ApiError("Experience not found", StatusCodes.NOT_FOUND);
+        }
+
+        return this.userRepository.updateExperience(userId, experienceId, data);
+    }
+
+    async deleteExperience(userId: string, experienceId: string): Promise<void> {
+        const experience = await this.userRepository.findExperienceById(experienceId);
+        if (!experience) {
+            throw new ApiError("Experience not found", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.deleteExperience(userId, experienceId);
     }
 
     private _filterSocials(socials: Record<string, any>): Record<string, string> {

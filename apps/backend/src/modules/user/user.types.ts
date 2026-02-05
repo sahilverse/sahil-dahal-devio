@@ -22,8 +22,6 @@ export interface CreateOAuthUserPayload
     avatarUrl: string | null;
 }
 
-
-
 export interface AccountStatusPayload {
     userId: string;
     status: AccountStatus;
@@ -56,7 +54,6 @@ export interface UpdateProfilePayload {
         website?: string | null;
     } | null;
 }
-
 
 export type UserProfile = Prisma.UserGetPayload<{
     include: {
@@ -97,3 +94,17 @@ export type UserProfile = Prisma.UserGetPayload<{
         };
     };
 }>;
+
+export interface CreateExperiencePayload {
+    title: string;
+    companyName: string;
+    companyId?: string | null;
+    location?: string | null;
+    type?: string | null;
+    startDate: Date;
+    endDate?: Date | null;
+    isCurrent: boolean;
+    description?: string | null;
+}
+
+export interface UpdateExperiencePayload extends Partial<CreateExperiencePayload> { }

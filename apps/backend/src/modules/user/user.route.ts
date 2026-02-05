@@ -3,7 +3,13 @@ import { container } from "../../config";
 import { TYPES } from "../../types";
 import { UserController } from "./user.controller";
 import { AuthMiddleware, validateRequest, upload } from "../../middlewares";
-import { onboardingSchema, updateProfileSchema, updateNamesSchema } from "@devio/zod-utils";
+import {
+    onboardingSchema,
+    updateProfileSchema,
+    updateNamesSchema,
+    createExperienceSchema,
+    updateExperienceSchema
+} from "@devio/zod-utils";
 
 const router: Router = Router();
 const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
@@ -339,6 +345,86 @@ router.patch(
     authMiddleware.guard,
     validateRequest(updateNamesSchema),
     userController.updateNames
+);
+
+/**
+ * @swagger
+ * /users/experiences:
+ *   post:
+ *     summary: Add user experience
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateExperienceInput'
+ *     responses:
+ *       201:
+ *         description: Experience added successfully
+ */
+router.post(
+    "/experiences",
+    authMiddleware.guard,
+    validateRequest(createExperienceSchema),
+    userController.addExperience
+);
+
+/**
+ * @swagger
+ * /users/experiences/{id}:
+ *   patch:
+ *     summary: Update user experience
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateExperienceInput'
+ *     responses:
+ *       200:
+ *         description: Experience updated successfully
+ */
+router.patch(
+    "/experiences/:id",
+    authMiddleware.guard,
+    validateRequest(updateExperienceSchema),
+    userController.updateExperience
+);
+
+/**
+ * @swagger
+ * /users/experiences/{id}:
+ *   delete:
+ *     summary: Remove user experience
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Experience removed successfully
+ */
+router.delete(
+    "/experiences/:id",
+    authMiddleware.guard,
+    userController.removeExperience
 );
 
 export { router };
