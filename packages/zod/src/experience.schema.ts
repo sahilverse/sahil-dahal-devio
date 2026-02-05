@@ -22,7 +22,7 @@ export const experienceSchema = z.object({
         .min(2, "Company name must be at least 2 characters")
         .max(100, "Company name is too long")
         .trim(),
-    companyId: z.string().cuid().optional().nullable(),
+    companyId: z.string().optional().nullable(),
     location: z.string().max(100, "Location is too long").trim().optional().nullable(),
     type: z.enum(EmploymentType).optional().nullable(),
     startDate: z.coerce.date(),
