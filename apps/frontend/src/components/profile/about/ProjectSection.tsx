@@ -1,6 +1,7 @@
 import { Project } from "@/types/profile";
 import { FolderGit2, ExternalLink } from "lucide-react";
 import AboutSection from "./AboutSection";
+import ExpandableText from "./ExpandableText";
 
 interface ProjectSectionProps {
     projects: Project[];
@@ -61,7 +62,7 @@ export default function ProjectSection({
                             {formatDateRange(project.startDate, project.endDate)}
                         </p>
                         {project.description && (
-                            <p className="text-sm text-muted-foreground mt-2">{project.description}</p>
+                            <ExpandableText text={project.description} className="mt-2" />
                         )}
                         {project.skills.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-2">

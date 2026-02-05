@@ -1,6 +1,7 @@
 import { Experience } from "@/types/profile";
 import { Briefcase, MapPin } from "lucide-react";
 import AboutSection from "./AboutSection";
+import ExpandableText from "./ExpandableText";
 
 interface ExperienceSectionProps {
     experiences: Experience[];
@@ -68,7 +69,7 @@ export default function ExperienceSection({
             onEdit={onEdit}
         >
             {experiences.map((exp, index) => (
-                <div key={exp.id} className="flex gap-4">
+                <div key={exp.id} className="relative flex gap-4">
                     <div className="shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
                         <Briefcase className="h-6 w-6 text-muted-foreground" />
                     </div>
@@ -87,12 +88,9 @@ export default function ExperienceSection({
                             </p>
                         )}
                         {exp.description && (
-                            <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
+                            <ExpandableText text={exp.description} className="mt-2" />
                         )}
                     </div>
-                    {index < experiences.length - 1 && (
-                        <div className="absolute left-6 top-14 bottom-0 w-px bg-border" />
-                    )}
                 </div>
             ))}
         </AboutSection>
