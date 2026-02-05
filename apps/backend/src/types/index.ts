@@ -16,6 +16,10 @@ export const TYPES = {
     UserService: Symbol.for("UserService"),
     UserController: Symbol.for("UserController"),
 
+    ActivityRepository: Symbol.for("ActivityRepository"),
+    ActivityService: Symbol.for("ActivityService"),
+    ActivityController: Symbol.for("ActivityController"),
+
     VerificationRepository: Symbol.for("VerificationRepository"),
     VerificationService: Symbol.for("VerificationService"),
 
