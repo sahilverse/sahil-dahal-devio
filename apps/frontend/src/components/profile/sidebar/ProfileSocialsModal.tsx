@@ -101,7 +101,7 @@ export default function ProfileSocialsModal({
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 pt-0">
-                    <div className="max-h-[60vh] overflow-y-auto px-1 space-y-4 custom-scrollbar">
+                    <div className="max-h-[60vh] overflow-y-auto px-1 space-y-4 custom-scrollbar pb-1">
                         {SOCIAL_FIELDS.map((field) => (
                             <div key={field.id}>
                                 <Label htmlFor={field.id} className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground dark:text-muted-foreground/70 ml-0.5 mb-1.5 block">

@@ -1,0 +1,389 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createExperienceSchema } from "@devio/zod-utils";
+import type { CreateExperienceInput } from "@devio/zod-utils";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Briefcase, MapPin, Building2 } from "lucide-react";
+import { useSearchCompanies } from "@/hooks/useExperience";
+import { useDebounce } from "@/hooks/useDebounce";
+import { EMPLOYMENT_TYPE_OPTIONS } from "@/lib/constants";
+import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
+
+interface ExperienceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (data: any) => void;
+    initialData?: Partial<CreateExperienceInput> & { id?: string; companyLogoUrl?: string | null };
+    onDelete?: (id: string) => void;
+    isPending?: boolean;
+}
+
+export default function ExperienceModal({
+    isOpen,
+    onClose,
+    onSave,
+    initialData,
+    onDelete,
+    isPending
+}: ExperienceModalProps) {
+    const [companySearch, setCompanySearch] = useState(initialData?.companyName || "");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+    const debouncedSearch = useDebounce(companySearch, 300);
+    const { data: companyResults, isLoading: isSearching } = useSearchCompanies(debouncedSearch);
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        control,
+        setValue,
+        watch,
+        formState: { errors, isDirty }
+    } = useForm({
+        resolver: zodResolver(createExperienceSchema),
+        defaultValues: {
+            title: "",
+            companyName: "",
+            companyId: null,
+            location: "",
+            type: "FULL_TIME",
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: "",
+            isCurrent: false,
+            description: "",
+        }
+    });
+
+    const isCurrent = watch("isCurrent");
+
+    useEffect(() => {
+        if (isOpen) {
+            reset({
+                title: initialData?.title ?? "",
+                companyName: initialData?.companyName ?? "",
+                companyId: initialData?.companyId ?? null,
+                location: initialData?.location ?? "",
+                type: (initialData?.type as any) ?? "FULL_TIME",
+                startDate: toInputDate(initialData?.startDate) || new Date().toISOString().split('T')[0],
+                endDate: toInputDate(initialData?.endDate),
+                isCurrent: initialData?.isCurrent ?? false,
+                description: initialData?.description ?? "",
+            });
+            setCompanySearch(initialData?.companyName ?? "");
+        }
+    }, [isOpen, initialData, reset]);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleCompanySelect = (company: { id: string; name: string }) => {
+        setValue("companyName", company.name, { shouldValidate: true, shouldDirty: true });
+        setValue("companyId", company.id, { shouldDirty: true });
+        setCompanySearch(company.name);
+        setShowSuggestions(false);
+    };
+
+    const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setCompanySearch(value);
+        setValue("companyName", value, { shouldValidate: true, shouldDirty: true });
+        setValue("companyId", null, { shouldDirty: true });
+        setShowSuggestions(true);
+    };
+
+    const toInputDate = (date: any) => {
+        if (!date) return "";
+        try {
+            return new Date(date).toISOString().split('T')[0];
+        } catch (e) {
+            return "";
+        }
+    };
+
+    const onSubmit = (data: CreateExperienceInput) => {
+        console.log("Form submitted with data:", data);
+        onSave(data);
+    };
+
+    const onError = (errors: any) => {
+        console.log("Form validation errors:", errors);
+    };
+
+    return (
+        <>
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl bg-card">
+                    <DialogHeader className="px-6 py-5 border-b bg-muted/20">
+                        <DialogTitle className="text-sm font-bold flex items-center gap-2 tracking-tight uppercase text-primary/80">
+                            <Briefcase className="w-4 h-4" /> {initialData?.id ? "Edit Experience" : "Add Experience"}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <form onSubmit={handleSubmit(onSubmit, onError)} className="p-6 pt-0 space-y-5">
+                        <div className="max-h-[70vh] overflow-y-auto px-1 space-y-5 custom-scrollbar pb-1">
+
+                            {/* Title */}
+                            <div className="space-y-2">
+                                <Label htmlFor="title" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                    Title *
+                                </Label>
+                                <Input
+                                    id="title"
+                                    placeholder="e.g. Senior Software Engineer"
+                                    className="h-11 bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm text-foreground placeholder:text-muted-foreground/70"
+                                    {...register("title")}
+                                />
+                                {errors.title && (
+                                    <p className="text-[10px] font-medium text-destructive ml-1">{errors.title.message}</p>
+                                )}
+                            </div>
+
+                            {/* Company & Type */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Company Search */}
+                                <div className="space-y-2 relative" ref={searchWrapperRef}>
+                                    <Label htmlFor="company" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                        Company *
+                                    </Label>
+                                    <div className="relative group">
+                                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+                                        <Input
+                                            id="company"
+                                            placeholder="Search company..."
+                                            value={companySearch}
+                                            onChange={handleCompanyChange}
+                                            onFocus={() => setShowSuggestions(true)}
+                                            className="pl-10 h-11 bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm text-foreground placeholder:text-muted-foreground/70"
+                                            autoComplete="off"
+                                        />
+                                    </div>
+                                    {errors.companyName && (
+                                        <p className="text-[10px] font-medium text-destructive ml-1">{errors.companyName.message}</p>
+                                    )}
+
+                                    {/* Suggestions Dropdown */}
+                                    {showSuggestions && debouncedSearch.length >= 2 && (
+                                        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                                            {isSearching ? (
+                                                <div className="p-3 text-xs text-muted-foreground text-center">Searching...</div>
+                                            ) : companyResults && companyResults.length > 0 ? (
+                                                <ul className="py-1">
+                                                    {companyResults.map((company) => (
+                                                        <li
+                                                            key={company.id}
+                                                            className="px-3 py-2 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors"
+                                                            onClick={() => handleCompanySelect(company)}
+                                                        >
+                                                            <div className="w-6 h-6 rounded bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                                                                {company.logoUrl ? (
+                                                                    <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <Building2 className="w-3 h-3 text-muted-foreground" />
+                                                                )}
+                                                            </div>
+                                                            <span className="text-sm font-medium">{company.name}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <div className="p-3 text-xs text-muted-foreground text-center">
+                                                    No companies found. Using "{debouncedSearch}"
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Employment Type */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="type" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                        Employment Type
+                                    </Label>
+                                    <select
+                                        id="type"
+                                        className="flex h-11 w-full items-center justify-between rounded-md border border-zinc-300 dark:border-muted/50 bg-zinc-50/50 dark:bg-muted/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-foreground dark:[&>option]:bg-popover dark:[&>option]:text-popover-foreground"
+                                        {...register("type")}
+                                    >
+                                        <option value="" disabled>Select type</option>
+                                        {EMPLOYMENT_TYPE_OPTIONS.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Location */}
+                            <div className="space-y-2">
+                                <Label htmlFor="location" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                    Location
+                                </Label>
+                                <div className="relative group">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+                                    <Input
+                                        id="location"
+                                        placeholder="e.g. San Francisco, CA"
+                                        className="pl-10 h-11 bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm text-foreground placeholder:text-muted-foreground/70"
+                                        {...register("location")}
+                                    />
+                                </div>
+                                {errors.location && (
+                                    <p className="text-[10px] font-medium text-destructive ml-1">{errors.location.message}</p>
+                                )}
+                            </div>
+
+                            {/* Dates */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="startDate" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                        Start Date *
+                                    </Label>
+                                    <Input
+                                        id="startDate"
+                                        type="date"
+                                        className="h-11 bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm text-foreground dark:[color-scheme:dark]"
+                                        {...register("startDate", { setValueAs: (v) => v === "" ? undefined : v })}
+                                    />
+                                    {errors.startDate && (
+                                        <p className="text-[10px] font-medium text-destructive ml-1">{errors.startDate.message}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="endDate" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                        End Date
+                                    </Label>
+                                    <Input
+                                        id="endDate"
+                                        type="date"
+                                        disabled={isCurrent}
+                                        className="h-11 bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm disabled:opacity-50 text-foreground dark:[color-scheme:dark]"
+                                        {...register("endDate", { setValueAs: (v) => v === "" ? null : v })}
+                                    />
+                                    {errors.endDate && (
+                                        <p className="text-[10px] font-medium text-destructive ml-1">{errors.endDate.message}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Current Role Checkbox */}
+                            <div className="flex items-center space-x-2">
+                                <Controller
+                                    name="isCurrent"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <input
+                                            type="checkbox"
+                                            id="isCurrent"
+                                            className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900 text-brand accent-[var(--color-brand-primary)] focus:ring-[var(--color-brand-primary)] dark:[color-scheme:dark]"
+                                            checked={!!field.value}
+                                            onChange={(e) => {
+                                                field.onChange(e.target.checked);
+                                                if (e.target.checked) {
+                                                    setValue("endDate", null, { shouldDirty: true });
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="isCurrent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-muted-foreground">
+                                    I am currently working in this role
+                                </Label>
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <Label htmlFor="description" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
+                                    Description
+                                </Label>
+                                <Textarea
+                                    id="description"
+                                    placeholder="Describe your responsibilities and achievements..."
+                                    className="min-h-[100px] bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm resize-y text-foreground placeholder:text-muted-foreground/70"
+                                    {...register("description")}
+                                />
+                                {errors.description && (
+                                    <p className="text-[10px] font-medium text-destructive ml-1">{errors.description.message}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <DialogFooter className="pt-6 border-t flex items-center justify-end gap-3">
+                            {initialData?.id && onDelete ? (
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    disabled={isPending}
+                                    className="h-9 min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase rounded-md text-destructive hover:text-destructive/80"
+                                >
+                                    Delete
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="secondary"
+                                    type="button"
+                                    onClick={onClose}
+                                    className="h-9 min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase rounded-md"
+                                >
+                                    Cancel
+                                </Button>
+                            )}
+                            <Button
+                                type="submit"
+                                variant="brand"
+                                disabled={isPending || !isDirty}
+                                className="h-9 min-w-[90px] px-4 font-bold tracking-tight text-[11px] uppercase shadow-lg shadow-brand-primary/20 transition-all rounded-md"
+                            >
+                                {isPending ? "Saving..." : "Save"}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            <ConfirmDeleteModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={() => {
+                    if (initialData?.id && onDelete) {
+                        onDelete(initialData.id);
+                        setShowDeleteConfirm(false);
+                    }
+                }}
+                title="Confirm Deletion"
+                description={
+                    <>
+                        Are you sure you want to delete this experience at <span className="font-semibold text-foreground">{initialData?.companyName}</span>?
+                        <br /><br />
+                        This action cannot be undone.
+                    </>
+                }
+                confirmText="Confirm Delete"
+                isPending={isPending}
+            />
+        </>
+    );
+}

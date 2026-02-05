@@ -1,10 +1,12 @@
+import { EmploymentType } from "@devio/zod-utils";
+
 export interface Experience {
     id: string;
     title: string;
     companyName: string;
     companyLogoUrl: string | null;
     location: string | null;
-    type: "FULL_TIME" | "PART_TIME" | "INTERNSHIP" | "CONTRACT" | "FREELANCE";
+    type: typeof EmploymentType[number];
     startDate: string;
     endDate: string | null;
     isCurrent: boolean;

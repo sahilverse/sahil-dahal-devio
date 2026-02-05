@@ -46,4 +46,18 @@ export const UserService = {
     updateNames: async (payload: any): Promise<void> => {
         await api.patch("/users/names", payload);
     },
+
+    addExperience: async (payload: any): Promise<any> => {
+        const { data } = await api.post("/users/experiences", payload);
+        return data.result;
+    },
+
+    updateExperience: async (id: string, payload: any): Promise<any> => {
+        const { data } = await api.patch(`/users/experiences/${id}`, payload);
+        return data.result;
+    },
+
+    deleteExperience: async (id: string): Promise<void> => {
+        await api.delete(`/users/experiences/${id}`);
+    },
 };

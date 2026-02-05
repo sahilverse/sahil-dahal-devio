@@ -1,12 +1,13 @@
 "use client";
-import { useRef, useState, useCallback } from "react";
+
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Area, Point } from "react-easy-crop";
 import { getCroppedImg } from "@/utils/cropImage";
 import { ModalHeader } from "./upload-modal/ModalHeader";
 import { ImagePreviewArea } from "./upload-modal/ImagePreviewArea";
 import { CropControls } from "./upload-modal/CropControls";
 import { ModalActions } from "./upload-modal/ModalActions";
-import { ConfirmDeleteModal } from "./upload-modal/ConfirmDeleteModal";
+import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 
 type UploadVariant = "avatar" | "banner";
 
@@ -38,6 +39,17 @@ export default function ImageUploadModal({
     const [isProcessing, setIsProcessing] = useState(false);
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isOpen]);
 
     const isAvatar = variant === "avatar";
     const aspect = isAvatar ? 1 : 1500 / 500;
@@ -92,7 +104,7 @@ export default function ImageUploadModal({
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
 
-                <div className="relative bg-white dark:bg-[#1a1a1b] rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6 overflow-hidden">
+                <div className="relative bg-card text-card-foreground border rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6 overflow-hidden">
                     <ModalHeader
                         title={title ?? (isAvatar ? "Avatar image" : "Banner image")}
                         onClose={handleClose}

@@ -1,29 +1,22 @@
 import { Experience } from "@/types/profile";
 import { formatDateRange, calculateDuration } from "@/lib/date";
-import { Briefcase, MapPin } from "lucide-react";
+import { Briefcase, MapPin, Pencil } from "lucide-react";
 import AboutSection from "./AboutSection";
 import ExpandableText from "./ExpandableText";
+import { EMPLOYMENT_TYPE_LABELS } from "@/lib/constants";
 
 interface ExperienceSectionProps {
     experiences: Experience[];
     isCurrentUser?: boolean;
     onAdd?: () => void;
-    onEdit?: () => void;
+    onEditExperience?: (experience: Experience) => void;
 }
-
-const TYPE_LABELS: Record<Experience["type"], string> = {
-    FULL_TIME: "Full-time",
-    PART_TIME: "Part-time",
-    INTERNSHIP: "Internship",
-    CONTRACT: "Contract",
-    FREELANCE: "Freelance",
-};
 
 export default function ExperienceSection({
     experiences,
     isCurrentUser,
     onAdd,
-    onEdit,
+    onEditExperience,
 }: ExperienceSectionProps) {
     return (
         <AboutSection
@@ -33,10 +26,17 @@ export default function ExperienceSection({
             emptyMessage="No experience added yet"
             isCurrentUser={isCurrentUser}
             onAdd={onAdd}
-            onEdit={onEdit}
         >
             {experiences.map((exp) => (
-                <div key={exp.id} className="relative flex gap-4">
+                <div key={exp.id} className="relative group/item flex gap-4">
+                    {isCurrentUser && onEditExperience && (
+                        <button
+                            onClick={() => onEditExperience(exp)}
+                            className="absolute right-0 top-0 opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                        >
+                            <Pencil className="w-[14px] h-[14px]" />
+                        </button>
+                    )}
                     <div className="shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                         {exp.companyLogoUrl ? (
                             <img
@@ -51,7 +51,7 @@ export default function ExperienceSection({
                     <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm">{exp.title}</h4>
                         <p className="text-sm text-muted-foreground">
-                            {exp.companyName} · {TYPE_LABELS[exp.type]}
+                            {exp.companyName} · {EMPLOYMENT_TYPE_LABELS[exp.type]}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                             {formatDateRange(exp.startDate, exp.endDate, { isCurrent: exp.isCurrent })} · {calculateDuration(exp.startDate, exp.endDate)}

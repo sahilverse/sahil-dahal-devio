@@ -12,7 +12,6 @@ interface AboutSectionProps {
     emptyMessage?: string;
     isCurrentUser?: boolean;
     onAdd?: () => void;
-    onEdit?: () => void;
 }
 
 export default function AboutSection({
@@ -23,7 +22,6 @@ export default function AboutSection({
     emptyMessage = "Nothing to show yet",
     isCurrentUser = false,
     onAdd,
-    onEdit,
 }: AboutSectionProps) {
     return (
         <div className="bg-card border border-border rounded-lg p-5">
@@ -42,16 +40,6 @@ export default function AboutSection({
                                 onClick={onAdd}
                             >
                                 <Plus className="h-4 w-4" />
-                            </Button>
-                        )}
-                        {onEdit && !isEmpty && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
-                                onClick={onEdit}
-                            >
-                                <Pencil className="h-4 w-4" />
                             </Button>
                         )}
                     </div>
