@@ -40,4 +40,10 @@ export const UserService = {
     removeBanner: async (): Promise<void> => {
         await api.delete("/users/banner");
     },
+    updateProfile: async (payload: any): Promise<void> => {
+        await api.patch("/users/profile", payload);
+    },
+    updateNames: async (payload: any): Promise<void> => {
+        await api.patch("/users/names", payload);
+    },
 };

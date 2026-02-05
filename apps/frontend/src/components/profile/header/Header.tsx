@@ -10,13 +10,15 @@ import ImageUploadModal from "./ImageUploadModal";
 import { toast } from "sonner";
 import ActionsDropdown from "./ActionsDropdown";
 import MobileAccordion from "./MobileAccordion";
+import ProfileInfoModal from "./ProfileInfoModal";
 import {
     useFollowUser,
     useUnfollowUser,
     useUploadAvatar,
     useUploadBanner,
     useRemoveAvatar,
-    useRemoveBanner
+    useRemoveBanner,
+    useUpdateProfile
 } from "@/hooks/useProfile";
 import Nav from "./Nav";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -34,6 +36,8 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
 
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+    const [isProfileInfoModalOpen, setIsProfileInfoModalOpen] = useState(false);
+    const [profileModalMode, setProfileModalMode] = useState<"title" | "location">("title");
 
     const { user } = useAppSelector((state) => state.auth);
     const isAuthenticated = !!user;
@@ -47,6 +51,17 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
     const { mutate: uploadBanner } = useUploadBanner(profile.username);
     const { mutate: removeAvatar } = useRemoveAvatar(profile.username);
     const { mutate: removeBanner } = useRemoveBanner(profile.username);
+    const { mutate: updateProfile, isPending: isUpdatePending } = useUpdateProfile(profile.username);
+
+    const openTitleModal = () => {
+        setProfileModalMode("title");
+        setIsProfileInfoModalOpen(true);
+    };
+
+    const openLocationModal = () => {
+        setProfileModalMode("location");
+        setIsProfileInfoModalOpen(true);
+    };
 
     const handleAvatarSave = (file: File) => {
         uploadAvatar(file);
@@ -141,13 +156,17 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                         <div>
                             <h1 className="text-lg font-bold">{fullName}</h1>
                             {location ? (
-                                <p className="text-muted-foreground tracking-wider text-xs whitespace-nowrap mt-1">
+                                <p
+                                    className={`text-muted-foreground tracking-wider text-xs whitespace-nowrap mt-1 ${isCurrentUser ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                                    onClick={() => isCurrentUser && openLocationModal()}
+                                >
                                     {location}
                                 </p>
                             ) : isCurrentUser && (
                                 <button
                                     className="mt-2 text-muted-foreground/50 hover:text-primary tracking-wider text-xs cursor-pointer flex items-center gap-1 transition-colors"
                                     type="button"
+                                    onClick={openLocationModal}
                                 >
                                     <Plus className="w-3 h-3" /> Add Location
                                 </button>
@@ -188,11 +207,17 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
 
 
                     {profile.title ? (
-                        <p className="text-muted-foreground max-w-md text-xs">{profile.title}</p>
+                        <p
+                            className={`text-muted-foreground max-w-md text-xs ${isCurrentUser ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                            onClick={() => isCurrentUser && openTitleModal()}
+                        >
+                            {profile.title}
+                        </p>
                     ) : isCurrentUser && (
                         <button
                             className="text-muted-foreground/50 hover:text-primary text-xs cursor-pointer flex items-center gap-1 transition-colors w-fit"
                             type="button"
+                            onClick={openTitleModal}
                         >
                             <Plus className="w-3 h-3" /> Add Title
                         </button>
@@ -224,6 +249,23 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                 onRemove={handleBannerRemove}
                 currentUrl={profile.bannerUrl}
                 variant="banner"
+            />
+
+            <ProfileInfoModal
+                isOpen={isProfileInfoModalOpen}
+                onClose={() => setIsProfileInfoModalOpen(false)}
+                mode={profileModalMode}
+                onSave={(data) => {
+                    updateProfile(data, {
+                        onSuccess: () => setIsProfileInfoModalOpen(false)
+                    });
+                }}
+                initialData={{
+                    title: profile.title,
+                    city: profile.city,
+                    country: profile.country
+                }}
+                isPending={isUpdatePending}
             />
         </div>
     );

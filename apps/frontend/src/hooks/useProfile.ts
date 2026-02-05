@@ -146,3 +146,33 @@ export function useRemoveBanner(username: string) {
         },
     });
 }
+
+export function useUpdateProfile(username: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: any) => UserService.updateProfile(payload),
+        onSuccess: () => {
+            toast.success("Profile updated successfully");
+            queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || "Failed to update profile");
+        },
+    });
+}
+
+export function useUpdateNames(username: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: any) => UserService.updateNames(payload),
+        onSuccess: () => {
+            toast.success("Names updated successfully");
+            queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || "Failed to update names");
+        },
+    });
+}
