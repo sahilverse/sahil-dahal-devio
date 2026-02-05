@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Share2, Plus, UserMinus, MessageCircle, MoreHorizontal } from "lucide-react";
 import { ActionsDropdown } from "../header";
 import { toast } from "sonner";
+import { copyCurrentUrl } from "@/lib/string";
 import Stats from "./Stats";
 import Achievements from "./Achievements";
 import Socials from "./Socials";
@@ -28,8 +29,8 @@ export default function Sidebar({ profile, isCurrentUser }: SidebarProps) {
     const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
     const isPending = isFollowPending || isUnfollowPending;
 
-    const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
+    const handleShare = async () => {
+        await copyCurrentUrl();
         toast.success("Link copied to clipboard");
         setHasCopied(true);
         setTimeout(() => setHasCopied(false), 2000);

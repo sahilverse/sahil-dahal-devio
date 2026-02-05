@@ -48,7 +48,7 @@ export default function DesktopUserMenu({ user, onLogout }: DesktopUserMenuProps
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <div className="hidden lg:block cursor-pointer select-none">
-                    <UserAvatar user={user} size="sm" />
+                    <UserAvatar user={user} size="md" />
                 </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72 p-2 space-y-2" align="end">

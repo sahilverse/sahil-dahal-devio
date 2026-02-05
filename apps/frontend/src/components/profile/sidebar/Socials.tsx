@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { UserProfile } from "@/types/profile";
+import { capitalize } from "@/lib/string";
 import { Github, Linkedin, Twitter, Globe, Link as LinkIcon, Facebook, Instagram, Youtube, Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -25,10 +26,6 @@ export default function Socials({ socials, isCurrentUser }: SocialsProps) {
         return <LinkIcon className="w-5 h-5" />;
     };
 
-    const getLabel = (key: string) => {
-        return key.charAt(0).toUpperCase() + key.slice(1);
-    };
-
     return (
         <div className="flex flex-col gap-3 pb-4">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">On the Web</h3>
@@ -42,7 +39,7 @@ export default function Socials({ socials, isCurrentUser }: SocialsProps) {
                         className="h-10 w-10 px-0 rounded-full text-foreground hover:text-primary hover:border-primary transition-colors bg-card"
                         asChild
                     >
-                        <Link href={url} target="_blank" rel="noopener noreferrer" aria-label={getLabel(key)} title={getLabel(key)}>
+                        <Link href={url} target="_blank" rel="noopener noreferrer" aria-label={capitalize(key)} title={capitalize(key)}>
                             {getIcon(key)}
                         </Link>
                     </Button>

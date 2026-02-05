@@ -14,6 +14,7 @@ import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
 import Nav from "./Nav";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppSelector } from "@/store/hooks";
+import { copyCurrentUrl } from "@/lib/string";
 
 interface HeaderProps {
     profile: UserProfile;
@@ -51,8 +52,8 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
         }
     };
 
-    const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
+    const handleShare = async () => {
+        await copyCurrentUrl();
         toast.success("Link copied to clipboard");
     };
 

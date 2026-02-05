@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { googleOAuth, githubOAuth } from "@/slices/auth";
 import { toast } from "sonner";
+import { capitalize } from "@/lib/string";
 import { Loader2 } from "lucide-react";
 
 export default function OAuthCallbackPage() {
@@ -47,7 +48,7 @@ export default function OAuthCallbackPage() {
                 }
 
                 await dispatch(action).unwrap();
-                toast.success(`Successfully logged in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}`);
+                toast.success(`Successfully logged in with ${capitalize(provider)}`);
                 router.push("/");
             } catch (err: any) {
                 console.error("OAuth Error:", err);

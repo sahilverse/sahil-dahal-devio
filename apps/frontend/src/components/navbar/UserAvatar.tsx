@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AuthUser } from "@/slices/auth/authTypes";
+import Image from "next/image";
 
 interface UserAvatarProps {
     user: AuthUser;
@@ -9,29 +10,24 @@ interface UserAvatarProps {
 }
 
 const SIZE_CLASSES = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-10 h-10 text-sm",
-    lg: "w-12 h-12 text-base"
+    sm: "w-8 h-8",
+    md: "w-10 h-10",
+    lg: "w-18 h-18",
 };
-
-const IMG_SIZES = { sm: 32, md: 40, lg: 48 };
 
 export default function UserAvatar({ user, size = "sm" }: UserAvatarProps) {
     return (
-        <div className={`${SIZE_CLASSES[size]} rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden border border-gray-200 dark:border-gray-700`}>
-            {user.avatarUrl ? (
+        <Avatar className={`${SIZE_CLASSES[size]} border border-gray-200 dark:border-gray-700`}>
+            <AvatarImage src={user.avatarUrl || undefined} alt={user.username || "User"} />
+            <AvatarFallback>
                 <Image
-                    src={user.avatarUrl}
-                    alt={user.username || "User"}
-                    width={IMG_SIZES[size]}
-                    height={IMG_SIZES[size]}
-                    className="object-cover w-full h-full"
+                    src="/devio-logo.png"
+                    alt="Devio"
+                    className="object-cover"
+                    height={24}
+                    width={24}
                 />
-            ) : (
-                <div className="w-full h-full flex items-center justify-center bg-brand-primary/10 text-brand-primary font-bold">
-                    {user.username?.slice(0, 2).toUpperCase() || "U"}
-                </div>
-            )}
-        </div>
+            </AvatarFallback>
+        </Avatar>
     );
 }
