@@ -2,6 +2,7 @@ import { injectable, inject } from "inversify";
 import { UserRepository } from "./user.repository";
 import { ApiError } from "../../utils/ApiError";
 import type { User } from "../../generated/prisma/client";
+import { AccountStatus } from "../../generated/prisma/client";
 import type { OnboardingPayload, UserProfile } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
@@ -37,6 +38,18 @@ export class UserService {
         }
 
         const isOwner = viewerId === user.id;
+
+        const restrictedStatuses: AccountStatus[] = [
+            AccountStatus.DEACTIVATED,
+            AccountStatus.SUSPENDED,
+            AccountStatus.ADMIN_DISABLED,
+            AccountStatus.PENDING_DELETION,
+        ];
+
+        if (restrictedStatuses.includes(user.accountStatus) && !isOwner) {
+            throw new ApiError("This account is not available", StatusCodes.NOT_FOUND);
+        }
+
         let isFollowing = false;
 
         if (viewerId && !isOwner) {
@@ -70,6 +83,7 @@ export class UserService {
             joinedAt: user.createdAt,
             devioAge,
             isFollowing,
+            isOwner,
 
             currentStreak: user.userStreak?.currentStreak || 0,
             longestStreak: user.userStreak?.longestStreak || 0,

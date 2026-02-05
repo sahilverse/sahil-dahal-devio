@@ -97,6 +97,7 @@ export interface PublicProfileDTO {
 
     devioAge: string;
     isFollowing: boolean;
+    isOwner: boolean;
 
     currentStreak: number;
     longestStreak: number;
