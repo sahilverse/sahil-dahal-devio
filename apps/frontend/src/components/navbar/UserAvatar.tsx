@@ -18,16 +18,19 @@ const SIZE_CLASSES = {
 export default function UserAvatar({ user, size = "sm" }: UserAvatarProps) {
     return (
         <Avatar className={`${SIZE_CLASSES[size]} border border-gray-200 dark:border-gray-700`}>
-            <AvatarImage src={user.avatarUrl || undefined} alt={user.username || "User"} />
+            <AvatarImage
+                src={user.avatarUrl || undefined}
+                alt={user.username || "User"}
+                className="object-cover"
+            />
             <AvatarFallback>
                 <Image
                     src="/devio-logo.png"
                     alt="Devio"
-                    className="object-cover"
                     height={24}
                     width={24}
                 />
-            </AvatarFallback>
+            </AvatarFallback>``
         </Avatar>
     );
 }
