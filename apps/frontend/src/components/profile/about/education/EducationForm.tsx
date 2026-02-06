@@ -7,11 +7,11 @@ import { createEducationSchema } from "@devio/zod-utils";
 import type { CreateEducationInput } from "@devio/zod-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { School, GraduationCap } from "lucide-react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import { DialogFooter } from "@/components/ui/dialog";
+import { FormTextarea } from "@/components/ui/FormTextarea";
 
 
 interface EducationFormProps {
@@ -35,7 +35,6 @@ export function EducationForm({
         register,
         handleSubmit,
         reset,
-        setValue,
         watch,
         formState: { errors, isDirty }
     } = useForm({
@@ -51,6 +50,9 @@ export function EducationForm({
             description: "",
         }
     });
+
+    const activitiesValue = watch("activities") || "";
+    const descriptionValue = watch("description") || "";
 
     useEffect(() => {
         if (initialData) {
@@ -188,46 +190,26 @@ export function EducationForm({
                     )}
                 </div>
 
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center ml-0.5">
-                        <Label htmlFor="activities" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70">
-                            Activities and Societies
-                        </Label>
-                        <span className="text-[10px] tabular-nums text-muted-foreground/60 font-medium">
-                            {watch("activities")?.length || 0}/500
-                        </span>
-                    </div>
-                    <Textarea
-                        id="activities"
-                        placeholder="e.g. Computer Science Club, Debate Team..."
-                        className="min-h-[80px] bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm resize-y text-foreground placeholder:text-muted-foreground/70"
-                        {...register("activities")}
-                    />
-                    {errors.activities && (
-                        <p className="text-[10px] font-medium text-destructive ml-1">{errors.activities.message}</p>
-                    )}
-                </div>
+                <FormTextarea
+                    id="activities"
+                    label="Activities and Societies"
+                    placeholder="e.g. Computer Science Club, Debate Team..."
+                    maxLength={500}
+                    register={register("activities")}
+                    watchValue={activitiesValue}
+                    error={errors.activities}
+                    className="min-h-[80px]"
+                />
 
-                {/* Description */}
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center ml-0.5">
-                        <Label htmlFor="description" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70">
-                            Description
-                        </Label>
-                        <span className="text-[10px] tabular-nums text-muted-foreground/60 font-medium">
-                            {watch("description")?.length || 0}/1000
-                        </span>
-                    </div>
-                    <Textarea
-                        id="description"
-                        placeholder="Describe your studies, awards, etc..."
-                        className="min-h-[100px] bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm resize-y text-foreground placeholder:text-muted-foreground/70"
-                        {...register("description")}
-                    />
-                    {errors.description && (
-                        <p className="text-[10px] font-medium text-destructive ml-1">{errors.description.message}</p>
-                    )}
-                </div>
+                <FormTextarea
+                    id="description"
+                    label="Description"
+                    placeholder="Describe your studies, awards, etc..."
+                    maxLength={1000}
+                    register={register("description")}
+                    watchValue={descriptionValue}
+                    error={errors.description}
+                />
             </div >
 
             <DialogFooter className="pt-4 md:pt-6 border-t flex items-center gap-3 shrink-0 w-full">

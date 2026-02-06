@@ -7,13 +7,13 @@ import { createExperienceSchema } from "@devio/zod-utils";
 import type { CreateExperienceInput } from "@devio/zod-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MapPin } from "lucide-react";
 import { EMPLOYMENT_TYPE_OPTIONS } from "@/lib/constants";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import { CompanySearchInput } from "./CompanySearchInput";
 import { DialogFooter } from "@/components/ui/dialog";
+import { FormTextarea } from "@/components/ui/FormTextarea";
 
 interface ExperienceFormProps {
     initialData?: Partial<CreateExperienceInput> & { id?: string; companyLogoUrl?: string | null };
@@ -57,6 +57,7 @@ export function ExperienceForm({
 
     const isCurrent = watch("isCurrent");
     const companyName = watch("companyName");
+    const descriptionValue = watch("description") || "";
 
     useEffect(() => {
         if (initialData) {
@@ -211,7 +212,7 @@ export function ExperienceForm({
                                 onChange={(e) => {
                                     field.onChange(e.target.checked);
                                     if (e.target.checked) {
-                                        setValue("endDate", null, { shouldDirty: true });
+                                        setValue("endDate", null, { shouldDirty: true, shouldValidate: true });
                                     }
                                 }}
                             />
@@ -223,20 +224,15 @@ export function ExperienceForm({
                 </div>
 
                 {/* Description */}
-                <div className="space-y-2">
-                    <Label htmlFor="description" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground/70 ml-0.5">
-                        Description
-                    </Label>
-                    <Textarea
-                        id="description"
-                        placeholder="Describe your responsibilities and achievements..."
-                        className="min-h-[100px] bg-zinc-50/50 dark:bg-muted/20 border-zinc-300 dark:border-muted/50 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-md text-sm resize-y text-foreground placeholder:text-muted-foreground/70"
-                        {...register("description")}
-                    />
-                    {errors.description && (
-                        <p className="text-[10px] font-medium text-destructive ml-1">{errors.description.message}</p>
-                    )}
-                </div>
+                <FormTextarea
+                    id="description"
+                    label="Description"
+                    placeholder="Describe your responsibilities and achievements..."
+                    maxLength={1000}
+                    register={register("description")}
+                    watchValue={descriptionValue}
+                    error={errors.description}
+                />
             </div>
 
             <DialogFooter className="pt-4 md:pt-6 border-t flex items-center gap-3 shrink-0 w-full">

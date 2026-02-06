@@ -28,7 +28,7 @@ export const experienceSchema = z.object({
     startDate: z.preprocess((arg) => (arg === "" || arg === null ? undefined : arg), z.coerce.date()),
     endDate: z.preprocess((arg) => (arg === "" ? null : arg), z.coerce.date().optional().nullable()),
     isCurrent: z.boolean().default(false),
-    description: z.string().max(2000, "Description is too long").trim().optional().nullable(),
+    description: z.string().max(1000, "Description is too long").trim().optional().nullable(),
 }).refine((data) => {
     if (!data.isCurrent && !data.endDate) {
         return false;

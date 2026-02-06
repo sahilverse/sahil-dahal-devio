@@ -9,19 +9,21 @@ import ExperienceModal from "./experience/ExperienceModal";
 import EducationModal from "./education/EducationModal";
 import CertificationModal from "./certifications/CertificationModal";
 import SkillsModal from "./skills/SkillsModal";
+import { ProjectModal } from "./projects/ProjectModal";
 import { useManageExperience } from "@/hooks/useExperience";
 import { useManageEducation } from "@/hooks/useEducation";
 import { useManageSkills } from "@/hooks/useSkills";
+import { useManageProjects } from "@/hooks/useProjects";
 import { logger } from "@/lib/logger";
 
-import type { UserProfile, Experience, Education, Certification } from "@/types/profile";
+import type { UserProfile, Experience, Education, Certification, Project } from "@/types/profile";
 
 interface AboutProps {
     profile: UserProfile;
-    isCurrentUser?: boolean;
+    isCurrentUser: boolean;
 }
 
-export default function About({ profile, isCurrentUser = false }: AboutProps) {
+export default function About({ profile, isCurrentUser }: AboutProps) {
     const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
     const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
 
@@ -33,13 +35,13 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
 
     const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
 
+    const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+    const [editingProject, setEditingProject] = useState<Project | null>(null);
+
     const { addExperience, updateExperience, deleteExperience } = useManageExperience(profile.username);
     const { addEducation, updateEducation, deleteEducation } = useManageEducation(profile.username);
     const { addSkill, removeSkill } = useManageSkills(profile.username);
-
-    const handleAdd = (section: string) => () => {
-        console.log(`Add ${section}`);
-    };
+    const { addProject, updateProject, deleteProject } = useManageProjects(profile.username);
 
     const handleSaveExperience = async (data: any) => {
         try {
@@ -135,6 +137,40 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
         setIsCertificationModalOpen(true);
     };
 
+    const handleAddProject = () => {
+        setEditingProject(null);
+        setIsProjectModalOpen(true);
+    };
+
+    const handleEditProject = (proj: Project) => {
+        setEditingProject(proj);
+        setIsProjectModalOpen(true);
+    };
+
+    const handleSaveProject = async (data: any) => {
+        try {
+            if (editingProject) {
+                await updateProject.mutateAsync({ id: editingProject.id, payload: data });
+            } else {
+                await addProject.mutateAsync(data);
+            }
+            setIsProjectModalOpen(false);
+            setEditingProject(null);
+        } catch (error) {
+            logger.error(error);
+        }
+    };
+
+    const handleDeleteProject = async (id: string) => {
+        try {
+            await deleteProject.mutateAsync(id);
+            setIsProjectModalOpen(false);
+            setEditingProject(null);
+        } catch (error) {
+            logger.error(error);
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -172,7 +208,8 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
             <ProjectSection
                 projects={profile.projects}
                 isCurrentUser={isCurrentUser}
-                onAdd={handleAdd("project")}
+                onAdd={handleAddProject}
+                onEdit={handleEditProject}
             />
 
             {/* Experience Modal */}
@@ -229,6 +266,19 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
                 }}
                 username={profile.username}
                 initialData={editingCertification}
+            />
+
+            {/* Project Modal */}
+            <ProjectModal
+                isOpen={isProjectModalOpen}
+                onClose={() => {
+                    setIsProjectModalOpen(false);
+                    setEditingProject(null);
+                }}
+                initialData={editingProject || undefined}
+                onSave={handleSaveProject}
+                onDelete={handleDeleteProject}
+                isPending={addProject.isPending || updateProject.isPending}
             />
         </motion.div>
     );

@@ -8,7 +8,7 @@ export const projectSchema = z.object({
         .trim(),
     description: z
         .string()
-        .max(2000, "Description is too long")
+        .max(1000, "Description is too long")
         .nullable()
         .optional(),
     url: z
