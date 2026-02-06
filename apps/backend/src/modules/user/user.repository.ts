@@ -9,7 +9,9 @@ import type {
     CreateExperiencePayload,
     UpdateExperiencePayload,
     CreateEducationPayload,
-    UpdateEducationPayload
+    UpdateEducationPayload,
+    CreateCertificationPayload,
+    UpdateCertificationPayload
 } from "./user.types";
 import { TYPES } from "../../types";
 
@@ -465,6 +467,40 @@ export class UserRepository {
                     skillId
                 }
             }
+        });
+    }
+
+    async createCertification(userId: string, data: CreateCertificationPayload): Promise<any> {
+        return this.prisma.userCertification.create({
+            data: {
+                ...data,
+                userId
+            }
+        });
+    }
+
+    async updateCertification(userId: string, certificationId: string, data: UpdateCertificationPayload): Promise<any> {
+        return this.prisma.userCertification.update({
+            where: {
+                id: certificationId,
+                userId
+            },
+            data
+        });
+    }
+
+    async deleteCertification(userId: string, certificationId: string): Promise<void> {
+        await this.prisma.userCertification.delete({
+            where: {
+                id: certificationId,
+                userId
+            }
+        });
+    }
+
+    async findCertificationById(certificationId: string): Promise<any | null> {
+        return this.prisma.userCertification.findUnique({
+            where: { id: certificationId }
         });
     }
 }

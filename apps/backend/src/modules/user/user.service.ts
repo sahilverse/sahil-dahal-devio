@@ -11,7 +11,9 @@ import type {
     CreateExperiencePayload,
     UpdateExperiencePayload,
     CreateEducationPayload,
-    UpdateEducationPayload
+    UpdateEducationPayload,
+    CreateCertificationPayload,
+    UpdateCertificationPayload
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
@@ -396,6 +398,28 @@ export class UserService {
         }
 
         await this.userRepository.removeUserSkill(userId, skillId);
+    }
+
+    async addCertification(userId: string, data: CreateCertificationPayload): Promise<any> {
+        return this.userRepository.createCertification(userId, data);
+    }
+
+    async updateCertification(userId: string, certificationId: string, data: UpdateCertificationPayload): Promise<any> {
+        const certification = await this.userRepository.findCertificationById(certificationId);
+        if (!certification || certification.userId !== userId) {
+            throw new ApiError("Certification not found", StatusCodes.NOT_FOUND);
+        }
+
+        return this.userRepository.updateCertification(userId, certificationId, data);
+    }
+
+    async removeCertification(userId: string, certificationId: string): Promise<void> {
+        const certification = await this.userRepository.findCertificationById(certificationId);
+        if (!certification || certification.userId !== userId) {
+            throw new ApiError("Certification not found", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.deleteCertification(userId, certificationId);
     }
 
     private _filterSocials(socials: Record<string, any>): Record<string, string> {

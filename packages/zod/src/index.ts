@@ -5,5 +5,5 @@ export * from "./user.schema";
 export * from "./experience.schema";
 export * from "./education.schema";
 export * from "./skills.schema";
-
-
+export * from "./certification.schema";
+export * from "./utils";

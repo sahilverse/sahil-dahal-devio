@@ -121,3 +121,14 @@ export interface CreateEducationPayload {
 }
 
 export interface UpdateEducationPayload extends Partial<CreateEducationPayload> { }
+
+export interface CreateCertificationPayload {
+    name: string;
+    issuingOrg: string;
+    issueDate: Date;
+    expirationDate?: Date | null;
+    credentialId?: string | null;
+    credentialUrl?: string | null;
+}
+
+export interface UpdateCertificationPayload extends Partial<CreateCertificationPayload> { }

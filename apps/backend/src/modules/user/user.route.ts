@@ -11,12 +11,66 @@ import {
     updateExperienceSchema,
     createEducationSchema,
     updateEducationSchema,
-    createUserSkillSchema
+    createUserSkillSchema,
+    createCertificationSchema,
+    updateCertificationSchema
 } from "@devio/zod-utils";
 
 const router: Router = Router();
+
 const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 const userController = container.get<UserController>(TYPES.UserController);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     EmploymentType:
+ *       type: string
+ *       enum: [FULL_TIME, PART_TIME, SELF_EMPLOYED, FREELANCE, CONTRACT, INTERNSHIP, APPRENTICESHIP, SEASONAL]
+ *     CreateExperienceInput:
+ *       type: object
+ *       required: [title, companyName, startDate]
+ *       properties:
+ *         title: { type: string, minLength: 2, maxLength: 100 }
+ *         companyName: { type: string, minLength: 2, maxLength: 100 }
+ *         companyId: { type: string, nullable: true }
+ *         location: { type: string, maxLength: 100, nullable: true }
+ *         type: { $ref: '#/components/schemas/EmploymentType', nullable: true }
+ *         startDate: { type: string, format: date }
+ *         endDate: { type: string, format: date, nullable: true }
+ *         isCurrent: { type: boolean, default: false }
+ *         description: { type: string, maxLength: 2000, nullable: true }
+ *     UpdateExperienceInput:
+ *       $ref: '#/components/schemas/CreateExperienceInput'
+ *     CreateEducationInput:
+ *       type: object
+ *       required: [school, startDate]
+ *       properties:
+ *         school: { type: string, minLength: 2, maxLength: 100 }
+ *         degree: { type: string, maxLength: 100, nullable: true }
+ *         fieldOfStudy: { type: string, maxLength: 100, nullable: true }
+ *         startDate: { type: string, format: date }
+ *         endDate: { type: string, format: date, nullable: true }
+ *         grade: { type: string, maxLength: 50, nullable: true }
+ *         activities: { type: string, maxLength: 500, nullable: true }
+ *         description: { type: string, maxLength: 2000, nullable: true }
+ *     UpdateEducationInput:
+ *       $ref: '#/components/schemas/CreateEducationInput'
+ *     CreateCertificationInput:
+ *       type: object
+ *       required: [name, issuingOrg, issueDate]
+ *       properties:
+ *         name: { type: string, minLength: 3, maxLength: 100, example: "Certified Ethical Hacker" }
+ *         issuingOrg: { type: string, minLength: 2, maxLength: 100, example: "EC-Council" }
+ *         issueDate: { type: string, format: date, example: "2024-01-15" }
+ *         expirationDate: { type: string, format: date, nullable: true, example: "2027-01-15" }
+ *         credentialId: { type: string, maxLength: 100, nullable: true, example: "CEH-12345" }
+ *         credentialUrl: { type: string, format: uri, nullable: true, example: "https://verify.eccouncil.org/ceh-12345" }
+ *     UpdateCertificationInput:
+ *       $ref: '#/components/schemas/CreateCertificationInput'
+ */
+
 
 /**
  * @swagger
@@ -352,41 +406,6 @@ router.patch(
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     EmploymentType:
- *       type: string
- *       enum: [FULL_TIME, PART_TIME, SELF_EMPLOYED, FREELANCE, CONTRACT, INTERNSHIP, APPRENTICESHIP, SEASONAL]
- *     CreateExperienceInput:
- *       type: object
- *       required: [title, companyName, startDate]
- *       properties:
- *         title: { type: string, minLength: 2, maxLength: 100 }
- *         companyName: { type: string, minLength: 2, maxLength: 100 }
- *         companyId: { type: string, nullable: true }
- *         location: { type: string, maxLength: 100, nullable: true }
- *         type: { $ref: '#/components/schemas/EmploymentType', nullable: true }
- *         startDate: { type: string, format: date }
- *         endDate: { type: string, format: date, nullable: true }
- *         isCurrent: { type: boolean, default: false }
- *         description: { type: string, maxLength: 2000, nullable: true }
- *     UpdateExperienceInput:
- *       $ref: '#/components/schemas/CreateExperienceInput'
- *     CreateEducationInput:
- *       type: object
- *       required: [school, startDate]
- *       properties:
- *         school: { type: string, minLength: 2, maxLength: 100 }
- *         degree: { type: string, maxLength: 100, nullable: true }
- *         fieldOfStudy: { type: string, maxLength: 100, nullable: true }
- *         startDate: { type: string, format: date }
- *         endDate: { type: string, format: date, nullable: true }
- *         grade: { type: string, maxLength: 50, nullable: true }
- *         activities: { type: string, maxLength: 500, nullable: true }
- *         description: { type: string, maxLength: 2000, nullable: true }
- *     UpdateEducationInput:
- *       $ref: '#/components/schemas/CreateEducationInput'
- *
  * /users/experiences:
  *   post:
  *     summary: Add user experience
@@ -603,6 +622,96 @@ router.delete(
     "/skills/:id",
     authMiddleware.guard,
     userController.removeSkill
+);
+
+
+
+/**
+ * @swagger
+ * /users/certifications:
+ *   post:
+ *     summary: Add certification
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCertificationInput'
+ *     responses:
+ *       201:
+ *         description: Certification added successfully
+ *       400:
+ *         description: Bad request
+ */
+router.post(
+    "/certifications",
+    authMiddleware.guard,
+    validateRequest(createCertificationSchema),
+    userController.addCertification
+);
+
+
+
+/**
+ * @swagger
+ * /users/certifications/{id}:
+ *   patch:
+ *     summary: Update certification
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCertificationInput'
+ *     responses:
+ *       200:
+ *         description: Certification updated successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Certification not found
+ */
+router.patch(
+    "/certifications/:id",
+    authMiddleware.guard,
+    validateRequest(updateCertificationSchema),
+    userController.updateCertification
+);
+
+/**
+ * @swagger
+ * /users/certifications/{id}:
+ *   delete:
+ *     summary: Remove certification
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Certification removed successfully
+ */
+router.delete(
+    "/certifications/:id",
+    authMiddleware.guard,
+    userController.removeCertification
 );
 
 export { router };

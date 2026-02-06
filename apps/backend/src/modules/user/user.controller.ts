@@ -179,4 +179,29 @@ export class UserController {
         await this.userService.removeSkill(userId, id);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Skill removed successfully");
     });
+
+    addCertification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
+
+        const certification = await this.userService.addCertification(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Certification added successfully", certification);
+    });
+
+    updateCertification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const payload = req.body;
+
+        const certification = await this.userService.updateCertification(userId, id, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Certification updated successfully", certification);
+    });
+
+    removeCertification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.userService.removeCertification(userId, id);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Certification removed successfully");
+    });
 }
