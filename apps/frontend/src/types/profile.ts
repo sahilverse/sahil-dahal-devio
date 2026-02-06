@@ -16,11 +16,13 @@ export interface Experience {
 export interface Education {
     id: string;
     school: string;
-    degree: string;
-    fieldOfStudy: string;
+    degree: string | null;
+    fieldOfStudy: string | null;
     startDate: string;
     endDate: string | null;
     grade: string | null;
+    activities: string | null;
+    description: string | null;
 }
 
 export interface Certification {

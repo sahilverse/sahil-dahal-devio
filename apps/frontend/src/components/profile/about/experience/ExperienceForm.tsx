@@ -98,7 +98,7 @@ export function ExperienceForm({
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 pt-0 space-y-4 md:space-y-5 flex flex-col flex-1 h-full overflow-hidden">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0 space-y-4 md:space-y-5 flex flex-col flex-1 h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto px-1 space-y-4 md:space-y-5 custom-scrollbar pb-1">
 
                 {/* Title */}

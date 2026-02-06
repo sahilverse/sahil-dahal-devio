@@ -14,19 +14,19 @@ export const EmploymentType = [
 export const experienceSchema = z.object({
     title: z
         .string()
-        .min(2, "Title must be at least 2 characters")
+        .min(3, "Title must be at least 3 characters")
         .max(100, "Title is too long")
         .trim(),
     companyName: z
         .string()
-        .min(2, "Company name must be at least 2 characters")
+        .min(3, "Company name must be at least 3 characters")
         .max(100, "Company name is too long")
         .trim(),
     companyId: z.string().optional().nullable(),
     location: z.string().max(100, "Location is too long").trim().optional().nullable(),
     type: z.enum(EmploymentType).optional().nullable(),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date().optional().nullable(),
+    startDate: z.preprocess((arg) => (arg === "" || arg === null ? undefined : arg), z.coerce.date()),
+    endDate: z.preprocess((arg) => (arg === "" ? null : arg), z.coerce.date().optional().nullable()),
     isCurrent: z.boolean().default(false),
     description: z.string().max(2000, "Description is too long").trim().optional().nullable(),
 }).refine((data) => {

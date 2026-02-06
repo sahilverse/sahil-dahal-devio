@@ -34,7 +34,7 @@ export const educationSchema = z.object({
         .nullable(),
     description: z
         .string()
-        .max(2000, "Description is too long")
+        .max(1000, "Description is too long")
         .trim()
         .optional()
         .nullable(),

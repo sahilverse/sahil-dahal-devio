@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserProfile, Experience } from "@/types/profile";
+import { UserProfile, Experience, Education } from "@/types/profile";
 import { motion } from "motion/react";
 import ExperienceSection from "./experience/ExperienceSection";
 import EducationSection from "./education/EducationSection";
@@ -7,7 +7,9 @@ import CertificationSection from "./certifications/CertificationSection";
 import ProjectSection from "./projects/ProjectSection";
 import SkillsSection from "./skills/SkillsSection";
 import ExperienceModal from "./experience/ExperienceModal";
+import EducationModal from "./education/EducationModal";
 import { useManageExperience } from "@/hooks/useExperience";
+import { useManageEducation } from "@/hooks/useEducation";
 import { logger } from "@/lib/logger";
 
 interface AboutProps {
@@ -19,14 +21,14 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
     const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
     const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
 
+    const [isEducationModalOpen, setIsEducationModalOpen] = useState(false);
+    const [editingEducation, setEditingEducation] = useState<Education | null>(null);
+
     const { addExperience, updateExperience, deleteExperience } = useManageExperience(profile.username);
+    const { addEducation, updateEducation, deleteEducation } = useManageEducation(profile.username);
 
     const handleAdd = (section: string) => () => {
         console.log(`Add ${section}`);
-    };
-
-    const handleEdit = (section: string) => () => {
-        console.log(`Edit ${section}`);
     };
 
     const handleSaveExperience = async (data: any) => {
@@ -55,11 +57,43 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
 
     const handleDeleteExperience = async (id: string) => {
         try {
-            if (confirm("Are you sure you want to delete this experience?")) {
-                await deleteExperience.mutateAsync(id);
-                setIsExperienceModalOpen(false);
-                setEditingExperience(null);
+            await deleteExperience.mutateAsync(id);
+            setIsExperienceModalOpen(false);
+            setEditingExperience(null);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleSaveEducation = async (data: any) => {
+        try {
+            if (editingEducation) {
+                await updateEducation.mutateAsync({ id: editingEducation.id, payload: data });
+            } else {
+                await addEducation.mutateAsync(data);
             }
+            setIsEducationModalOpen(false);
+            setEditingEducation(null);
+        } catch (error) {
+            logger.error(error);
+        }
+    };
+
+    const handleAddEducation = () => {
+        setEditingEducation(null);
+        setIsEducationModalOpen(true);
+    };
+
+    const handleEditEducation = (edu: Education) => {
+        setEditingEducation(edu);
+        setIsEducationModalOpen(true);
+    };
+
+    const handleDeleteEducation = async (id: string) => {
+        try {
+            await deleteEducation.mutateAsync(id);
+            setIsEducationModalOpen(false);
+            setEditingEducation(null);
         } catch (error) {
             console.error(error);
         }
@@ -82,7 +116,8 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
             <EducationSection
                 educations={profile.educations}
                 isCurrentUser={isCurrentUser}
-                onAdd={handleAdd("education")}
+                onAdd={handleAddEducation}
+                onEditEducation={handleEditEducation}
             />
 
             <SkillsSection
@@ -118,6 +153,23 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
                     endDate: editingExperience.endDate ? new Date(editingExperience.endDate) : null,
                 } : undefined}
                 isPending={addExperience.isPending || updateExperience.isPending}
+            />
+
+            {/* Education Modal */}
+            <EducationModal
+                isOpen={isEducationModalOpen}
+                onClose={() => {
+                    setIsEducationModalOpen(false);
+                    setEditingEducation(null);
+                }}
+                onSave={handleSaveEducation}
+                onDelete={handleDeleteEducation}
+                initialData={editingEducation ? {
+                    ...editingEducation,
+                    startDate: new Date(editingEducation.startDate),
+                    endDate: editingEducation.endDate ? new Date(editingEducation.endDate) : null,
+                } : undefined}
+                isPending={addEducation.isPending || updateEducation.isPending}
             />
         </motion.div>
     );

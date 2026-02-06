@@ -32,7 +32,7 @@ export default function ExperienceSection({
                     {isCurrentUser && onEditExperience && (
                         <button
                             onClick={() => onEditExperience(exp)}
-                            className="absolute right-0 top-0 opacity-0 group-hover/item:opacity-100 transition-opacity p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="absolute right-0 top-0 opacity-100 lg:opacity-0 lg:group-hover/item:opacity-100 transition-opacity p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
                         >
                             <Pencil className="w-[14px] h-[14px]" />
                         </button>

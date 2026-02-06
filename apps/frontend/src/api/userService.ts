@@ -60,4 +60,18 @@ export const UserService = {
     deleteExperience: async (id: string): Promise<void> => {
         await api.delete(`/users/experiences/${id}`);
     },
+
+    addEducation: async (payload: any): Promise<any> => {
+        const { data } = await api.post("/users/educations", payload);
+        return data.result;
+    },
+
+    updateEducation: async (id: string, payload: any): Promise<any> => {
+        const { data } = await api.patch(`/users/educations/${id}`, payload);
+        return data.result;
+    },
+
+    deleteEducation: async (id: string): Promise<void> => {
+        await api.delete(`/users/educations/${id}`);
+    },
 };

@@ -39,8 +39,8 @@ export function useFollowUser(username: string) {
 
             return { previousProfile };
         },
-        onError: (_err, _vars, context) => {
-            toast.error("Failed to follow user");
+        onError: (err: any, _vars, context) => {
+            toast.error(err.errorMessage || "Failed to follow user");
             if (context?.previousProfile) {
                 queryClient.setQueryData(USER_QUERY_KEYS.profile(username), context.previousProfile);
             }
@@ -74,8 +74,8 @@ export function useUnfollowUser(username: string) {
 
             return { previousProfile };
         },
-        onError: (_err, _vars, context) => {
-            toast.error("Failed to unfollow user");
+        onError: (err: any, _vars, context) => {
+            toast.error(err.errorMessage || "Failed to unfollow user");
             if (context?.previousProfile) {
                 queryClient.setQueryData(USER_QUERY_KEYS.profile(username), context.previousProfile);
             }
@@ -96,8 +96,8 @@ export function useUploadAvatar(username: string) {
             toast.success("Avatar updated successfully");
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
-        onError: () => {
-            toast.error("Failed to update avatar");
+        onError: (err: any) => {
+            toast.error(err.errorMessage || "Failed to update avatar");
         },
     });
 }
@@ -111,8 +111,8 @@ export function useUploadBanner(username: string) {
             toast.success("Banner updated successfully");
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
-        onError: () => {
-            toast.error("Failed to update banner");
+        onError: (err: any) => {
+            toast.error(err.errorMessage || "Failed to update banner");
         },
     });
 }
@@ -126,8 +126,8 @@ export function useRemoveAvatar(username: string) {
             toast.success("Avatar removed successfully");
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
-        onError: () => {
-            toast.error("Failed to remove avatar");
+        onError: (err: any) => {
+            toast.error(err.errorMessage || "Failed to remove avatar");
         },
     });
 }
@@ -141,8 +141,8 @@ export function useRemoveBanner(username: string) {
             toast.success("Banner removed successfully");
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
-        onError: () => {
-            toast.error("Failed to remove banner");
+        onError: (err: any) => {
+            toast.error(err.errorMessage || "Failed to remove banner");
         },
     });
 }
@@ -157,7 +157,7 @@ export function useUpdateProfile(username: string) {
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
         onError: (err: any) => {
-            toast.error(err.response?.data?.message || "Failed to update profile");
+            toast.error(err.errorMessage || "Failed to update profile");
         },
     });
 }
@@ -172,7 +172,7 @@ export function useUpdateNames(username: string) {
             queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.profile(username) });
         },
         onError: (err: any) => {
-            toast.error(err.response?.data?.message || "Failed to update names");
+            toast.error(err.errorMessage || "Failed to update names");
         },
     });
 }
