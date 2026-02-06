@@ -132,3 +132,14 @@ export interface CreateCertificationPayload {
 }
 
 export interface UpdateCertificationPayload extends Partial<CreateCertificationPayload> { }
+
+export interface CreateProjectPayload {
+    title: string;
+    description?: string | null;
+    url?: string | null;
+    startDate: Date;
+    endDate?: Date | null;
+    skills: string[];
+}
+
+export interface UpdateProjectPayload extends Partial<CreateProjectPayload> { }

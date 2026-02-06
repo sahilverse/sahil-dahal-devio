@@ -13,7 +13,9 @@ import type {
     CreateEducationPayload,
     UpdateEducationPayload,
     CreateCertificationPayload,
-    UpdateCertificationPayload
+    UpdateCertificationPayload,
+    CreateProjectPayload,
+    UpdateProjectPayload
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
@@ -420,6 +422,28 @@ export class UserService {
         }
 
         await this.userRepository.deleteCertification(userId, certificationId);
+    }
+
+    async addProject(userId: string, data: CreateProjectPayload): Promise<any> {
+        return this.userRepository.createProject(userId, data);
+    }
+
+    async updateProject(userId: string, projectId: string, data: UpdateProjectPayload): Promise<any> {
+        const project = await this.userRepository.findProjectById(projectId);
+        if (!project || project.userId !== userId) {
+            throw new ApiError("Project not found", StatusCodes.NOT_FOUND);
+        }
+
+        return this.userRepository.updateProject(userId, projectId, data);
+    }
+
+    async deleteProject(userId: string, projectId: string): Promise<void> {
+        const project = await this.userRepository.findProjectById(projectId);
+        if (!project || project.userId !== userId) {
+            throw new ApiError("Project not found", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.deleteProject(userId, projectId);
     }
 
     private _filterSocials(socials: Record<string, any>): Record<string, string> {

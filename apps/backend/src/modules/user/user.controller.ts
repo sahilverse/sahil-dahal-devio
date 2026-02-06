@@ -204,4 +204,29 @@ export class UserController {
         await this.userService.removeCertification(userId, id);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Certification removed successfully");
     });
+
+    addProject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
+
+        const project = await this.userService.addProject(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Project added successfully", project);
+    });
+
+    updateProject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const payload = req.body;
+
+        const project = await this.userService.updateProject(userId, id, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Project updated successfully", project);
+    });
+
+    removeProject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.userService.deleteProject(userId, id);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Project removed successfully");
+    });
 }

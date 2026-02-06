@@ -11,7 +11,9 @@ import type {
     CreateEducationPayload,
     UpdateEducationPayload,
     CreateCertificationPayload,
-    UpdateCertificationPayload
+    UpdateCertificationPayload,
+    CreateProjectPayload,
+    UpdateProjectPayload
 } from "./user.types";
 import { TYPES } from "../../types";
 
@@ -501,6 +503,40 @@ export class UserRepository {
     async findCertificationById(certificationId: string): Promise<any | null> {
         return this.prisma.userCertification.findUnique({
             where: { id: certificationId }
+        });
+    }
+
+    async createProject(userId: string, data: CreateProjectPayload): Promise<any> {
+        return this.prisma.userProject.create({
+            data: {
+                ...data,
+                userId
+            }
+        });
+    }
+
+    async updateProject(userId: string, projectId: string, data: UpdateProjectPayload): Promise<any> {
+        return this.prisma.userProject.update({
+            where: {
+                id: projectId,
+                userId
+            },
+            data
+        });
+    }
+
+    async deleteProject(userId: string, projectId: string): Promise<void> {
+        await this.prisma.userProject.delete({
+            where: {
+                id: projectId,
+                userId
+            }
+        });
+    }
+
+    async findProjectById(projectId: string): Promise<any | null> {
+        return this.prisma.userProject.findUnique({
+            where: { id: projectId }
         });
     }
 }

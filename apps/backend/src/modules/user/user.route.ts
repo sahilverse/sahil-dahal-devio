@@ -13,7 +13,9 @@ import {
     updateEducationSchema,
     createUserSkillSchema,
     createCertificationSchema,
-    updateCertificationSchema
+    updateCertificationSchema,
+    createProjectSchema,
+    updateProjectSchema
 } from "@devio/zod-utils";
 
 const router: Router = Router();
@@ -69,6 +71,18 @@ const userController = container.get<UserController>(TYPES.UserController);
  *         credentialUrl: { type: string, format: uri, nullable: true, example: "https://verify.eccouncil.org/ceh-12345" }
  *     UpdateCertificationInput:
  *       $ref: '#/components/schemas/CreateCertificationInput'
+ *     CreateProjectInput:
+ *       type: object
+ *       required: [title, startDate]
+ *       properties:
+ *         title: { type: string, minLength: 2, maxLength: 100, example: "E-Commerce Platform" }
+ *         description: { type: string, maxLength: 2000, nullable: true, example: "A full-stack e-commerce solution." }
+ *         url: { type: string, format: uri, nullable: true, example: "https://github.com/user/project" }
+ *         startDate: { type: string, format: date, example: "2023-01-01" }
+ *         endDate: { type: string, format: date, nullable: true, example: "2023-06-01" }
+ *         skills: { type: array, items: { type: string }, example: ["React", "Node.js", "Prisma"] }
+ *     UpdateProjectInput:
+ *       $ref: '#/components/schemas/CreateProjectInput'
  */
 
 
@@ -712,6 +726,92 @@ router.delete(
     "/certifications/:id",
     authMiddleware.guard,
     userController.removeCertification
+);
+
+/**
+ * @swagger
+ * /users/projects:
+ *   post:
+ *     summary: Add user project
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateProjectInput'
+ *     responses:
+ *       201:
+ *         description: Project added successfully
+ *       400:
+ *         description: Bad request
+ */
+router.post(
+    "/projects",
+    authMiddleware.guard,
+    validateRequest(createProjectSchema),
+    userController.addProject
+);
+
+/**
+ * @swagger
+ * /users/projects/{id}:
+ *   patch:
+ *     summary: Update user project
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateProjectInput'
+ *     responses:
+ *       200:
+ *         description: Project updated successfully
+ *       404:
+ *         description: Project not found
+ */
+router.patch(
+    "/projects/:id",
+    authMiddleware.guard,
+    validateRequest(updateProjectSchema),
+    userController.updateProject
+);
+
+/**
+ * @swagger
+ * /users/projects/{id}:
+ *   delete:
+ *     summary: Remove user project
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Project removed successfully
+ *       404:
+ *         description: Project not found
+ */
+router.delete(
+    "/projects/:id",
+    authMiddleware.guard,
+    userController.removeProject
 );
 
 export { router };
