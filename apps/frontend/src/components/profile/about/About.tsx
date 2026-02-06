@@ -8,8 +8,10 @@ import ProjectSection from "./projects/ProjectSection";
 import SkillsSection from "./skills/SkillsSection";
 import ExperienceModal from "./experience/ExperienceModal";
 import EducationModal from "./education/EducationModal";
+import SkillsModal from "./skills/SkillsModal";
 import { useManageExperience } from "@/hooks/useExperience";
 import { useManageEducation } from "@/hooks/useEducation";
+import { useManageSkills } from "@/hooks/useSkills";
 import { logger } from "@/lib/logger";
 
 interface AboutProps {
@@ -24,8 +26,11 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
     const [isEducationModalOpen, setIsEducationModalOpen] = useState(false);
     const [editingEducation, setEditingEducation] = useState<Education | null>(null);
 
+    const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
+
     const { addExperience, updateExperience, deleteExperience } = useManageExperience(profile.username);
     const { addEducation, updateEducation, deleteEducation } = useManageEducation(profile.username);
+    const { addSkill, removeSkill } = useManageSkills(profile.username);
 
     const handleAdd = (section: string) => () => {
         console.log(`Add ${section}`);
@@ -99,6 +104,22 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
         }
     };
 
+    const handleAddSkill = async (name: string) => {
+        try {
+            await addSkill.mutateAsync(name);
+        } catch (error) {
+            logger.error(error);
+        }
+    };
+
+    const handleRemoveSkill = async (id: string) => {
+        try {
+            await removeSkill.mutateAsync(id);
+        } catch (error) {
+            logger.error(error);
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -123,7 +144,7 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
             <SkillsSection
                 skills={profile.skills}
                 isCurrentUser={isCurrentUser}
-                onAdd={handleAdd("skills")}
+                onAdd={() => setIsSkillsModalOpen(true)}
             />
 
             <CertificationSection
@@ -170,6 +191,17 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
                     endDate: editingEducation.endDate ? new Date(editingEducation.endDate) : null,
                 } : undefined}
                 isPending={addEducation.isPending || updateEducation.isPending}
+            />
+
+            {/* Skills Modal */}
+            <SkillsModal
+                isOpen={isSkillsModalOpen}
+                onClose={() => setIsSkillsModalOpen(false)}
+                skills={profile.skills}
+                onAdd={handleAddSkill}
+                onRemove={handleRemoveSkill}
+                isAdding={addSkill.isPending}
+                isRemoving={removeSkill.isPending ? removeSkill.variables : null}
             />
         </motion.div>
     );

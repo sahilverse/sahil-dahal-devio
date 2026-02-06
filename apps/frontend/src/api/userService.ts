@@ -74,4 +74,13 @@ export const UserService = {
     deleteEducation: async (id: string): Promise<void> => {
         await api.delete(`/users/educations/${id}`);
     },
+
+    addSkill: async (name: string): Promise<any> => {
+        const { data } = await api.post("/users/skills", { name });
+        return data.result;
+    },
+
+    removeSkill: async (id: string): Promise<void> => {
+        await api.delete(`/users/skills/${id}`);
+    },
 };
