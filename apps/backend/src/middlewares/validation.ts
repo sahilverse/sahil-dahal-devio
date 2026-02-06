@@ -13,3 +13,15 @@ export const validateRequest = (schema: ZodType) => {
         next();
     };
 }
+
+export const validateQuery = (schema: ZodType) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const result: ZodSafeParseResult<any> = schema.safeParse(req.query);
+        if (!result.success) {
+            ResponseHandler.sendValidationError(res, result);
+            return;
+        }
+        Object.assign(req.query, result.data);
+        next();
+    };
+}

@@ -17,6 +17,7 @@ import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import { PrivateProfileDTO, PublicProfileDTO } from "./dtos/user.dto";
 import { StorageService } from "../storage";
+import { SkillService } from "../skill";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
 
@@ -24,7 +25,8 @@ import { format } from "date-fns";
 export class UserService {
     constructor(
         @inject(TYPES.UserRepository) private userRepository: UserRepository,
-        @inject(TYPES.StorageService) private storageService: StorageService
+        @inject(TYPES.StorageService) private storageService: StorageService,
+        @inject(TYPES.SkillService) private skillService: SkillService
     ) { }
 
     async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<User> {
@@ -369,6 +371,31 @@ export class UserService {
         }
 
         await this.userRepository.deleteEducation(userId, educationId);
+    }
+
+    async addSkill(userId: string, name: string): Promise<any> {
+        const skill = await this.skillService.createSkill(name);
+
+        const existingUserSkill = await this.userRepository.findUserSkill(userId, skill.id);
+        if (existingUserSkill) {
+            throw new ApiError("Skill already added", StatusCodes.CONFLICT);
+        }
+
+        const userSkill = await this.userRepository.addUserSkill(userId, skill.id);
+        return {
+            id: userSkill.skill.id,
+            name: userSkill.skill.name,
+            slug: userSkill.skill.slug
+        };
+    }
+
+    async removeSkill(userId: string, skillId: string): Promise<void> {
+        const userSkill = await this.userRepository.findUserSkill(userId, skillId);
+        if (!userSkill) {
+            throw new ApiError("Skill not found for user", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.removeUserSkill(userId, skillId);
     }
 
     private _filterSocials(socials: Record<string, any>): Record<string, string> {

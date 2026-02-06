@@ -10,7 +10,8 @@ import {
     createExperienceSchema,
     updateExperienceSchema,
     createEducationSchema,
-    updateEducationSchema
+    updateEducationSchema,
+    createUserSkillSchema
 } from "@devio/zod-utils";
 
 const router: Router = Router();
@@ -542,6 +543,66 @@ router.delete(
     "/educations/:id",
     authMiddleware.guard,
     userController.removeEducation
+);
+
+/**
+ * @swagger
+ * /users/skills:
+ *   post:
+ *     summary: Add user skill
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Skill added successfully
+ *       400:
+ *         description: Bad request
+ *       409:
+ *         description: Skill already added
+ */
+router.post(
+    "/skills",
+    authMiddleware.guard,
+    validateRequest(createUserSkillSchema),
+    userController.addSkill
+);
+
+/**
+ * @swagger
+ * /users/skills/{id}:
+ *   delete:
+ *     summary: Remove user skill
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Skill removed successfully
+ *       404:
+ *         description: Skill not found
+ */
+router.delete(
+    "/skills/:id",
+    authMiddleware.guard,
+    userController.removeSkill
 );
 
 export { router };

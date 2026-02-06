@@ -159,4 +159,24 @@ export class UserController {
         await this.userService.deleteEducation(userId, id);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Education removed successfully");
     });
+
+    addSkill = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { name } = req.body;
+
+        if (!name) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Skill name is required");
+        }
+
+        const userSkill = await this.userService.addSkill(userId, name);
+        ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Skill added successfully", userSkill);
+    });
+
+    removeSkill = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.userService.removeSkill(userId, id);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Skill removed successfully");
+    });
 }

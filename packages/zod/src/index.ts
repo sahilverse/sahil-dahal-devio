@@ -4,5 +4,6 @@ export * from "./password.schema";
 export * from "./user.schema";
 export * from "./experience.schema";
 export * from "./education.schema";
+export * from "./skills.schema";
 
 

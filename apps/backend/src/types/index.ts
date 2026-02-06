@@ -33,6 +33,10 @@ export const TYPES = {
     CompanyRepository: Symbol.for("CompanyRepository"),
     CompanyService: Symbol.for("CompanyService"),
     CompanyController: Symbol.for("CompanyController"),
+
+    SkillRepository: Symbol.for("SkillRepository"),
+    SkillService: Symbol.for("SkillService"),
+    SkillController: Symbol.for("SkillController"),
 };
 
 export * from "./jwt";

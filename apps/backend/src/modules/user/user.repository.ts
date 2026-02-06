@@ -260,7 +260,11 @@ export class UserRepository {
                 educations: { orderBy: { startDate: 'desc' } },
                 certifications: { orderBy: { issueDate: 'desc' } },
                 projects: { orderBy: { startDate: 'desc' } },
-                skills: true,
+                skills: {
+                    include: {
+                        skill: true
+                    }
+                },
                 userAchievements: {
                     include: { achievement: true },
                     orderBy: { unlockedAt: 'desc' },
@@ -427,6 +431,40 @@ export class UserRepository {
     async findEducationById(educationId: string): Promise<any | null> {
         return this.prisma.userEducation.findUnique({
             where: { id: educationId }
+        });
+    }
+
+    async addUserSkill(userId: string, skillId: string): Promise<any> {
+        return this.prisma.userSkill.create({
+            data: {
+                userId,
+                skillId
+            },
+            include: {
+                skill: true
+            }
+        });
+    }
+
+    async removeUserSkill(userId: string, skillId: string): Promise<void> {
+        await this.prisma.userSkill.delete({
+            where: {
+                userId_skillId: {
+                    userId,
+                    skillId
+                }
+            }
+        });
+    }
+
+    async findUserSkill(userId: string, skillId: string): Promise<any | null> {
+        return this.prisma.userSkill.findUnique({
+            where: {
+                userId_skillId: {
+                    userId,
+                    skillId
+                }
+            }
         });
     }
 }

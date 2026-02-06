@@ -5,6 +5,7 @@ import { AuthService, AuthController, AuthRepository, TokenService, OAuthService
 import { UserRepository, UserService, UserController } from "../modules/user";
 import { CompanyRepository, CompanyService, CompanyController } from "../modules/company";
 import { ActivityRepository, ActivityService, ActivityController } from "../modules/activity";
+import { SkillRepository, SkillService, SkillController } from "../modules/skill";
 import { prisma } from "./prisma";
 import { AuthMiddleware } from "../middlewares";
 import type { Transporter } from "nodemailer";
@@ -44,6 +45,10 @@ container.bind<ActivityController>(TYPES.ActivityController).to(ActivityControll
 container.bind<CompanyRepository>(TYPES.CompanyRepository).to(CompanyRepository).inSingletonScope();
 container.bind<CompanyService>(TYPES.CompanyService).to(CompanyService).inSingletonScope();
 container.bind<CompanyController>(TYPES.CompanyController).to(CompanyController).inSingletonScope();
+
+container.bind<SkillRepository>(TYPES.SkillRepository).to(SkillRepository).inSingletonScope();
+container.bind<SkillService>(TYPES.SkillService).to(SkillService).inSingletonScope();
+container.bind<SkillController>(TYPES.SkillController).to(SkillController).inSingletonScope();
 
 container.bind(TYPES.VerificationRepository).to(VerificationRepository).inSingletonScope();
 container.bind(TYPES.VerificationService).to(VerificationService).inSingletonScope();

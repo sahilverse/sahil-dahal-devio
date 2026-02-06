@@ -7,7 +7,7 @@ import type { CompanySearchResponse } from "./company.types";
 export class CompanyRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
-    async searchCompanies(query: string): Promise<CompanySearchResponse[]> {
+    async searchCompanies(query: string, limit: number = 10): Promise<CompanySearchResponse[]> {
         return this.prisma.company.findMany({
             where: {
                 name: {
@@ -20,7 +20,10 @@ export class CompanyRepository {
                 name: true,
                 logoUrl: true
             },
-            take: 10
+            take: limit,
+            orderBy: {
+                name: "asc"
+            }
         });
     }
 }
