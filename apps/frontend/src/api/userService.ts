@@ -83,4 +83,18 @@ export const UserService = {
     removeSkill: async (id: string): Promise<void> => {
         await api.delete(`/users/skills/${id}`);
     },
+
+    addCertification: async (payload: any): Promise<any> => {
+        const { data } = await api.post("/users/certifications", payload);
+        return data.result;
+    },
+
+    updateCertification: async (id: string, payload: any): Promise<any> => {
+        const { data } = await api.patch(`/users/certifications/${id}`, payload);
+        return data.result;
+    },
+
+    deleteCertification: async (id: string): Promise<void> => {
+        await api.delete(`/users/certifications/${id}`);
+    },
 };

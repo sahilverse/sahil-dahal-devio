@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { UserProfile, Experience, Education } from "@/types/profile";
 import { motion } from "motion/react";
 import ExperienceSection from "./experience/ExperienceSection";
 import EducationSection from "./education/EducationSection";
@@ -8,11 +7,14 @@ import ProjectSection from "./projects/ProjectSection";
 import SkillsSection from "./skills/SkillsSection";
 import ExperienceModal from "./experience/ExperienceModal";
 import EducationModal from "./education/EducationModal";
+import CertificationModal from "./certifications/CertificationModal";
 import SkillsModal from "./skills/SkillsModal";
 import { useManageExperience } from "@/hooks/useExperience";
 import { useManageEducation } from "@/hooks/useEducation";
 import { useManageSkills } from "@/hooks/useSkills";
 import { logger } from "@/lib/logger";
+
+import type { UserProfile, Experience, Education, Certification } from "@/types/profile";
 
 interface AboutProps {
     profile: UserProfile;
@@ -25,6 +27,9 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
 
     const [isEducationModalOpen, setIsEducationModalOpen] = useState(false);
     const [editingEducation, setEditingEducation] = useState<Education | null>(null);
+
+    const [isCertificationModalOpen, setIsCertificationModalOpen] = useState(false);
+    const [editingCertification, setEditingCertification] = useState<Certification | null>(null);
 
     const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
 
@@ -120,6 +125,16 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
         }
     };
 
+    const handleAddCertification = () => {
+        setEditingCertification(null);
+        setIsCertificationModalOpen(true);
+    };
+
+    const handleEditCertification = (cert: Certification) => {
+        setEditingCertification(cert);
+        setIsCertificationModalOpen(true);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -150,7 +165,8 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
             <CertificationSection
                 certifications={profile.certifications}
                 isCurrentUser={isCurrentUser}
-                onAdd={handleAdd("certification")}
+                onAdd={handleAddCertification}
+                onEdit={handleEditCertification}
             />
 
             <ProjectSection
@@ -202,6 +218,17 @@ export default function About({ profile, isCurrentUser = false }: AboutProps) {
                 onRemove={handleRemoveSkill}
                 isAdding={addSkill.isPending}
                 isRemoving={removeSkill.isPending ? removeSkill.variables : null}
+            />
+
+            {/* Certification Modal */}
+            <CertificationModal
+                isOpen={isCertificationModalOpen}
+                onClose={() => {
+                    setIsCertificationModalOpen(false);
+                    setEditingCertification(null);
+                }}
+                username={profile.username}
+                initialData={editingCertification}
             />
         </motion.div>
     );
