@@ -43,7 +43,7 @@ export function EducationForm({
             school: "",
             degree: "",
             fieldOfStudy: "",
-            startDate: "",
+            startDate: new Date().toISOString().split('T')[0],
             endDate: "",
             grade: "",
             activities: "",
