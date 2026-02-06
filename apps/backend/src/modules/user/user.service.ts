@@ -9,7 +9,9 @@ import type {
     UpdateProfilePayload,
     UpdateNamesPayload,
     CreateExperiencePayload,
-    UpdateExperiencePayload
+    UpdateExperiencePayload,
+    CreateEducationPayload,
+    UpdateEducationPayload
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
@@ -345,6 +347,28 @@ export class UserService {
         }
 
         await this.userRepository.deleteExperience(userId, experienceId);
+    }
+
+    async addEducation(userId: string, data: CreateEducationPayload): Promise<any> {
+        return this.userRepository.createEducation(userId, data);
+    }
+
+    async updateEducation(userId: string, educationId: string, data: UpdateEducationPayload): Promise<any> {
+        const education = await this.userRepository.findEducationById(educationId);
+        if (!education) {
+            throw new ApiError("Education not found", StatusCodes.NOT_FOUND);
+        }
+
+        return this.userRepository.updateEducation(userId, educationId, data);
+    }
+
+    async deleteEducation(userId: string, educationId: string): Promise<void> {
+        const education = await this.userRepository.findEducationById(educationId);
+        if (!education) {
+            throw new ApiError("Education not found", StatusCodes.NOT_FOUND);
+        }
+
+        await this.userRepository.deleteEducation(userId, educationId);
     }
 
     private _filterSocials(socials: Record<string, any>): Record<string, string> {

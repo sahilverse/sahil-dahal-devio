@@ -8,7 +8,9 @@ import {
     updateProfileSchema,
     updateNamesSchema,
     createExperienceSchema,
-    updateExperienceSchema
+    updateExperienceSchema,
+    createEducationSchema,
+    updateEducationSchema
 } from "@devio/zod-utils";
 
 const router: Router = Router();
@@ -356,45 +358,33 @@ router.patch(
  *       enum: [FULL_TIME, PART_TIME, SELF_EMPLOYED, FREELANCE, CONTRACT, INTERNSHIP, APPRENTICESHIP, SEASONAL]
  *     CreateExperienceInput:
  *       type: object
- *       required:
- *         - title
- *         - companyName
- *         - startDate
+ *       required: [title, companyName, startDate]
  *       properties:
- *         title:
- *           type: string
- *           minLength: 2
- *           maxLength: 100
- *         companyName:
- *           type: string
- *           minLength: 2
- *           maxLength: 100
- *         companyId:
- *           type: string
- *           nullable: true
- *         location:
- *           type: string
- *           maxLength: 100
- *           nullable: true
- *         type:
- *           $ref: '#/components/schemas/EmploymentType'
- *           nullable: true
- *         startDate:
- *           type: string
- *           format: date
- *         endDate:
- *           type: string
- *           format: date
- *           nullable: true
- *         isCurrent:
- *           type: boolean
- *           default: false
- *         description:
- *           type: string
- *           maxLength: 2000
- *           nullable: true
+ *         title: { type: string, minLength: 2, maxLength: 100 }
+ *         companyName: { type: string, minLength: 2, maxLength: 100 }
+ *         companyId: { type: string, nullable: true }
+ *         location: { type: string, maxLength: 100, nullable: true }
+ *         type: { $ref: '#/components/schemas/EmploymentType', nullable: true }
+ *         startDate: { type: string, format: date }
+ *         endDate: { type: string, format: date, nullable: true }
+ *         isCurrent: { type: boolean, default: false }
+ *         description: { type: string, maxLength: 2000, nullable: true }
  *     UpdateExperienceInput:
  *       $ref: '#/components/schemas/CreateExperienceInput'
+ *     CreateEducationInput:
+ *       type: object
+ *       required: [school, startDate]
+ *       properties:
+ *         school: { type: string, minLength: 2, maxLength: 100 }
+ *         degree: { type: string, maxLength: 100, nullable: true }
+ *         fieldOfStudy: { type: string, maxLength: 100, nullable: true }
+ *         startDate: { type: string, format: date }
+ *         endDate: { type: string, format: date, nullable: true }
+ *         grade: { type: string, maxLength: 50, nullable: true }
+ *         activities: { type: string, maxLength: 500, nullable: true }
+ *         description: { type: string, maxLength: 2000, nullable: true }
+ *     UpdateEducationInput:
+ *       $ref: '#/components/schemas/CreateEducationInput'
  *
  * /users/experiences:
  *   post:
@@ -472,6 +462,86 @@ router.delete(
     "/experiences/:id",
     authMiddleware.guard,
     userController.removeExperience
+);
+
+/**
+ * @swagger
+ * /users/educations:
+ *   post:
+ *     summary: Add user education
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateEducationInput'
+ *     responses:
+ *       201:
+ *         description: Education added successfully
+ */
+router.post(
+    "/educations",
+    authMiddleware.guard,
+    validateRequest(createEducationSchema),
+    userController.addEducation
+);
+
+/**
+ * @swagger
+ * /users/educations/{id}:
+ *   patch:
+ *     summary: Update user education
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateEducationInput'
+ *     responses:
+ *       200:
+ *         description: Education updated successfully
+ */
+router.patch(
+    "/educations/:id",
+    authMiddleware.guard,
+    validateRequest(updateEducationSchema),
+    userController.updateEducation
+);
+
+/**
+ * @swagger
+ * /users/educations/{id}:
+ *   delete:
+ *     summary: Remove user education
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Education removed successfully
+ */
+router.delete(
+    "/educations/:id",
+    authMiddleware.guard,
+    userController.removeEducation
 );
 
 export { router };

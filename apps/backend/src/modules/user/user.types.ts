@@ -108,3 +108,16 @@ export interface CreateExperiencePayload {
 }
 
 export interface UpdateExperiencePayload extends Partial<CreateExperiencePayload> { }
+
+export interface CreateEducationPayload {
+    school: string;
+    degree?: string | null;
+    fieldOfStudy?: string | null;
+    startDate: Date;
+    endDate?: Date | null;
+    grade?: string | null;
+    activities?: string | null;
+    description?: string | null;
+}
+
+export interface UpdateEducationPayload extends Partial<CreateEducationPayload> { }

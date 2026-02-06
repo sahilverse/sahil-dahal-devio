@@ -134,4 +134,29 @@ export class UserController {
         await this.userService.deleteExperience(userId, id);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Experience removed successfully");
     });
+
+    addEducation = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const payload = req.body;
+
+        const education = await this.userService.addEducation(userId, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Education added successfully", education);
+    });
+
+    updateEducation = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const payload = req.body;
+
+        const education = await this.userService.updateEducation(userId, id, payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Education updated successfully", education);
+    });
+
+    removeEducation = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.userService.deleteEducation(userId, id);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Education removed successfully");
+    });
 }
