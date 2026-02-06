@@ -192,12 +192,6 @@ export default function About({ profile, isCurrentUser }: AboutProps) {
                 onEditEducation={handleEditEducation}
             />
 
-            <SkillsSection
-                skills={profile.skills}
-                isCurrentUser={isCurrentUser}
-                onAdd={() => setIsSkillsModalOpen(true)}
-            />
-
             <CertificationSection
                 certifications={profile.certifications}
                 isCurrentUser={isCurrentUser}
@@ -210,6 +204,12 @@ export default function About({ profile, isCurrentUser }: AboutProps) {
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAddProject}
                 onEdit={handleEditProject}
+            />
+
+            <SkillsSection
+                skills={profile.skills}
+                isCurrentUser={isCurrentUser}
+                onAdd={() => setIsSkillsModalOpen(true)}
             />
 
             {/* Experience Modal */}
