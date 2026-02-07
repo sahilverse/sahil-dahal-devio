@@ -158,7 +158,6 @@ export class UserService {
         const communities = members.map((member: any) => ({
             id: member.community.id,
             name: member.community.name,
-            displayName: member.community.displayName,
             iconUrl: member.community.iconUrl,
             memberCount: member.community._count.members,
         }));
@@ -197,21 +196,21 @@ export class UserService {
     private formatDevioAge(days: number): string {
         if (days === 0) return "Just joined";
 
-        if (days < 30) return `${days} d`;
+        if (days < 30) return `${days}d`;
 
         const months = Math.floor(days / 30);
         if (months < 12) {
-            return `${months} m`;
+            return `${months}m`;
         }
 
         const years = Math.floor(months / 12);
         const remainingMonths = months % 12;
 
         if (remainingMonths === 0) {
-            return `${years} y`;
+            return `${years}y`;
         }
 
-        return `${years} y ${remainingMonths} m`;
+        return `${years}y ${remainingMonths}m`;
     }
 
     private calculateProblemStats(submissions: any[]) {

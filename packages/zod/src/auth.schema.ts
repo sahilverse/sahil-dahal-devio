@@ -35,8 +35,7 @@ export const registerSchema = z.object({
         .min(3, "Username must be at least 3 characters")
         .max(20, "Username is too long")
         .regex(/^[a-zA-Z0-9_]+$/, "Name can only contain alphanumeric characters and underscores")
-        .trim()
-        .toLowerCase(),
+        .trim(),
 
     password: passwordRules,
     confirmPassword: confirmPasswordRule,
@@ -60,8 +59,7 @@ export const onboardingSchema = z.object({
         .min(3, "Username must be at least 3 characters")
         .max(30, "Username is too long")
         .regex(/^[a-zA-Z0-9_]+$/, "Name can only contain alphanumeric characters and underscores")
-        .trim()
-        .toLowerCase(),
+        .trim(),
 
     firstName: z
         .string()

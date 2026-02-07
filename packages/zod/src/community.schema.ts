@@ -12,8 +12,7 @@ export const createCommunitySchema = z.object({
         .min(3, "Name must be at least 3 characters")
         .max(20, "Name must be at most 20 characters")
         .regex(/^[a-zA-Z0-9_]+$/, "Name can only contain alphanumeric characters and underscores")
-        .trim()
-        .toLowerCase(),
+        .trim(),
 
     description: z.string()
         .max(500, "Description must be at most 500 characters")

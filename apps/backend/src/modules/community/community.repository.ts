@@ -78,8 +78,13 @@ export class CommunityRepository {
     }
 
     async findByName(name: string, userId?: string): Promise<(Community & { _count: { members: number; posts: number }; members?: { userId: string }[] }) | null> {
-        return this.prisma.community.findUnique({
-            where: { name },
+        return this.prisma.community.findFirst({
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            },
             include: {
                 _count: {
                     select: {
