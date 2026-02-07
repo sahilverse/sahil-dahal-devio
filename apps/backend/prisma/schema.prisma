@@ -93,6 +93,7 @@ model User {
 
   conversationParticipants ConversationParticipant[]
   messages                 Message[]
+  pollVotes                PollVote[]
 
   submissions Submission[]
 
@@ -433,7 +434,6 @@ model CommunityJoinRequest {
 
 enum PostType {
   TEXT
-  IMAGE
   LINK
   QUESTION
   POLL
@@ -442,6 +442,17 @@ enum PostType {
 enum VoteType {
   UP
   DOWN
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PostVisibility {
+  PUBLIC
+  PRIVATE
 }
 
 model Post {
@@ -461,7 +472,9 @@ model Post {
 
   deletedAt DateTime? @map("deleted_at")
   isPinned  Boolean   @default(false) @map("is_pinned")
-  isLocked  Boolean   @default(false) @map("is_locked")
+
+  status     PostStatus     @default(DRAFT)
+  visibility PostVisibility @default(PUBLIC)
 
   upvotes      Int @default(0)
   downvotes    Int @default(0)
@@ -470,14 +483,15 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  author         User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  community      Community?  @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  acceptedAnswer Comment?    @relation("accepted_answer", fields: [acceptedAnswerId], references: [id])
-  comments       Comment[]   @relation("post_comments")
+  author         User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  community      Community?   @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  acceptedAnswer Comment?     @relation("accepted_answer", fields: [acceptedAnswerId], references: [id])
+  comments       Comment[]    @relation("post_comments")
   votes          PostVote[]
-  media          Media[]     @relation("post_media")
+  media          Media[]      @relation("post_media")
   topics         PostTopic[]
   savePosts      SavePost[]
+  pollOptions    PollOption[]
 
   @@index([authorId])
   @@index([communityId])
@@ -564,6 +578,32 @@ model CommentVote {
   @@index([userId])
 }
 
+model PollOption {
+  id     String @id @default(cuid())
+  postId String @map("post_id")
+  text   String
+  order  Int    @default(0)
+  votes  Int    @default(0)
+
+  post   Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  voters PollVote[]
+
+  @@index([postId])
+}
+
+model PollVote {
+  id       String @id @default(cuid())
+  optionId String @map("option_id")
+  userId   String @map("user_id")
+
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId])
+  @@index([optionId])
+  @@index([userId])
+}
+
 enum MediaType {
   IMAGE
   VIDEO
@@ -592,10 +632,9 @@ model Media {
 }
 
 model Topic {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  slug        String  @unique
-  description String?
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
 
   postCount      Int @default(0) @map("post_count")
   communityCount Int @default(0) @map("community_count")
