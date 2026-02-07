@@ -1,27 +1,22 @@
 import { User } from "../../generated/prisma/client";
+import { Exclude, Expose, Transform } from "class-transformer";
 
-export interface AuthUserDTO {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    username: string | null;
-    email: string;
-    emailVerified: Date | null;
-    avatarUrl: string | null;
-    role: string;
-    createdAt: Date;
-}
+@Exclude()
+export class AuthUserDto {
+    @Expose() id!: string;
+    @Expose() firstName!: string | null;
+    @Expose() lastName!: string | null;
+    @Expose() username!: string | null;
+    @Expose() email!: string;
+    @Expose() emailVerified!: Date | null;
 
-export function toAuthUserDTO(user: User): AuthUserDTO {
-    return {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        username: user.username,
-        email: user.email,
-        emailVerified: user.emailVerified,
-        avatarUrl: user.avatarUrl || null,
-        role: (user as any).role?.name || "user",
-        createdAt: user.createdAt,
-    };
+    @Expose()
+    @Transform(({ value }) => value || null)
+    avatarUrl!: string | null;
+
+    @Expose()
+    @Transform(({ obj }) => obj.role?.name || "user")
+    role!: string;
+
+    @Expose() createdAt!: Date;
 }

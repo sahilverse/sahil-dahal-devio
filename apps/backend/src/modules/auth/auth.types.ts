@@ -1,7 +1,8 @@
 import type { AccountStatus, SessionType } from "../../generated/prisma/client";
-import type { AuthUserDTO } from "./auth.dto";
+import { AuthUserDto } from "./auth.dto";
+
 export interface LoginServiceResponse {
-    user: AuthUserDTO;
+    user: AuthUserDto;
     accessToken: string;
     refreshToken: string;
 }
@@ -69,7 +70,7 @@ export interface GitHubEmail {
 }
 
 export interface OAuthLoginResult {
-    user: AuthUserDTO;
+    user: AuthUserDto;
     accessToken: string;
     refreshToken: string;
     isNewUser: boolean;

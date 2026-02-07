@@ -7,7 +7,8 @@ import { BcryptUtils, ApiError, JwtManager, logger } from "../../../utils";
 import type { LoginInput as LoginPayload } from '@devio/zod-utils';
 import { StatusCodes } from "http-status-codes";
 import { LoginServiceResponse, RefreshTokenServiceResponse } from "../auth.types";
-import { toAuthUserDTO } from "../auth.dto";
+import { AuthUserDto } from "../auth.dto";
+import { plainToInstance } from "class-transformer";
 import type { UserAgentInfo, CreateSessionPayload } from "../auth.types";
 import { AccountStatus, CodeType, SessionType } from "../../../generated/prisma/enums";
 import { VerificationService } from "../../verification";
@@ -85,7 +86,7 @@ export class AuthService {
         const { accessToken, refreshToken } = await this.generateOrUpdateTokensAndSession(user.id, clientIp, userAgent);
 
         return {
-            user: toAuthUserDTO(user),
+            user: plainToInstance(AuthUserDto, user, { excludeExtraneousValues: true }),
             accessToken,
             refreshToken
         };
@@ -139,7 +140,7 @@ export class AuthService {
         );
 
         return {
-            user: toAuthUserDTO(user),
+            user: plainToInstance(AuthUserDto, user, { excludeExtraneousValues: true }),
             accessToken: newAccessToken,
             refreshToken: newRefreshToken
         };
