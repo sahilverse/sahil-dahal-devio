@@ -98,6 +98,35 @@ export class CommunityRepository {
         });
     }
 
+    async findJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<any[]> {
+        const where: any = { userId };
+
+        if (query) {
+            where.community = {
+                name: { contains: query, mode: 'insensitive' },
+            };
+        }
+
+        return this.prisma.communityMember.findMany({
+            where,
+            take: limit + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: { joinedAt: 'desc' },
+            include: {
+                community: {
+                    select: {
+                        id: true,
+                        name: true,
+                        iconUrl: true,
+                        _count: {
+                            select: { members: true }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
 
     get client() {
         return this.prisma;

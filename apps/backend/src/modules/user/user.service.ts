@@ -19,20 +19,22 @@ import type {
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
-import { PrivateProfileDTO, PublicProfileDTO, JoinedCommunityDto, GetJoinedCommunitiesResponseDto } from "./user.dto";
+import { PrivateProfileDTO, PublicProfileDTO } from "./user.dto";
 import { StorageService } from "../storage";
 import { SkillService } from "../skill";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
 import { AuthUserDto } from "../auth";
 import { plainToInstance } from "class-transformer";
+import { CommunityRepository, JoinedCommunityDto, GetJoinedCommunitiesResponseDto } from "../community";
 
 @injectable()
 export class UserService {
     constructor(
         @inject(TYPES.UserRepository) private userRepository: UserRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
-        @inject(TYPES.SkillService) private skillService: SkillService
+        @inject(TYPES.SkillService) private skillService: SkillService,
+        @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository
     ) { }
 
     async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<AuthUserDto> {
@@ -118,7 +120,7 @@ export class UserService {
             title: user.profile?.title || null,
             city: user.profile?.city || null,
             country: user.profile?.country || null,
-            socials: user.profile?.socials ? this._filterSocials(user.profile.socials as Record<string, string | null>) : null,
+            socials: user.profile?.socials ? this.filterSocials(user.profile.socials as Record<string, string | null>) : null,
             contributions: weeklyContributions,
             followersCount: user._count.followers,
             followingCount: user._count.following,
@@ -145,7 +147,7 @@ export class UserService {
     }
 
     async getJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<GetJoinedCommunitiesResponseDto> {
-        const members = await this.userRepository.findJoinedCommunities(userId, limit, cursor, query);
+        const members = await this.communityRepository.findJoinedCommunities(userId, limit, cursor, query);
 
         let nextCursor: string | null = null;
         if (members.length > limit) {
@@ -329,7 +331,7 @@ export class UserService {
         }
 
         if (payload.socials) {
-            payload.socials = this._filterSocials(payload.socials);
+            payload.socials = this.filterSocials(payload.socials);
         }
 
         await this.userRepository.updateProfileDetails(userId, payload);
@@ -458,7 +460,7 @@ export class UserService {
     }
 
 
-    private _filterSocials(socials: Record<string, any>): Record<string, string> {
+    private filterSocials(socials: Record<string, any>): Record<string, string> {
         return Object.fromEntries(
             Object.entries(socials).filter(([_, value]) => value !== null && value !== "")
         );

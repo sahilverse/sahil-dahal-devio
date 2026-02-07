@@ -1,4 +1,4 @@
-import { Exclude, Expose } from "class-transformer";
+import { Exclude, Expose, Type } from "class-transformer";
 import { CreateCommunityInput } from "@devio/zod-utils";
 import { CommunityVisibility } from "../../generated/prisma/client";
 
@@ -30,4 +30,22 @@ export class CommunityResponseDto {
 export class GetModeratorsDto {
     @Expose() moderators!: { id: string; username: string; avatarUrl?: string; joinedAt: Date }[];
     @Expose() nextCursor?: string;
+}
+
+
+@Exclude()
+export class JoinedCommunityDto {
+    @Expose() id!: string;
+    @Expose() name!: string;
+    @Expose() iconUrl!: string | null;
+    @Expose() memberCount!: number;
+}
+
+@Exclude()
+export class GetJoinedCommunitiesResponseDto {
+    @Expose()
+    @Type(() => JoinedCommunityDto)
+    communities!: JoinedCommunityDto[];
+
+    @Expose() nextCursor!: string | null;
 }
