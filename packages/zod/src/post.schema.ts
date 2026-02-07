@@ -22,7 +22,7 @@ const basePostSchema = z.object({
     content: z.string().optional(),
     communityId: z.cuid().optional(),
     topics: z.array(z.string().trim().min(1).max(50)).max(5, "Maximum 5 topics allowed").optional(),
-    status: z.nativeEnum(PostStatus).optional(),
+    status: z.enum(PostStatus).optional(),
 });
 
 export const createPostSchema = z.discriminatedUnion("type", [
