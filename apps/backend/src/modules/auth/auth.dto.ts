@@ -1,4 +1,3 @@
-import { User } from "../../generated/prisma/client";
 import { Exclude, Expose, Transform } from "class-transformer";
 
 @Exclude()
@@ -15,7 +14,7 @@ export class AuthUserDto {
     avatarUrl!: string | null;
 
     @Expose()
-    @Transform(({ obj }) => obj.role?.name || "user")
+    @Transform(({ obj }) => obj.role?.name)
     role!: string;
 
     @Expose() createdAt!: Date;

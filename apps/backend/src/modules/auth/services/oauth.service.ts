@@ -22,7 +22,8 @@ import type {
     GitHubEmail,
     OAuthLoginResult
 } from "../auth.types";
-import { toAuthUserDTO } from "../auth.dto";
+import { AuthUserDto } from "../auth.dto";
+import { plainToInstance } from "class-transformer";
 
 @injectable()
 export class OAuthService {
@@ -105,7 +106,7 @@ export class OAuthService {
         );
 
         return {
-            user: toAuthUserDTO(user),
+            user: plainToInstance(AuthUserDto, user, { excludeExtraneousValues: true }),
             accessToken,
             refreshToken,
             isNewUser,
@@ -218,7 +219,7 @@ export class OAuthService {
         );
 
         return {
-            user: toAuthUserDTO(user),
+            user: plainToInstance(AuthUserDto, user, { excludeExtraneousValues: true }),
             accessToken,
             refreshToken,
             isNewUser,
@@ -245,16 +246,6 @@ export class OAuthService {
                 );
             }
 
-            if (
-                existingUser.accountStatus === AccountStatus.DEACTIVATED ||
-                existingUser.accountStatus === AccountStatus.PENDING_DELETION
-            ) {
-                throw new ApiError(
-                    { account: "Account is deactivated. Please reactivate to continue." },
-                    StatusCodes.FORBIDDEN
-                );
-            }
-
             try {
                 const accountPayload: CreateAccountPayload = {
                     userId: existingUser.id,
@@ -275,7 +266,7 @@ export class OAuthService {
             lastName: userData.lastName,
             password: null,
             avatarUrl: userData.avatarUrl,
-            userId: "", 
+            userId: "",
             provider,
             providerAccountId,
             id_token: idToken,
