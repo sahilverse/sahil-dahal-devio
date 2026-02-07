@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { MediaType, CipherReason, PostType, PostStatus } from "../../generated/prisma/client";
+import { MediaType, CipherReason, PostType, PostStatus, PostVisibility } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 import { CreatePostInput } from "@devio/zod-utils";
 import { StorageService } from "../storage/storage.service";
@@ -157,6 +157,8 @@ export class PostService {
             userId: query.userId,
             communityId: query.communityId,
             currentUserId,
+            status: query.status,
+            visibility: query.visibility,
         });
 
         let nextCursor: string | null = null;
@@ -169,5 +171,39 @@ export class PostService {
             posts: plainToInstance(PostResponseDto, posts, { excludeExtraneousValues: true }),
             nextCursor,
         };
+    }
+
+    async updatePost(userId: string, postId: string, data: any): Promise<PostResponseDto> {
+        const post = await this.postRepository.findById(postId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+
+        if (post.authorId !== userId) {
+            throw new ApiError("You are not authorized to update this post", StatusCodes.FORBIDDEN);
+        }
+
+        const updatedPost = await this.postRepository.update(postId, data);
+        return plainToInstance(PostResponseDto, updatedPost, { excludeExtraneousValues: true });
+    }
+
+    async deletePost(userId: string, postId: string): Promise<void> {
+        const post = await this.postRepository.findById(postId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+
+        if (post.authorId !== userId) {
+            throw new ApiError("You are not authorized to delete this post", StatusCodes.FORBIDDEN);
+        }
+        const deletedPost = await this.postRepository.delete(postId);
+
+        // Cleanup Media from Storage
+        if (deletedPost && deletedPost.media && deletedPost.media.length > 0) {
+            for (const media of deletedPost.media) {
+                await this.storageService.deleteFile(media.url);
+            }
+        }
+    }
+
+    async getPostCount(userId: string, status?: PostStatus, visibility?: PostVisibility): Promise<{ count: number }> {
+        const count = await this.postRepository.count({ userId, status, visibility });
+        return { count };
     }
 }

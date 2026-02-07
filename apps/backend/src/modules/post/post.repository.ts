@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Post, Prisma, PostStatus, PostVisibility, CommunityVisibility } from "../../generated/prisma/client";
+import { PrismaClient, Post, Prisma, PostStatus, PostVisibility, CommunityVisibility, Media } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -26,8 +26,10 @@ export class PostRepository {
         userId?: string;
         communityId?: string;
         currentUserId?: string;
+        status?: PostStatus;
+        visibility?: PostVisibility;
     }): Promise<Post[]> {
-        const { cursor, limit, userId, communityId, currentUserId } = params;
+        const { cursor, limit, userId, communityId, currentUserId, status, visibility } = params;
 
         const isOwner = userId && currentUserId && userId === currentUserId;
 
@@ -46,8 +48,13 @@ export class PostRepository {
                         ]
                     }
                 }),
-                status: PostStatus.PUBLISHED,
-                ...(!isOwner && {
+
+                ...(status
+                    ? { status: status === PostStatus.DRAFT && !isOwner ? PostStatus.PUBLISHED : status }
+                    : { status: PostStatus.PUBLISHED }
+                ),
+                ...(visibility && { visibility }),
+                ...(!isOwner && !communityId && {
                     visibility: PostVisibility.PUBLIC
                 })
             },
@@ -66,6 +73,50 @@ export class PostRepository {
                 media: true,
                 topics: { include: { topic: true } },
                 pollOptions: true,
+            },
+        });
+    }
+
+    async update(id: string, data: Prisma.PostUpdateInput): Promise<Post> {
+        return this.prisma.post.update({
+            where: { id },
+            data,
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        firstName: true,
+                        lastName: true,
+                        avatarUrl: true,
+                    },
+                },
+                community: true,
+                media: true,
+                topics: { include: { topic: true } },
+                pollOptions: true,
+            },
+        });
+    }
+
+    async delete(id: string): Promise<Post & { media: Media[] }> {
+        return this.prisma.post.delete({
+            where: { id },
+            include: { media: true }
+        }) as unknown as Promise<Post & { media: Media[] }>;
+    }
+
+    async count(params: {
+        userId?: string;
+        status?: PostStatus;
+        visibility?: PostVisibility;
+    }): Promise<number> {
+        const { userId, status, visibility } = params;
+        return this.prisma.post.count({
+            where: {
+                ...(userId && { authorId: userId }),
+                ...(status && { status }),
+                ...(visibility && { visibility }),
             },
         });
     }

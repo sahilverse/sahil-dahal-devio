@@ -103,6 +103,18 @@ router.post(
  *         schema:
  *           type: string
  *         description: Filter by Community ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PUBLISHED, DRAFT]
+ *         description: Filter by Status
+ *       - in: query
+ *         name: visibility
+ *         schema:
+ *           type: string
+ *           enum: [PUBLIC, PRIVATE]
+ *         description: Filter by Visibility
  *     responses:
  *       200:
  *         description: Posts fetched successfully
@@ -128,5 +140,97 @@ router.get(
     authMiddleware.extractUser,
     postController.getPosts
 );
+
+/**
+ * @swagger
+ * /posts/count:
+ *   get:
+ *     summary: Get post count (e.g. for drafts)
+ *     tags: [Post]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PUBLISHED, DRAFT]
+ *         description: Filter by status
+ *       - in: query
+ *         name: visibility
+ *         schema:
+ *           type: string
+ *           enum: [PUBLIC, PRIVATE]
+ *         description: Filter by Visibility
+ *     responses:
+ *       200:
+ *         description: Post count fetched successfully
+ *       403:
+ *         description: Unauthorized
+ */
+router.get("/count", authMiddleware.guard, postController.getPostCount);
+
+/**
+ * @swagger
+ * /posts/{postId}:
+ *   patch:
+ *     summary: Update a post
+ *     tags: [Post]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [PUBLISHED, DRAFT]
+ *               visibility:
+ *                 type: string
+ *                 enum: [PUBLIC, PRIVATE]
+ *               isPinned:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Post updated successfully
+ *       404:
+ *         description: Post not found
+ *       403:
+ *         description: Unauthorized
+ * 
+ *   delete:
+ *     summary: Delete a post
+ *     tags: [Post]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *       404:
+ *         description: Post not found
+ *       403:
+ *         description: Unauthorized
+ */
+router.patch("/:postId", authMiddleware.guard, postController.updatePost);
+router.delete("/:postId", authMiddleware.guard, postController.deletePost);
 
 export { router };

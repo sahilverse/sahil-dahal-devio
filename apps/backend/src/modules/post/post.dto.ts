@@ -135,6 +135,25 @@ export class PostResponseDto {
 }
 
 @Exclude()
+export class UpdatePostDto {
+    @Expose()
+    @Transform(({ value }) => value?.trim())
+    title?: string;
+
+    @Expose()
+    content?: string;
+
+    @Expose()
+    status?: PostStatus;
+
+    @Expose()
+    visibility?: PostVisibility;
+
+    @Expose()
+    isPinned?: boolean;
+}
+
+@Exclude()
 export class GetPostsDto {
     @Expose()
     cursor?: string;
@@ -148,4 +167,10 @@ export class GetPostsDto {
 
     @Expose()
     communityId?: string;
+
+    @Expose()
+    status?: PostStatus;
+
+    @Expose()
+    visibility?: PostVisibility;
 }

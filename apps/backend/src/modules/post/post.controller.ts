@@ -6,6 +6,7 @@ import { GetPostsDto } from "./post.dto";
 import { PostService } from "./post.service";
 import { asyncHandler, ResponseHandler } from "../../utils";
 import { StatusCodes } from "http-status-codes";
+import { PostStatus, PostVisibility } from "../../generated/prisma/client";
 
 @injectable()
 export class PostController {
@@ -26,5 +27,29 @@ export class PostController {
         const currentUserId = req.user?.id;
         const result = await this.postService.getPosts(query, currentUserId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Posts fetched successfully", result);
+    });
+    updatePost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+        const body = req.body;
+
+        const result = await this.postService.updatePost(userId, postId, body);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Post updated successfully", result);
+    });
+
+    deletePost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+
+        await this.postService.deletePost(userId, postId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Post deleted successfully");
+    });
+
+    getPostCount = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { status, visibility } = req.query as { status?: PostStatus, visibility?: PostVisibility };
+
+        const result = await this.postService.getPostCount(userId, status, visibility);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Post count fetched successfully", result);
     });
 }
