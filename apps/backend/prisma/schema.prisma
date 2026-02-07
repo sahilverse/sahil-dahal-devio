@@ -351,9 +351,9 @@ enum JoinRequestStatus {
 }
 
 model Community {
-  id          String              @id @default(cuid())
-  name        String              @unique
-  displayName String              @map("display_name")
+  id   String @id @default(cuid())
+  name String @unique
+
   description String?
   iconUrl     String?             @map("icon_url")
   bannerUrl   String?             @map("banner_url")
