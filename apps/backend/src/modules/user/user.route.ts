@@ -136,29 +136,6 @@ router.patch(
     userController.completeOnboarding
 );
 
-/**
- * @swagger
- * /users/{username}:
- *   get:
- *     summary: Get user profile by username
- *     description: Returns public profile for everyone, private profile for owner.
- *     tags: [User]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: username
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Profile fetched successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
 router.get(
     "/:username",
     authMiddleware.extractUser,

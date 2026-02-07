@@ -15,6 +15,11 @@ export const UserService = {
         await api.delete(`/users/${username}/follow`);
     },
 
+    getJoinedCommunities: async (username: string): Promise<any[]> => {
+        const { data } = await api.get(`/users/${username}/communities`);
+        return data?.result || [];
+    },
+
     uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
         const formData = new FormData();
         formData.append("avatar", file);
@@ -97,7 +102,7 @@ export const UserService = {
     deleteCertification: async (id: string): Promise<void> => {
         await api.delete(`/users/certifications/${id}`);
     },
-    
+
     addProject: async (payload: any): Promise<any> => {
         const { data } = await api.post("/users/projects", payload);
         return data.result;

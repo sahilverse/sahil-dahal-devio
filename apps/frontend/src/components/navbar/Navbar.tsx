@@ -92,10 +92,10 @@ export default function Navbar() {
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-950"></span>
                         </button>
 
-                        <button className="flex items-center gap-1.5 bg-brand-primary text-white px-3 lg:px-4 py-1.5 rounded-full hover:bg-brand-pressed transition-colors font-medium text-sm cursor-pointer">
+                        <Link href="/create" className="flex items-center gap-1.5 bg-brand-primary text-white px-3 lg:px-4 py-1.5 rounded-full hover:bg-brand-pressed transition-colors font-medium text-sm cursor-pointer">
                             <Plus className="w-4 h-4" />
                             <span className="hidden lg:inline">Create</span>
-                        </button>
+                        </Link>
 
                         <UserMenu user={user} />
                     </>

@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import type { User, PrismaClient, AccountStatusHistory } from "../../generated/prisma/client";
+import type { User, PrismaClient, AccountStatusHistory, Community } from "../../generated/prisma/client";
 import type {
     CreateUserPayload,
     AccountStatusPayload,

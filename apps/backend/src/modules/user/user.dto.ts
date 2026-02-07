@@ -1,5 +1,5 @@
 import { AccountStatus, Difficulty } from "../../generated/prisma/client";
-import { Exclude, Expose, Type, Transform } from "class-transformer";
+import { Exclude, Expose, Type } from "class-transformer";
 
 @Exclude()
 export class ActivityLogDTO {

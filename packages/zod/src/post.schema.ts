@@ -18,7 +18,7 @@ const fileSchema = z.custom<any>((val) => {
 }, "Invalid file");
 
 const basePostSchema = z.object({
-    title: z.string().min(1, "Title is required").max(255, "Title must be less than 255 characters").trim(),
+    title: z.string().min(1, "Title is required").max(300, "Title must be less than 300 characters").trim(),
     content: z.string().optional(),
     communityId: z.cuid().optional(),
     topics: z.array(z.string().trim().min(1).max(50)).max(5, "Maximum 5 topics allowed").optional(),

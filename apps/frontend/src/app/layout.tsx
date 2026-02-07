@@ -24,7 +24,7 @@ export default async function RootLayout({
   const token = !!cookieStore.get("refresh_token")?.value;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <script
           dangerouslySetInnerHTML={{

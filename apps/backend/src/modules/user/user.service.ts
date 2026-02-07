@@ -434,6 +434,7 @@ export class UserService {
         await this.userRepository.deleteProject(userId, projectId);
     }
 
+
     private _filterSocials(socials: Record<string, any>): Record<string, string> {
         return Object.fromEntries(
             Object.entries(socials).filter(([_, value]) => value !== null && value !== "")

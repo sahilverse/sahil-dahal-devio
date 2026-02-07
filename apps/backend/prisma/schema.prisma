@@ -636,21 +636,15 @@ model Topic {
   name String @unique
   slug String @unique
 
-  postCount      Int @default(0) @map("post_count")
-  communityCount Int @default(0) @map("community_count")
-  courseCount    Int @default(0) @map("course_count")
-  jobCount       Int @default(0) @map("job_count")
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts        PostTopic[]
-  communities  CommunityTopic[]
-  courseTopics CourseTopic[]
-  jobTopics    JobTopic[]
+  posts       PostTopic[]
+  communities CommunityTopic[]
+  courses     CourseTopic[]
+  jobs        JobTopic[]
 
   @@index([slug])
-  @@index([postCount])
 }
 
 model PostTopic {
