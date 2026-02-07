@@ -19,11 +19,13 @@ import type {
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
-import { PrivateProfileDTO, PublicProfileDTO } from "./dtos/user.dto";
+import { PrivateProfileDTO, PublicProfileDTO } from "./user.dto";
 import { StorageService } from "../storage";
 import { SkillService } from "../skill";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
+import { AuthUserDto } from "../auth";
+import { plainToInstance } from "class-transformer";
 
 @injectable()
 export class UserService {
@@ -33,7 +35,7 @@ export class UserService {
         @inject(TYPES.SkillService) private skillService: SkillService
     ) { }
 
-    async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<User> {
+    async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<AuthUserDto> {
         const existingUser = await this.userRepository.findByUsername(payload.username);
         if (existingUser && existingUser.id !== userId) {
             throw new ApiError("Username already taken", StatusCodes.CONFLICT);
@@ -45,7 +47,7 @@ export class UserService {
             lastName: payload.lastName,
         });
 
-        return updatedUser;
+        return plainToInstance(AuthUserDto, updatedUser, { excludeExtraneousValues: true });
     }
 
     async getUserById(userId: string): Promise<User | null> {
@@ -85,75 +87,61 @@ export class UserService {
         const devioAge = this.formatDevioAge(diffDays);
         const weeklyContributions = await this.userRepository.getWeeklyContributions(user.id);
 
-        const baseProfile: PublicProfileDTO = {
-            id: user.id,
-            username: user.username!,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            avatarUrl: user.avatarUrl,
-            bannerUrl: user.bannerUrl,
+        const activityMap = user.activityLogs.filter((log) => {
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            return new Date(log.date) >= oneYearAgo;
+        });
+
+        const achievements = {
+            latest: user.userAchievements.map((ua: any) => ua.achievement),
+            total: user._count.userAchievements,
+        };
+
+        const problemStats = this.calculateProblemStats(user.submissions);
+        const roomStats = this.calculateRoomStats(user.cyberRoomEnrollments);
+        const recentActivity = this.getRecentActivity(user.submissions, user.cyberRoomEnrollments);
+
+        const experiences = user.experiences.map((exp) => ({
+            ...exp,
+            companyLogoUrl: exp.company?.logoUrl || null,
+        }));
+
+        const skills = user.skills.map((us) => ({
+            id: us.skill.id,
+            name: us.skill.name,
+            slug: us.skill.slug,
+        }));
+
+        const plainProfile = {
+            ...user,
             title: user.profile?.title || null,
             city: user.profile?.city || null,
             country: user.profile?.country || null,
             socials: user.profile?.socials ? this._filterSocials(user.profile.socials as Record<string, string | null>) : null,
             contributions: weeklyContributions,
-
-            auraPoints: user.auraPoints,
             followersCount: user._count.followers,
             followingCount: user._count.following,
             joinedAt: user.createdAt,
             devioAge,
             isFollowing,
             isOwner,
-
             currentStreak: user.userStreak?.currentStreak || 0,
             longestStreak: user.userStreak?.longestStreak || 0,
-            activityMap: user.activityLogs.filter((log) => {
-                const oneYearAgo = new Date();
-                oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-                return new Date(log.date) >= oneYearAgo;
-            }),
-
-            achievements: {
-                latest: user.userAchievements.map((ua: any) => ua.achievement),
-                total: user._count.userAchievements,
-            },
-
-            problemStats: this.calculateProblemStats(user.submissions),
-            roomStats: this.calculateRoomStats(user.cyberRoomEnrollments),
-            recentActivity: this.getRecentActivity(user.submissions, user.cyberRoomEnrollments),
-
-            experiences: user.experiences.map((exp) => ({
-                id: exp.id,
-                title: exp.title,
-                companyName: exp.companyName,
-                companyLogoUrl: exp.company?.logoUrl || null,
-                location: exp.location,
-                type: exp.type,
-                startDate: exp.startDate,
-                endDate: exp.endDate,
-                isCurrent: exp.isCurrent,
-                description: exp.description,
-            })),
-            educations: user.educations,
-            certifications: user.certifications,
-            projects: user.projects,
-            skills: user.skills.map((us) => ({
-                id: us.skill.id,
-                name: us.skill.name,
-                slug: us.skill.slug,
-            })),
+            activityMap,
+            achievements,
+            problemStats,
+            roomStats,
+            recentActivity,
+            experiences,
+            skills,
         };
 
         if (isOwner) {
-            return {
-                ...baseProfile,
-                cipherBalance: user.cipherBalance,
-                accountStatus: user.accountStatus,
-            } as PrivateProfileDTO;
+            return plainToInstance(PrivateProfileDTO, plainProfile, { excludeExtraneousValues: true });
         }
 
-        return baseProfile;
+        return plainToInstance(PublicProfileDTO, plainProfile, { excludeExtraneousValues: true });
     }
 
     async followUser(targetUsername: string, followerId: string): Promise<void> {

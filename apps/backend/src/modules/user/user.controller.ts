@@ -2,9 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { UserService } from "./user.service";
-import { asyncHandler, ResponseHandler, ApiError } from "../../utils";
+import { asyncHandler, ResponseHandler } from "../../utils";
 import { StatusCodes } from "http-status-codes";
-import { toAuthUserDTO } from "../auth";
 
 @injectable()
 export class UserController {
@@ -19,7 +18,7 @@ export class UserController {
             firstName,
             lastName,
         });
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Profile completed successfully", toAuthUserDTO(updatedUser));
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Profile completed successfully", updatedUser);
     });
 
     getProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
