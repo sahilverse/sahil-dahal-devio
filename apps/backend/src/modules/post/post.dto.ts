@@ -110,7 +110,17 @@ export class PostResponseDto {
     media!: MediaDto[];
 
     @Expose()
-    @Transform(({ obj }) => obj.type === PostType.POLL ? obj.pollOptions : undefined)
+    @Transform(({ obj }) => {
+        if (obj.type === PostType.POLL) {
+            return obj.pollOptions.map((option: any) => ({
+                id: option.id,
+                text: option.text,
+                order: option.order,
+                votes: option.votes,
+            }));
+        }
+        return undefined;
+    })
     @Type(() => PollOptionDto)
     pollOptions!: PollOptionDto[];
 
