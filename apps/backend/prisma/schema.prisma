@@ -447,7 +447,6 @@ enum VoteType {
 enum PostStatus {
   DRAFT
   PUBLISHED
-  ARCHIVED
 }
 
 enum PostVisibility {
