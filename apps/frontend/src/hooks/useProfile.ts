@@ -9,14 +9,6 @@ export const USER_QUERY_KEYS = {
     communities: (username: string) => [...USER_QUERY_KEYS.all, "communities", username] as const,
 };
 
-export function useJoinedCommunities(username: string) {
-    return useQuery({
-        queryKey: USER_QUERY_KEYS.communities(username),
-        queryFn: () => UserService.getJoinedCommunities(username),
-        enabled: !!username,
-    });
-}
-
 export function useUserProfile(username: string) {
     return useQuery({
         queryKey: USER_QUERY_KEYS.profile(username),

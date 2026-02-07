@@ -8,7 +8,8 @@ import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { PostRepository } from "./post.repository";
 import { plainToInstance } from "class-transformer";
-import { PostResponseDto } from "./post.dto";
+import { PostResponseDto, GetPostsDto } from "./post.dto";
+
 
 @injectable()
 export class PostService {
@@ -144,5 +145,29 @@ export class PostService {
 
             return plainToInstance(PostResponseDto, post, { excludeExtraneousValues: true });
         });
+    }
+
+    async getPosts(
+        query: GetPostsDto,
+        currentUserId?: string
+    ): Promise<{ posts: PostResponseDto[]; nextCursor: string | null }> {
+        const posts = await this.postRepository.findMany({
+            cursor: query.cursor,
+            limit: query.limit,
+            userId: query.userId,
+            communityId: query.communityId,
+            currentUserId,
+        });
+
+        let nextCursor: string | null = null;
+        if (posts.length > query.limit) {
+            const nextItem = posts.pop();
+            nextCursor = nextItem?.id || null;
+        }
+
+        return {
+            posts: plainToInstance(PostResponseDto, posts, { excludeExtraneousValues: true }),
+            nextCursor,
+        };
     }
 }

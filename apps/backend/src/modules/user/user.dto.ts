@@ -240,3 +240,21 @@ export class PrivateProfileDTO extends PublicProfileDTO {
     @Expose() cipherBalance!: number;
     @Expose() accountStatus!: AccountStatus;
 }
+
+@Exclude()
+export class JoinedCommunityDto {
+    @Expose() id!: string;
+    @Expose() name!: string;
+    @Expose() displayName!: string;
+    @Expose() iconUrl!: string | null;
+    @Expose() memberCount!: number;
+}
+
+@Exclude()
+export class GetJoinedCommunitiesResponseDto {
+    @Expose()
+    @Type(() => JoinedCommunityDto)
+    communities!: JoinedCommunityDto[];
+
+    @Expose() nextCursor!: string | null;
+}

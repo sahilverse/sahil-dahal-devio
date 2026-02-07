@@ -4,12 +4,11 @@ import { Header } from "@/components/profile/header";
 import { Sidebar } from "@/components/profile/sidebar";
 import { Overview } from "@/components/profile/overview";
 import { About } from "@/components/profile/about";
-import { Button } from "@/components/ui/button";
 import ProfileSkeleton from "@/components/profile/ProfileSkeleton";
 import { notFound } from "next/navigation";
 import { useUserProfile } from "@/hooks/useProfile";
 import { useParams, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import PostFeed from "@/components/profile/posts/PostFeed";
 
 export default function UserProfilePage() {
     const { username } = useParams<{ username: string }>();
@@ -34,26 +33,9 @@ export default function UserProfilePage() {
                         {activeTab === "overview" && <Overview profile={profile} />}
 
                         {activeTab === "posts" && (
-                            <div className="p-16 border rounded-xl bg-card border-dashed text-center space-y-4">
-                                <div className="space-y-2">
-                                    <p className="text-muted-foreground">
-                                        {isCurrentUser
-                                            ? "You haven't posted anything yet"
-                                            : `u/${profile.username} hasn't posted anything yet`}
-                                    </p>
-                                    {isCurrentUser && (
-                                        <p className="text-sm text-muted-foreground/70">
-                                            Share your thoughts, projects, or questions with the community
-                                        </p>
-                                    )}
-                                </div>
-                                {isCurrentUser && (
-                                    <Button variant="brand" className="cursor-pointer">
-                                        <Plus className="size-4" />
-                                        Create Post
-                                    </Button>
-                                )}
-                            </div>
+
+                            <PostFeed userId={profile.id} isCurrentUser={isCurrentUser} username={profile.username} />
+
                         )}
                         {activeTab === "saved" && isCurrentUser && (
                             <div className="p-16 border rounded-xl bg-card border-dashed text-center space-y-2">

@@ -15,9 +15,14 @@ export const UserService = {
         await api.delete(`/users/${username}/follow`);
     },
 
-    getJoinedCommunities: async (username: string): Promise<any[]> => {
-        const { data } = await api.get(`/users/${username}/communities`);
-        return data?.result || [];
+    getJoinedCommunities: async (userId: string, limit = 10, cursor?: string, query?: string): Promise<{ communities: any[]; nextCursor: string | null }> => {
+        const params = new URLSearchParams();
+        params.append("limit", limit.toString());
+        if (cursor) params.append("cursor", cursor);
+        if (query) params.append("query", query);
+
+        const { data } = await api.get(`/users/${userId}/communities?${params.toString()}`);
+        return data.result;
     },
 
     uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {

@@ -75,4 +75,58 @@ router.post(
     postController.createPost
 );
 
+/**
+ * @swagger
+ * /posts:
+ *   get:
+ *     summary: Fetch posts 
+ *     tags: [Post]
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Cursor for pagination (ID of the last item)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items to fetch
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: Filter by User ID
+ *       - in: query
+ *         name: communityId
+ *         schema:
+ *           type: string
+ *         description: Filter by Community ID
+ *     responses:
+ *       200:
+ *         description: Posts fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     posts:
+ *                     nextCursor:
+ *                       type: string
+ *                       nullable: true
+ */
+router.get(
+    "/",
+    authMiddleware.extractUser,
+    postController.getPosts
+);
+
 export { router };

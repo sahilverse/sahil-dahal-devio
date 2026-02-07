@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { X, Check, Loader2, Plus } from "lucide-react";
 import { useSearchTopics } from "@/hooks/useTopics";
 import { useDebounce } from "@/hooks/useDebounce";
-import { cn } from "@/lib/utils";
+import { cn, formatCompactNumber } from "@/lib/utils";
 
 export default function TopicSelector() {
     const { control, setValue, watch } = useFormContext();
@@ -123,7 +123,7 @@ export default function TopicSelector() {
                                                         )}
                                                         {topic.count !== undefined && (
                                                             <span className="ml-auto text-xs text-muted-foreground">
-                                                                {topic.count} posts
+                                                                {formatCompactNumber(topic.count)}
                                                             </span>
                                                         )}
                                                     </CommandItem>

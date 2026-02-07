@@ -534,6 +534,39 @@ export class UserRepository {
         });
     }
 
+    async findJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<any[]> {
+        const where: any = { userId };
+
+        if (query) {
+            where.community = {
+                OR: [
+                    { name: { contains: query, mode: 'insensitive' } },
+                    { displayName: { contains: query, mode: 'insensitive' } }
+                ]
+            };
+        }
+
+        return this.prisma.communityMember.findMany({
+            where,
+            take: limit + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: { joinedAt: 'desc' },
+            include: {
+                community: {
+                    select: {
+                        id: true,
+                        name: true,
+                        displayName: true,
+                        iconUrl: true,
+                        _count: {
+                            select: { members: true }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     async findProjectById(projectId: string): Promise<any | null> {
         return this.prisma.userProject.findUnique({
             where: { id: projectId }

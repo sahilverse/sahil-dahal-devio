@@ -4,6 +4,7 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
+import { Markdown } from "tiptap-markdown";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export default function TiptapEditor({ content, onChange, placeholder, className
     const editor = useEditor({
         extensions: [
             StarterKit,
+            Markdown,
             Placeholder.configure({
                 placeholder: placeholder || "Body text (optional)",
             }),
@@ -46,7 +48,7 @@ export default function TiptapEditor({ content, onChange, placeholder, className
         content: content,
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
+            onChange((editor.storage as any).markdown.getMarkdown());
         },
         editorProps: {
             attributes: {
@@ -56,7 +58,7 @@ export default function TiptapEditor({ content, onChange, placeholder, className
     });
 
     useEffect(() => {
-        if (editor && content !== editor.getHTML()) {
+        if (editor && content !== (editor.storage as any).markdown.getMarkdown()) {
             editor.commands.setContent(content);
         }
     }, [content, editor]);

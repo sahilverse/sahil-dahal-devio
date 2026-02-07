@@ -33,6 +33,16 @@ export class UserController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Profile fetched successfully", profile);
     });
 
+    getJoinedCommunities = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { userId } = req.params as { userId: string };
+        const { limit, cursor, query } = req.query as { limit?: string; cursor?: string; query?: string };
+
+        const parsedLimit = limit ? parseInt(limit, 10) : 10;
+
+        const result = await this.userService.getJoinedCommunities(userId, parsedLimit, cursor, query);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Joined communities fetched successfully", result);
+    });
+
     followUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { username } = req.params as { username: string };
         const followerId = req.user!.id;

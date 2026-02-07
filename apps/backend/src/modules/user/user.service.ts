@@ -19,7 +19,7 @@ import type {
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
-import { PrivateProfileDTO, PublicProfileDTO } from "./user.dto";
+import { PrivateProfileDTO, PublicProfileDTO, JoinedCommunityDto, GetJoinedCommunitiesResponseDto } from "./user.dto";
 import { StorageService } from "../storage";
 import { SkillService } from "../skill";
 import { v4 as uuidv4 } from "uuid";
@@ -142,6 +142,29 @@ export class UserService {
         }
 
         return plainToInstance(PublicProfileDTO, plainProfile, { excludeExtraneousValues: true });
+    }
+
+    async getJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<GetJoinedCommunitiesResponseDto> {
+        const members = await this.userRepository.findJoinedCommunities(userId, limit, cursor, query);
+
+        let nextCursor: string | null = null;
+        if (members.length > limit) {
+            const nextItem = members.pop();
+            nextCursor = nextItem?.id || null;
+        }
+
+        const communities = members.map((member: any) => ({
+            id: member.community.id,
+            name: member.community.name,
+            displayName: member.community.displayName,
+            iconUrl: member.community.iconUrl,
+            memberCount: member.community._count.members,
+        }));
+
+        return plainToInstance(GetJoinedCommunitiesResponseDto, {
+            communities,
+            nextCursor
+        }, { excludeExtraneousValues: true });
     }
 
     async followUser(targetUsername: string, followerId: string): Promise<void> {

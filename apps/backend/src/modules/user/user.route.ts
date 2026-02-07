@@ -136,6 +136,29 @@ router.patch(
     userController.completeOnboarding
 );
 
+/**
+ * @swagger
+ * /users/{username}:
+ *   get:
+ *     summary: Get user profile by username
+ *     description: Returns public profile for everyone, private profile for owner.
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile fetched successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
 router.get(
     "/:username",
     authMiddleware.extractUser,
@@ -202,6 +225,43 @@ router.delete(
     "/:username/follow",
     authMiddleware.guard,
     userController.unfollowUser
+);
+
+/**
+ * @swagger
+ * /users/{userId}/communities:
+ *   get:
+ *     summary: Get communities joined by user
+ *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: query
+ *         schema:
+ *           type: string
+ *           description: Search query for community name
+ *     responses:
+ *       200:
+ *         description: List of joined communities
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/:userId/communities",
+    userController.getJoinedCommunities
 );
 
 /**

@@ -133,3 +133,19 @@ export class PostResponseDto {
     })))
     topics!: TopicDto[];
 }
+
+@Exclude()
+export class GetPostsDto {
+    @Expose()
+    cursor?: string;
+
+    @Expose()
+    @Type(() => Number)
+    limit: number = 10;
+
+    @Expose()
+    userId?: string;
+
+    @Expose()
+    communityId?: string;
+}

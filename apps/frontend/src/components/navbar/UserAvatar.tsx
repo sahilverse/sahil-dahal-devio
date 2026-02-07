@@ -1,11 +1,13 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AuthUser } from "@/slices/auth/authTypes";
 import Image from "next/image";
 
 interface UserAvatarProps {
-    user: AuthUser;
+    user: {
+        avatarUrl?: string | null;
+        username: string | null;
+    }
     size?: "sm" | "md" | "lg";
 }
 
@@ -23,14 +25,15 @@ export default function UserAvatar({ user, size = "sm" }: UserAvatarProps) {
                 alt={user.username || "User"}
                 className="object-cover"
             />
-            <AvatarFallback>
+            <AvatarFallback className="bg-transparent">
                 <Image
                     src="/devio-logo.png"
                     alt="Devio"
                     height={24}
                     width={24}
+                    className="object-contain"
                 />
-            </AvatarFallback>``
+            </AvatarFallback>
         </Avatar>
     );
 }

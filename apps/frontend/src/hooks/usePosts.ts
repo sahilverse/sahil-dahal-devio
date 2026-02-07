@@ -1,6 +1,4 @@
-"use client";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { PostService } from "@/api/postService";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -18,6 +16,7 @@ export function useCreatePost() {
         onSuccess: (response) => {
             toast.success("Post created successfully!");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
 
             if (response.result.communityId) {
                 router.push(`/community/${response.result.community.slug}?view=posts`);
@@ -30,5 +29,21 @@ export function useCreatePost() {
             toast.error(message);
             logger.error("Post Creation Error:", error);
         }
+    });
+}
+
+export function useFetchPosts(filters?: { userId?: string; communityId?: string; limit?: number }) {
+    return useInfiniteQuery({
+        queryKey: ["posts", filters],
+        queryFn: async ({ pageParam = undefined }) => {
+            const response = await PostService.getPosts({
+                ...filters,
+                cursor: pageParam as string | undefined,
+                limit: filters?.limit || 10,
+            });
+            return response.result;
+        },
+        getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
+        initialPageParam: undefined,
     });
 }

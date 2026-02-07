@@ -36,5 +36,10 @@ export const sanitizePostRequest = (req: Request, _res: Response, next: NextFunc
         req.body.media = undefined;
     }
 
+    // 5. Sanitize Content 
+    if (req.body.content && typeof req.body.content !== "string") {
+        req.body.content = String(req.body.content);
+    }
+
     next();
 };
