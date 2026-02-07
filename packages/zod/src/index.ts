@@ -9,5 +9,6 @@ export * from "./project.schema";
 export * from "./certification.schema";
 export * from "./topic.schema";
 export * from "./post.schema";
+export * from "./community.schema";
 export * from "./utils";
 

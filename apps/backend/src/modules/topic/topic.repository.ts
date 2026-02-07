@@ -1,13 +1,14 @@
 import { injectable, inject } from "inversify";
-import type { PrismaClient, Topic } from "../../generated/prisma/client";
+import { PrismaClient, Topic, Prisma } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
 export class TopicRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
-    async create(name: string, slug: string): Promise<Topic> {
-        return this.prisma.topic.create({
+    async create(name: string, slug: string, tx?: Prisma.TransactionClient): Promise<Topic> {
+        const client = tx || this.prisma;
+        return client.topic.create({
             data: {
                 name,
                 slug
@@ -31,8 +32,9 @@ export class TopicRepository {
         });
     }
 
-    async findBySlug(slug: string): Promise<Topic | null> {
-        return this.prisma.topic.findUnique({
+    async findBySlug(slug: string, tx?: Prisma.TransactionClient): Promise<Topic | null> {
+        const client = tx || this.prisma;
+        return client.topic.findUnique({
             where: { slug },
             include: {
                 _count: {

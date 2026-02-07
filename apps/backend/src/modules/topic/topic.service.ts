@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TopicRepository } from "./topic.repository";
-import type { Topic } from "../../generated/prisma/client";
+import type { PrismaClient, Topic, Prisma } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 import slugify from "slugify";
 import { plainToInstance } from "class-transformer";
@@ -12,15 +12,15 @@ export class TopicService {
         @inject(TYPES.TopicRepository) private topicRepository: TopicRepository
     ) { }
 
-    async createTopic(name: string): Promise<Topic> {
+    async createTopic(name: string, tx?: Prisma.TransactionClient): Promise<Topic> {
         const slug = slugify(name, { lower: true, strict: true });
 
-        const existingTopic = await this.topicRepository.findBySlug(slug);
+        const existingTopic = await this.topicRepository.findBySlug(slug, tx);
         if (existingTopic) {
             return existingTopic;
         }
 
-        return this.topicRepository.create(name, slug);
+        return this.topicRepository.create(name, slug, tx);
     }
 
     async searchTopics(query: string): Promise<TopicDTO[]> {

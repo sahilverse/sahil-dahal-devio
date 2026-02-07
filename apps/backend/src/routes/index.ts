@@ -8,6 +8,8 @@ import { router as activityRoutes } from "../modules/activity/activity.route";
 import { router as topicRoutes } from "../modules/topic/topic.route";
 import { router as postRoutes } from "../modules/post/post.route";
 
+import { router as communityRoutes } from "../modules/community/community.route";
+
 const router: Router = Router();
 
 router.use(authRoutes);
@@ -17,6 +19,7 @@ router.use("/skills", skillRoutes);
 router.use("/activity", activityRoutes);
 router.use("/topics", topicRoutes);
 router.use("/posts", postRoutes);
+router.use("/communities", communityRoutes);
 
 
 

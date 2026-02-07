@@ -6,7 +6,8 @@ export const loginSchema = z.object({
     identifier: z
         .string()
         .min(1, "Email or username is required")
-        .transform(val => val.trim().toLowerCase()),
+        .trim()
+        .toLowerCase(),
     password: z.string().min(1, "Password is required"),
 });
 
@@ -14,7 +15,7 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
     firstName: z
         .string()
-        .min(1, "First name is required")
+        .min(3, "First name is too short")
         .max(20, "First name is too long")
         .trim(),
 
@@ -33,7 +34,7 @@ export const registerSchema = z.object({
         .string()
         .min(3, "Username must be at least 3 characters")
         .max(20, "Username is too long")
-        .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscore, and hyphen allowed")
+        .regex(/^[a-zA-Z0-9_]+$/, "Name can only contain alphanumeric characters and underscores")
         .trim()
         .toLowerCase(),
 
@@ -58,20 +59,20 @@ export const onboardingSchema = z.object({
         .string()
         .min(3, "Username must be at least 3 characters")
         .max(30, "Username is too long")
-        .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscore, and hyphen allowed")
+        .regex(/^[a-zA-Z0-9_]+$/, "Name can only contain alphanumeric characters and underscores")
         .trim()
         .toLowerCase(),
 
     firstName: z
         .string()
-        .min(1, "First name is required")
-        .max(50, "First name is too long")
+        .min(3, "First name is too short")
+        .max(20, "First name is too long")
         .trim(),
 
     lastName: z
         .string()
-        .min(1, "Last name is required")
-        .max(50, "Last name is too long")
+        .min(3, "Last name is too short")
+        .max(20, "Last name is too long")
         .trim(),
 });
 

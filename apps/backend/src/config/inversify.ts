@@ -62,6 +62,14 @@ container.bind<PostRepository>(TYPES.PostRepository).to(PostRepository).inSingle
 container.bind<PostService>(TYPES.PostService).to(PostService).inSingletonScope();
 container.bind<PostController>(TYPES.PostController).to(PostController).inSingletonScope();
 
+import { CommunityRepository } from "../modules/community/community.repository";
+import { CommunityService } from "../modules/community/community.service";
+import { CommunityController } from "../modules/community/community.controller";
+
+container.bind<CommunityRepository>(TYPES.CommunityRepository).to(CommunityRepository).inSingletonScope();
+container.bind<CommunityService>(TYPES.CommunityService).to(CommunityService).inSingletonScope();
+container.bind<CommunityController>(TYPES.CommunityController).to(CommunityController).inSingletonScope();
+
 container.bind(TYPES.VerificationRepository).to(VerificationRepository).inSingletonScope();
 container.bind(TYPES.VerificationService).to(VerificationService).inSingletonScope();
 

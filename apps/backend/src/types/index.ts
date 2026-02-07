@@ -45,6 +45,10 @@ export const TYPES = {
     PostRepository: Symbol.for("PostRepository"),
     PostService: Symbol.for("PostService"),
     PostController: Symbol.for("PostController"),
+
+    CommunityRepository: Symbol.for("CommunityRepository"),
+    CommunityService: Symbol.for("CommunityService"),
+    CommunityController: Symbol.for("CommunityController"),
 };
 
 export * from "./jwt";
