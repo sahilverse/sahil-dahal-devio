@@ -6,6 +6,10 @@ import { UserRepository, UserService, UserController } from "../modules/user";
 import { CompanyRepository, CompanyService, CompanyController } from "../modules/company";
 import { ActivityRepository, ActivityService, ActivityController } from "../modules/activity";
 import { SkillRepository, SkillService, SkillController } from "../modules/skill";
+import { TopicRepository, TopicService, TopicController } from "../modules/topic";
+import { PostRepository } from "../modules/post/post.repository";
+import { PostService } from "../modules/post/post.service";
+import { PostController } from "../modules/post/post.controller";
 import { prisma } from "./prisma";
 import { AuthMiddleware } from "../middlewares";
 import type { Transporter } from "nodemailer";
@@ -49,6 +53,14 @@ container.bind<CompanyController>(TYPES.CompanyController).to(CompanyController)
 container.bind<SkillRepository>(TYPES.SkillRepository).to(SkillRepository).inSingletonScope();
 container.bind<SkillService>(TYPES.SkillService).to(SkillService).inSingletonScope();
 container.bind<SkillController>(TYPES.SkillController).to(SkillController).inSingletonScope();
+
+container.bind<TopicRepository>(TYPES.TopicRepository).to(TopicRepository).inSingletonScope();
+container.bind<TopicService>(TYPES.TopicService).to(TopicService).inSingletonScope();
+container.bind<TopicController>(TYPES.TopicController).to(TopicController).inSingletonScope();
+
+container.bind<PostRepository>(TYPES.PostRepository).to(PostRepository).inSingletonScope();
+container.bind<PostService>(TYPES.PostService).to(PostService).inSingletonScope();
+container.bind<PostController>(TYPES.PostController).to(PostController).inSingletonScope();
 
 container.bind(TYPES.VerificationRepository).to(VerificationRepository).inSingletonScope();
 container.bind(TYPES.VerificationService).to(VerificationService).inSingletonScope();

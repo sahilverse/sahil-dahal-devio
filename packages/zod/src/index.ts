@@ -7,4 +7,7 @@ export * from "./education.schema";
 export * from "./skills.schema";
 export * from "./project.schema";
 export * from "./certification.schema";
+export * from "./topic.schema";
+export * from "./post.schema";
 export * from "./utils";
+

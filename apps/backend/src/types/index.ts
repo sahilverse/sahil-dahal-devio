@@ -37,6 +37,14 @@ export const TYPES = {
     SkillRepository: Symbol.for("SkillRepository"),
     SkillService: Symbol.for("SkillService"),
     SkillController: Symbol.for("SkillController"),
+
+    TopicRepository: Symbol.for("TopicRepository"),
+    TopicService: Symbol.for("TopicService"),
+    TopicController: Symbol.for("TopicController"),
+
+    PostRepository: Symbol.for("PostRepository"),
+    PostService: Symbol.for("PostService"),
+    PostController: Symbol.for("PostController"),
 };
 
 export * from "./jwt";
