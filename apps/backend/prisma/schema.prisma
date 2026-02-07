@@ -473,7 +473,7 @@ model Post {
   deletedAt DateTime? @map("deleted_at")
   isPinned  Boolean   @default(false) @map("is_pinned")
 
-  status     PostStatus     @default(DRAFT)
+  status     PostStatus     @default(PUBLISHED)
   visibility PostVisibility @default(PUBLIC)
 
   upvotes      Int @default(0)
