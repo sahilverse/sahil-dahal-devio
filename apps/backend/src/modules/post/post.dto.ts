@@ -59,10 +59,11 @@ export class PostResponseDto {
 
     @Expose()
     @Transform(({ obj, options }) => {
+        const onlySaved = (options as any)?.onlySaved;
         const queryUserId = (options as any)?.queryUserId;
         const queryCommunityId = (options as any)?.queryCommunityId;
 
-        if (!obj.pinnedPosts) return false;
+        if (onlySaved || !obj.pinnedPosts) return false;
 
         if (queryUserId) {
             return obj.pinnedPosts.some((p: any) => p.userId === queryUserId);

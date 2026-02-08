@@ -176,6 +176,7 @@ export class PostService {
                 currentUserId,
                 queryUserId: query.userId,
                 queryCommunityId: query.communityId,
+                onlySaved: query.onlySaved,
             } as any),
             nextCursor,
         };
