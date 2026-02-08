@@ -21,7 +21,7 @@ export function AuthModal() {
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-md mx-4 bg-background border border-border rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 p-6 md:p-8 max-h-[90vh] overflow-y-auto cursor-default">
+            <div className="relative w-full max-w-md mx-4 bg-card border border-border rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 p-6 md:p-8 max-h-[90vh] overflow-y-auto cursor-default">
                 <button
                     onClick={close}
                     className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1 cursor-pointer"

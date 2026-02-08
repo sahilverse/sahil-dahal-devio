@@ -81,7 +81,7 @@ export const completeOnboarding = createAsyncThunk<
     { rejectValue: { errorMessage?: string; fieldErrors?: Record<string, string> } }
 >("auth/completeOnboarding", async (payload, { rejectWithValue }) => {
     try {
-        const { data } = await api.patch("/user/onboarding", payload);
+        const { data } = await api.patch("/users/onboarding", payload);
         return data.result as AuthUser;
     } catch (error: any) {
         return rejectWithValue(error);
@@ -339,7 +339,7 @@ const authSlice = createSlice({
             })
             .addCase(resetPassword.fulfilled, (state) => {
                 state.status = "succeeded";
-                state.resetSessionToken = null; 
+                state.resetSessionToken = null;
             })
             .addCase(resetPassword.rejected, (state, action) => {
                 state.status = "failed";

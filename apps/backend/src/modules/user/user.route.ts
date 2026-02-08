@@ -112,11 +112,11 @@ const userController = container.get<UserController>(TYPES.UserController);
  *               firstName:
  *                 type: string
  *                 minLength: 1
- *                 maxLength: 50
+ *                 maxLength: 30
  *               lastName:
  *                 type: string
  *                 minLength: 1
- *                 maxLength: 50
+ *                 maxLength: 30
  *     responses:
  *       200:
  *         description: Profile completed successfully

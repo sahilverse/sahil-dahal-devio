@@ -70,7 +70,7 @@ export function EmailVerificationForm() {
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 ">
             <div className="space-y-2 text-center">
                 <h2 className="text-xl font-semibold tracking-tight">Verify Your Email</h2>
                 <p className="text-sm text-muted-foreground">

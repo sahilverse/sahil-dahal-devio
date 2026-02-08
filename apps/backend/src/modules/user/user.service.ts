@@ -26,7 +26,7 @@ import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
 import { AuthUserDto } from "../auth";
 import { plainToInstance } from "class-transformer";
-import { CommunityRepository, JoinedCommunityDto, GetJoinedCommunitiesResponseDto } from "../community";
+import { CommunityRepository, GetJoinedCommunitiesResponseDto } from "../community";
 
 @injectable()
 export class UserService {
@@ -40,7 +40,7 @@ export class UserService {
     async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<AuthUserDto> {
         const existingUser = await this.userRepository.findByUsername(payload.username);
         if (existingUser && existingUser.id !== userId) {
-            throw new ApiError("Username already taken", StatusCodes.CONFLICT);
+            throw new ApiError({ "username": "Username already taken" }, StatusCodes.CONFLICT);
         }
 
         const updatedUser = await this.userRepository.updateUserProfile(userId, {

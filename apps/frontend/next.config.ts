@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/u/:username',
-        destination: '/user/:username',
+        source: '/user/:username',
+        destination: '/u/:username',
         permanent: true,
       },
     ];
