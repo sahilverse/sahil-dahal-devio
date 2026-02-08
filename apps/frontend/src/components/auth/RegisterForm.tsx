@@ -90,7 +90,6 @@ export function RegisterForm() {
             })).unwrap();
 
             toast.success("Signed in successfully!");
-            window.location.reload();
 
             await dispatch(sendVerificationEmail(data.email)).unwrap();
 
