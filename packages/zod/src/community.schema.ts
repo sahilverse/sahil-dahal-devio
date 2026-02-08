@@ -20,9 +20,9 @@ export const createCommunitySchema = z.object({
 
     visibility: z.enum(CommunityVisibility),
 
-    tags: z.array(z.string().min(1, "Tag cannot be empty"))
-        .min(1, "At least 1 tag is required")
-        .max(5, "Maximum 5 tags are allowed"),
+    topics: z.array(z.string().min(1, "Topic cannot be empty"))
+        .min(1, "At least 1 topic is required")
+        .max(5, "Maximum 5 topics are allowed"),
 });
 
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;

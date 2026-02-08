@@ -26,11 +26,11 @@ export class CommunityService {
         // 2. Transaction
         const community = await this.communityRepository.client.$transaction(async (tx) => {
             const topicIds: string[] = [];
-            if (data.tags && data.tags.length > 0) {
-                const uniqueTags = Array.from(new Set(data.tags));
+            if (data.topics && data.topics.length > 0) {
+                const uniqueTopics = Array.from(new Set(data.topics));
 
-                for (const tagName of uniqueTags) {
-                    const topic = await this.topicService.createTopic(tagName, tx);
+                for (const topicName of uniqueTopics) {
+                    const topic = await this.topicService.createTopic(topicName, tx);
                     topicIds.push(topic.id);
                 }
             }
