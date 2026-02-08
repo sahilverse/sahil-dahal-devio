@@ -13,11 +13,12 @@ import { useAppSelector } from "@/store/hooks";
 interface PostFeedProps {
     userId?: string;
     communityId?: string;
+    onlySaved?: boolean;
     isCurrentUser?: boolean;
     username?: string;
 }
 
-export default function PostFeed({ userId, communityId, isCurrentUser, username }: PostFeedProps) {
+export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser, username }: PostFeedProps) {
     const { user } = useAppSelector((state) => state.auth);
 
     const {
@@ -27,7 +28,7 @@ export default function PostFeed({ userId, communityId, isCurrentUser, username 
         isFetchingNextPage,
         isLoading,
         isError
-    } = useFetchPosts({ userId, communityId, limit: 10 });
+    } = useFetchPosts({ userId, communityId, onlySaved, limit: 10 });
 
     const { ref, inView } = useInView();
 
@@ -60,17 +61,21 @@ export default function PostFeed({ userId, communityId, isCurrentUser, username 
             <div className="p-16 border rounded-xl bg-card border-dashed text-center space-y-4">
                 <div className="space-y-2">
                     <p className="text-muted-foreground">
-                        {isCurrentUser
-                            ? "You haven't posted anything yet"
-                            : `u/${username} hasn't posted anything yet`}
+                        {onlySaved
+                            ? "You haven't saved any posts yet"
+                            : isCurrentUser
+                                ? "You haven't posted anything yet"
+                                : `u/${username} hasn't posted anything yet`}
                     </p>
                     {isCurrentUser && (
                         <p className="text-sm text-muted-foreground/70">
-                            Share your thoughts, projects, or questions with the community
+                            {onlySaved
+                                ? "Posts you save will appear here for easy access"
+                                : "Share your thoughts, projects, or questions with the community"}
                         </p>
                     )}
                 </div>
-                {isCurrentUser && (
+                {isCurrentUser && !onlySaved && (
                     <Button variant="brand" className="cursor-pointer" asChild>
                         <Link href="/create">
                             <Plus className="size-4" />

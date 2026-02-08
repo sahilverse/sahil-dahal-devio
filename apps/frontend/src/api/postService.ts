@@ -48,7 +48,7 @@ export const PostService = {
         return response.data;
     },
 
-    getPosts: async (params: { cursor?: string; limit?: number; userId?: string; communityId?: string }) => {
+    getPosts: async (params: { cursor?: string; limit?: number; userId?: string; communityId?: string; onlySaved?: boolean }) => {
         const response = await api.get("/posts", { params });
         return response.data;
     },

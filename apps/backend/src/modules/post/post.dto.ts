@@ -192,4 +192,8 @@ export class GetPostsDto {
 
     @Expose()
     visibility?: PostVisibility;
+
+    @Expose()
+    @Transform(({ value }) => value === "true" || value === true)
+    onlySaved?: boolean;
 }

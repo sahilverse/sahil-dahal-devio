@@ -38,14 +38,7 @@ export default function UserProfilePage() {
 
                         )}
                         {activeTab === "saved" && isCurrentUser && (
-                            <div className="p-16 border rounded-xl bg-card border-dashed text-center space-y-2">
-                                <p className="text-muted-foreground">
-                                    You haven't saved any posts yet
-                                </p>
-                                <p className="text-sm text-muted-foreground/70">
-                                    Posts you save will appear here for easy access
-                                </p>
-                            </div>
+                            <PostFeed onlySaved={true} isCurrentUser={isCurrentUser} />
                         )}
                         {activeTab === "about" && (
                             <About profile={profile} isCurrentUser={isCurrentUser} />

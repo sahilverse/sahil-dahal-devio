@@ -53,8 +53,9 @@ export class PostRepository {
         currentUserId?: string;
         status?: PostStatus;
         visibility?: PostVisibility;
+        savedByUserId?: string;
     }): Promise<Post[]> {
-        const { cursor, limit, userId, communityId, currentUserId, status, visibility } = params;
+        const { cursor, limit, userId, communityId, currentUserId, status, visibility, savedByUserId } = params;
 
         const isOwner = userId && currentUserId && userId === currentUserId;
 
@@ -79,8 +80,13 @@ export class PostRepository {
                     : { status: PostStatus.PUBLISHED }
                 ),
                 ...(visibility && { visibility }),
-                ...(!isOwner && !communityId && {
+                ...(!isOwner && !communityId && !savedByUserId && {
                     visibility: PostVisibility.PUBLIC
+                }),
+                ...(savedByUserId && {
+                    savePosts: {
+                        some: { userId: savedByUserId }
+                    }
                 })
             },
             orderBy: { createdAt: "desc" },
