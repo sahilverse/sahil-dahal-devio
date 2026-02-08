@@ -522,8 +522,8 @@ model PinnedPost {
   id String @id @default(cuid())
 
   postId      String  @map("post_id")
-  userId      String? @map("user_id") // Profile pin (author's profile)
-  communityId String? @map("community_id") // Community pin
+  userId      String? @map("user_id") 
+  communityId String? @map("community_id")
 
   createdAt DateTime @default(now())
 
