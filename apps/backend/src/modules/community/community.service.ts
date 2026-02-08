@@ -20,7 +20,7 @@ export class CommunityService {
         // 1. Check Name Uniqueness
         const existing = await this.communityRepository.findByName(data.name);
         if (existing) {
-            throw new ApiError("Community name already taken", StatusCodes.CONFLICT);
+            throw new ApiError({ "name": "Community name already taken" }, StatusCodes.CONFLICT);
         }
 
         // 2. Transaction
