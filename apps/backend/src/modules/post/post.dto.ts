@@ -57,6 +57,25 @@ export class PostResponseDto {
 
     @Expose() commentCount!: number;
 
+    @Expose() isPinned!: boolean;
+
+    @Expose()
+    @Transform(({ obj, options }) => {
+        const currentUserId = (options as any)?.currentUserId;
+        if (!currentUserId || !obj.votes) return undefined;
+        const vote = obj.votes.find((v: any) => v.userId === currentUserId);
+        return vote?.type;
+    })
+    userVote?: "UP" | "DOWN";
+
+    @Expose()
+    @Transform(({ obj, options }) => {
+        const currentUserId = (options as any)?.currentUserId;
+        if (!currentUserId || !obj.savePosts) return false;
+        return obj.savePosts.some((s: any) => s.userId === currentUserId);
+    })
+    isSaved?: boolean;
+
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
 

@@ -32,6 +32,60 @@ export function useCreatePost() {
     });
 }
 
+export function useVotePost() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ postId, type }: { postId: string; type: "UP" | "DOWN" | null }) =>
+            PostService.votePost(postId, type),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage || "Failed to record vote.";
+            toast.error(message);
+        },
+    });
+}
+
+export function useSavePost() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (postId: string) => PostService.toggleSavePost(postId),
+        onSuccess: (response) => {
+            const message = response.result.isSaved ? "Post saved!" : "Post unsaved!";
+            toast.success(message);
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage || "Failed to save post.";
+            toast.error(message);
+        },
+    });
+}
+
+export function usePinPost() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ postId, isPinned }: { postId: string; isPinned: boolean }) =>
+            PostService.togglePinPost(postId, isPinned),
+        onSuccess: (response) => {
+            const message = response.result.isPinned ? "Post pinned to profile!" : "Post unpinned!";
+            toast.success(message);
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage || "Failed to update pin status.";
+            toast.error(message);
+        },
+    });
+}
+
 export function useFetchPosts(filters?: { userId?: string; communityId?: string; limit?: number }) {
     return useInfiniteQuery({
         queryKey: ["posts", filters],

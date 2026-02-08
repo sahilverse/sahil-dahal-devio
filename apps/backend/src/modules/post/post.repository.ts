@@ -6,12 +6,37 @@ import { TYPES } from "../../types";
 export class PostRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
-    async create(data: Prisma.PostCreateInput): Promise<Post> {
-        return this.prisma.post.create({ data });
+    private getPostInclude(currentUserId?: string) {
+        return {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true,
+                },
+            },
+            community: true,
+            media: true,
+            topics: { include: { topic: true } },
+            pollOptions: true,
+            ...(currentUserId && {
+                votes: { where: { userId: currentUserId } },
+                savePosts: { where: { userId: currentUserId } },
+            }),
+        };
     }
 
-    async findById(id: string): Promise<Post | null> {
-        return this.prisma.post.findUnique({ where: { id } });
+    async create(data: Prisma.PostCreateInput): Promise<Post> {
+        return this.prisma.post.create({ data, include: this.getPostInclude() });
+    }
+
+    async findById(id: string, currentUserId?: string): Promise<Post | null> {
+        return this.prisma.post.findUnique({
+            where: { id },
+            include: this.getPostInclude(currentUserId)
+        });
     }
 
     async createPostWithTransaction(
@@ -59,43 +84,15 @@ export class PostRepository {
                 })
             },
             orderBy: { createdAt: "desc" },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        firstName: true,
-                        lastName: true,
-                        avatarUrl: true,
-                    },
-                },
-                community: true,
-                media: true,
-                topics: { include: { topic: true } },
-                pollOptions: true,
-            },
+            include: this.getPostInclude(currentUserId),
         });
     }
 
-    async update(id: string, data: Prisma.PostUpdateInput): Promise<Post> {
+    async update(id: string, data: Prisma.PostUpdateInput, currentUserId?: string): Promise<Post> {
         return this.prisma.post.update({
             where: { id },
             data,
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        firstName: true,
-                        lastName: true,
-                        avatarUrl: true,
-                    },
-                },
-                community: true,
-                media: true,
-                topics: { include: { topic: true } },
-                pollOptions: true,
-            },
+            include: this.getPostInclude(currentUserId),
         });
     }
 
@@ -139,6 +136,7 @@ export class PostRepository {
                         data: {
                             [existingVote.type === "UP" ? "upvotes" : "downvotes"]: { decrement: 1 },
                         },
+                        include: this.getPostInclude(userId),
                     });
                 }
 
@@ -154,6 +152,7 @@ export class PostRepository {
                         [existingVote.type === "UP" ? "upvotes" : "downvotes"]: { decrement: 1 },
                         [type === "UP" ? "upvotes" : "downvotes"]: { increment: 1 },
                     },
+                    include: this.getPostInclude(userId),
                 });
             }
 
@@ -168,11 +167,15 @@ export class PostRepository {
                     data: {
                         [type === "UP" ? "upvotes" : "downvotes"]: { increment: 1 },
                     },
+                    include: this.getPostInclude(userId),
                 });
             }
 
             // Fallback for null type with no existing vote
-            return tx.post.findUnique({ where: { id: postId } }) as Promise<Post>;
+            return tx.post.findUnique({
+                where: { id: postId },
+                include: this.getPostInclude(userId)
+            }) as Promise<Post>;
         });
     }
 
@@ -192,10 +195,11 @@ export class PostRepository {
         });
     }
 
-    async togglePin(postId: string, isPinned: boolean): Promise<Post> {
+    async togglePin(postId: string, isPinned: boolean, currentUserId?: string): Promise<Post> {
         return this.prisma.post.update({
             where: { id: postId },
             data: { isPinned },
+            include: this.getPostInclude(currentUserId),
         });
     }
 

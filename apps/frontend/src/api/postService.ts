@@ -51,5 +51,20 @@ export const PostService = {
     getPosts: async (params: { cursor?: string; limit?: number; userId?: string; communityId?: string }) => {
         const response = await api.get("/posts", { params });
         return response.data;
+    },
+
+    votePost: async (postId: string, type: "UP" | "DOWN" | null) => {
+        const response = await api.post(`/posts/${postId}/vote`, { type });
+        return response.data;
+    },
+
+    toggleSavePost: async (postId: string) => {
+        const response = await api.post(`/posts/${postId}/save`);
+        return response.data;
+    },
+
+    togglePinPost: async (postId: string, isPinned: boolean) => {
+        const response = await api.patch(`/posts/${postId}/pin`, { isPinned });
+        return response.data;
     }
 };

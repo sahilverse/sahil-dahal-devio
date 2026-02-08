@@ -168,7 +168,10 @@ export class PostService {
         }
 
         return {
-            posts: plainToInstance(PostResponseDto, posts, { excludeExtraneousValues: true }),
+            posts: plainToInstance(PostResponseDto, posts as any[], {
+                excludeExtraneousValues: true,
+                currentUserId
+            } as any),
             nextCursor,
         };
     }
@@ -181,8 +184,11 @@ export class PostService {
             throw new ApiError("You are not authorized to update this post", StatusCodes.FORBIDDEN);
         }
 
-        const updatedPost = await this.postRepository.update(postId, data);
-        return plainToInstance(PostResponseDto, updatedPost, { excludeExtraneousValues: true });
+        const updatedPost = await this.postRepository.update(postId, data, userId);
+        return plainToInstance(PostResponseDto, updatedPost, {
+            excludeExtraneousValues: true,
+            currentUserId: userId
+        } as any) as PostResponseDto;
     }
 
     async deletePost(userId: string, postId: string): Promise<void> {
@@ -212,7 +218,10 @@ export class PostService {
         if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
 
         const updatedPost = await this.postRepository.vote(postId, userId, type);
-        return plainToInstance(PostResponseDto, updatedPost, { excludeExtraneousValues: true });
+        return plainToInstance(PostResponseDto, updatedPost, {
+            excludeExtraneousValues: true,
+            currentUserId: userId
+        } as any) as PostResponseDto;
     }
 
     async toggleSavePost(userId: string, postId: string): Promise<{ isSaved: boolean }> {
@@ -232,6 +241,9 @@ export class PostService {
         }
 
         const updatedPost = await this.postRepository.togglePin(postId, isPinned);
-        return plainToInstance(PostResponseDto, updatedPost, { excludeExtraneousValues: true });
+        return plainToInstance(PostResponseDto, updatedPost, {
+            excludeExtraneousValues: true,
+            currentUserId: userId
+        } as any) as PostResponseDto;
     }
 }

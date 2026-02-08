@@ -26,7 +26,10 @@ import Markdown from "react-markdown";
 import Link from "next/link";
 import UserAvatar from "@/components/navbar/UserAvatar";
 import PostMediaCarousel from "./PostMediaCarousel";
-import { formatCompactNumber } from "@/lib/utils";
+import { formatCompactNumber, cn } from "@/lib/utils";
+import { useVotePost, useSavePost, usePinPost } from "@/hooks/usePosts";
+import { useAppSelector } from "@/store/hooks";
+import { toast } from "sonner";
 
 
 interface PostCardProps {
@@ -35,6 +38,32 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, isOwner }: PostCardProps) {
+    const { user } = useAppSelector((state) => state.auth);
+    const voteMutation = useVotePost();
+    const saveMutation = useSavePost();
+    const pinMutation = usePinPost();
+
+    const handleVote = (type: "UP" | "DOWN") => {
+        if (!user) {
+            toast.error("Please login to vote");
+            return;
+        }
+        const newType = post.userVote === type ? null : type;
+        voteMutation.mutate({ postId: post.id, type: newType });
+    };
+
+    const handleSave = () => {
+        if (!user) {
+            toast.error("Please login to save posts");
+            return;
+        }
+        saveMutation.mutate(post.id);
+    };
+
+    const handlePin = () => {
+        pinMutation.mutate({ postId: post.id, isPinned: !post.isPinned });
+    };
+
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 transition-colors p-3">
             {/* Header */}
@@ -89,8 +118,13 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                                 <DropdownMenuItem className="gap-2 cursor-pointer">
                                     <Pencil className="h-4 w-4" /> Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 cursor-pointer">
-                                    <Pin className="h-4 w-4" /> Pin to Profile
+                                <DropdownMenuItem
+                                    className="gap-2 cursor-pointer"
+                                    onClick={handlePin}
+                                    disabled={pinMutation.isPending}
+                                >
+                                    <Pin className={cn("h-4 w-4", post.isPinned && "fill-current")} />
+                                    {post.isPinned ? "Unpin from Profile" : "Pin to Profile"}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="gap-2 cursor-pointer">
                                     {post.visibility === "PUBLIC" ? (
@@ -172,14 +206,39 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             <div className="flex items-center gap-2">
                 {/* Vote Pill */}
                 <div className="flex items-center bg-muted/50 rounded-full border border-border/50 overflow-hidden h-8">
-                    <Button variant="ghost" size="icon" className="h-full w-8 hover:text-orange-500 hover:bg-orange-500/10 rounded-none">
-                        <ArrowBigUp className="h-5 w-5" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleVote("UP")}
+                        disabled={voteMutation.isPending}
+                        className={cn(
+                            "h-full w-8 rounded-none transition-colors",
+                            post.userVote === "UP"
+                                ? "text-orange-500 bg-orange-500/10"
+                                : "hover:text-orange-500 hover:bg-orange-500/10"
+                        )}
+                    >
+                        <ArrowBigUp className={cn("h-5 w-5", post.userVote === "UP" && "fill-current")} />
                     </Button>
-                    <span className="text-xs font-bold text-foreground px-1 min-w-[20px] text-center">
+                    <span className={cn(
+                        "text-xs font-bold px-1 min-w-[20px] text-center",
+                        post.userVote === "UP" ? "text-orange-500" : post.userVote === "DOWN" ? "text-brand-primary" : "text-foreground"
+                    )}>
                         {formatCompactNumber(post.voteCount)}
                     </span>
-                    <Button variant="ghost" size="icon" className="h-full w-8 hover:text-blue-500 hover:bg-blue-500/10 rounded-none">
-                        <ArrowBigDown className="h-5 w-5" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleVote("DOWN")}
+                        disabled={voteMutation.isPending}
+                        className={cn(
+                            "h-full w-8 rounded-none transition-colors",
+                            post.userVote === "DOWN"
+                                ? "text-brand-primary bg-brand-primary/10"
+                                : "hover:text-brand-primary hover:bg-brand-primary/10"
+                        )}
+                    >
+                        <ArrowBigDown className={cn("h-5 w-5", post.userVote === "DOWN" && "fill-current")} />
                     </Button>
                 </div>
 
@@ -190,9 +249,20 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                 </Button>
 
                 {/* Save Pill */}
-                <Button variant="ghost" size="sm" className="bg-muted/50 rounded-full border border-border/50 h-8 gap-2 px-3 text-muted-foreground hover:bg-muted hover:text-foreground">
-                    <Bookmark className="h-4 w-4" />
-                    <span className="text-xs font-semibold">Save</span>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={saveMutation.isPending}
+                    className={cn(
+                        "bg-muted/50 rounded-full border border-border/50 h-8 gap-2 px-3 transition-colors",
+                        post.isSaved
+                            ? "text-primary bg-primary/10 border-primary/20"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                >
+                    <Bookmark className={cn("h-4 w-4", post.isSaved && "fill-current")} />
+                    <span className="text-xs font-semibold">{post.isSaved ? "Saved" : "Save"}</span>
                 </Button>
 
                 <div className="flex-1" />

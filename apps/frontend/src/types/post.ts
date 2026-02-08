@@ -43,5 +43,6 @@ export interface PostResponseDto {
     }[];
     userVote?: "UP" | "DOWN";
     isSaved?: boolean;
+    isPinned: boolean;
     visibility: "PUBLIC" | "PRIVATE";
 }
