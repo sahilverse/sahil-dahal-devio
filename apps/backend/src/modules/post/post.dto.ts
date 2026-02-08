@@ -2,7 +2,7 @@ import { Exclude, Expose, Transform, Type } from "class-transformer";
 import { PostType, PostStatus, PostVisibility, MediaType } from "../../generated/prisma/client";
 
 @Exclude()
-class AuthorDto {
+export class AuthorDto {
     @Expose() id!: string;
     @Expose() username!: string;
     @Expose() firstName!: string;
@@ -11,7 +11,7 @@ class AuthorDto {
 }
 
 @Exclude()
-class MediaDto {
+export class MediaDto {
     @Expose() id!: string;
     @Expose() url!: string;
     @Expose() type!: MediaType;
@@ -21,7 +21,7 @@ class MediaDto {
 }
 
 @Exclude()
-class PollOptionDto {
+export class PollOptionDto {
     @Expose() id!: string;
     @Expose() text!: string;
     @Expose() order!: number;
@@ -29,10 +29,9 @@ class PollOptionDto {
 }
 
 @Exclude()
-class CommunityDto {
+export class CommunityDto {
     @Expose() id!: string;
     @Expose() name!: string;
-    @Expose() displayName!: string;
     @Expose() iconUrl!: string;
 }
 
@@ -46,11 +45,6 @@ export class TopicDto {
 @Exclude()
 export class PostResponseDto {
     @Expose() id!: string;
-    @Expose() authorId!: string;
-    @Expose()
-    @Transform(({ obj }) => obj.communityId ? obj.community : undefined)
-    communityId!: string;
-
     @Expose() title!: string;
     @Expose() content!: string;
     @Expose() type!: PostType;
@@ -90,7 +84,11 @@ export class PostResponseDto {
     author!: AuthorDto;
 
     @Expose()
-    @Transform(({ obj }) => obj.communityId ? obj.community : undefined)
+    @Transform(({ obj }) => obj.communityId && obj.community ? {
+        id: obj.community.id,
+        name: obj.community.name,
+        iconUrl: obj.community.iconUrl
+    } : undefined)
     @Type(() => CommunityDto)
     community!: CommunityDto;
 
