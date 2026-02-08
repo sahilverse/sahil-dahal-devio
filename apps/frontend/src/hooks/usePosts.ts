@@ -16,7 +16,7 @@ export function useCreatePost() {
         onSuccess: (response) => {
             toast.success("Post created successfully!");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
-            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
 
             if (response.result.communityId) {
                 router.push(`/d/${response.result.community.name}?view=posts`);
@@ -40,7 +40,7 @@ export function useVotePost() {
             PostService.votePost(postId, type),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["posts"] });
-            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: (error: any) => {
             const message = error.errorMessage || "Failed to record vote.";
@@ -58,7 +58,7 @@ export function useSavePost() {
             const message = response.result.isSaved ? "Post saved!" : "Post unsaved!";
             toast.success(message);
             queryClient.invalidateQueries({ queryKey: ["posts"] });
-            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: (error: any) => {
             const message = error.errorMessage || "Failed to save post.";
@@ -77,7 +77,7 @@ export function usePinPost() {
             const message = response.result.isPinned ? "Post pinned to profile!" : "Post unpinned!";
             toast.success(message);
             queryClient.invalidateQueries({ queryKey: ["posts"] });
-            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: (error: any) => {
             const message = error.errorMessage || "Failed to update pin status.";
@@ -110,7 +110,7 @@ export function useDeletePost() {
         onSuccess: () => {
             toast.success("Post deleted successfully!");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
-            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: (error: any) => {
             const message = error.errorMessage || "Failed to delete post.";
