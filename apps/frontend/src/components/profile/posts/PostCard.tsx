@@ -41,7 +41,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 {post.community ? (
                     <>
-                        <Link href={`/d/${post.community.name}`} className="font-semibold text-[12px] text-foreground hover:underline flex items-center gap-1">
+                        <Link href={`/d/${post.community.name}`} className="text-[14px] text-foreground hover:underline flex items-center gap-1">
                             <UserAvatar
                                 user={{
                                     username: post.community.name,
@@ -64,7 +64,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                             user={post.author}
                             size="sm"
                         />
-                        <Link href={`/user/${post.author.username}`} className="font-bold text-foreground hover:underline">
+                        <Link href={`/user/${post.author.username}`} className="text-[14px] text-foreground hover:underline">
                             u/{post.author.username}
                         </Link>
                     </div>
@@ -117,9 +117,9 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold leading-snug text-foreground mb-2">
+            <p className="text-lg font-semibold leading-snug text-foreground mb-2">
                 {post.title}
-            </h3>
+            </p>
 
             {/* Markdown Content (Preview) */}
             {post.content && <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground line-clamp-4 mb-2">
@@ -148,7 +148,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                         <Link
                             href={`/t/${topic.name}`}
                             key={topic.id}
-                            className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/30 border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                            className="group flex items-center gap-0 px-2.5 py-1 rounded-full bg-muted/30 border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
                         >
                             <span className="text-[10px] font-bold text-primary/60 group-hover:text-primary transition-colors">
                                 t/
