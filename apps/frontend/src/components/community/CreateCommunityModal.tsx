@@ -57,7 +57,7 @@ export default function CreateCommunityModal({ isOpen, onClose }: CreateCommunit
         handleSubmit,
         setValue,
         watch,
-        trigger,
+        setError,
         formState: { errors },
         reset
     } = useForm<CreateCommunityInput>({
@@ -114,6 +114,17 @@ export default function CreateCommunityModal({ isOpen, onClose }: CreateCommunit
         createMutation.mutate(data, {
             onSuccess: () => {
                 handleClose();
+            },
+            onError: (err: any) => {
+                const { fieldErrors } = err;
+                if (fieldErrors) {
+                    Object.entries(fieldErrors).forEach(([field, message]) => {
+                        setError(field as keyof CreateCommunityInput, {
+                            type: "manual",
+                            message: message as string,
+                        });
+                    });
+                }
             }
         });
     };
@@ -273,24 +284,25 @@ export default function CreateCommunityModal({ isOpen, onClose }: CreateCommunit
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <div className="relative">
-                                        <div className="relative group">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium z-10 h-10 flex items-center pt-0.5">d/</span>
-                                            <Input
-                                                {...register("name")}
-                                                label="Community Name *"
-                                                placeholder="communityname"
-                                                className={cn(
-                                                    "pl-7 !bg-transparent transition-all",
-                                                    errors.name && "border-destructive focus-visible:ring-destructive"
-                                                )}
-                                                error={errors.name?.message}
-                                            />
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center h-10 pointer-events-none">
-                                                <span className={cn("text-[10px]", (name?.length || 0) > 20 ? "text-destructive" : "text-muted-foreground")}>
-                                                    {name?.length || 0}/21
-                                                </span>
-                                            </div>
+                                    <div className="relative group">
+                                        <span className="absolute left-3 top-[11px] text-sm text-muted-foreground font-medium z-10 pointer-events-none">
+                                            d/
+                                        </span>
+                                        <Input
+                                            {...register("name")}
+                                            label="Community Name *"
+                                            placeholder="Community Name *"
+                                            error={errors.name?.message}
+                                            disabled={createMutation.isPending}
+                                            className="pl-7 !bg-transparent"
+                                        />
+                                        <div className="absolute right-3 top-[13px] pointer-events-none">
+                                            <span className={cn(
+                                                "text-[10px]",
+                                                (name?.length || 0) > 20 ? "text-destructive" : "text-muted-foreground"
+                                            )}>
+                                                {name?.length || 0}/21
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

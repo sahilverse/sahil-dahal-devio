@@ -25,7 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 />
                 {label && (
                     <label className={cn(
-                        "absolute left-3 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform bg-background px-1 text-sm text-muted-foreground duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-1 peer-focus:text-foreground cursor-text pointer-events-none",
+                        "absolute left-3 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform bg-card px-1 text-sm text-muted-foreground duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-1 peer-focus:text-foreground cursor-text pointer-events-none",
                         error && "text-destructive peer-focus:text-destructive"
                     )}>
                         {label}
