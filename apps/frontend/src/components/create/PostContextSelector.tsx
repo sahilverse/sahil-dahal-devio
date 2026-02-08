@@ -105,7 +105,7 @@ export default function PostContextSelector() {
                                 size="md"
                             />
                             <div className="flex flex-col">
-                                <span className="font-bold text-sm text-foreground transition-colors">c/{community.name}</span>
+                                <span className="font-bold text-sm text-foreground transition-colors">d/{community.name}</span>
                                 <span className="text-xs text-muted-foreground">{community.memberCount} members</span>
                             </div>
                             {communityId === community.id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-primary" />}

@@ -19,7 +19,7 @@ export function useCreatePost() {
             queryClient.invalidateQueries({ queryKey: ["user-posts"] });
 
             if (response.result.communityId) {
-                router.push(`/community/${response.result.community.slug}?view=posts`);
+                router.push(`/d/${response.result.community.name}?view=posts`);
             } else {
                 router.push(`/user/${user?.username}?view=posts`);
             }

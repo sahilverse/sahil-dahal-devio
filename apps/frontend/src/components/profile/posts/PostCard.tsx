@@ -15,7 +15,6 @@ import {
     Pencil,
     Eye
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -26,6 +25,7 @@ import {
 import Markdown from "react-markdown";
 import Link from "next/link";
 import UserAvatar from "@/components/navbar/UserAvatar";
+import PostMediaCarousel from "./PostMediaCarousel";
 import { formatCompactNumber } from "@/lib/utils";
 
 
@@ -41,7 +41,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 {post.community ? (
                     <>
-                        <Link href={`/community/${post.community.name}`} className="font-bold text-foreground hover:underline flex items-center gap-1">
+                        <Link href={`/d/${post.community.name}`} className="font-semibold text-[12px] text-foreground hover:underline flex items-center gap-1">
                             <UserAvatar
                                 user={{
                                     username: post.community.name,
@@ -53,7 +53,6 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                         </Link>
                         <span>•</span>
                         <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Posted by</span>
                             <Link href={`/user/${post.author.username}`} className="hover:underline text-foreground">
                                 u/{post.author.username}
                             </Link>
@@ -118,23 +117,54 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold leading-snug mb-3 text-foreground">
+            <h3 className="text-lg font-bold leading-snug text-foreground mb-2">
                 {post.title}
             </h3>
 
             {/* Markdown Content (Preview) */}
-            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground line-clamp-4 mb-4">
+            {post.content && <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground line-clamp-4 mb-2">
                 <Markdown>{post.content}</Markdown>
-            </div>
+            </div>}
 
-            {/* Media Preview (If any) */}
+            {/* Link Preview (if it's a link post) */}
+            {post.linkUrl && (
+                <div className="mb-3">
+                    <a
+                        href={post.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-primary hover:underline flex items-center gap-1.5 bg-primary/5 border border-primary/10 rounded-lg px-3 py-2 w-fit transition-all hover:bg-primary/10"
+                    >
+                        <Eye className="h-4 w-4" />
+                        <span className="truncate max-w-[300px]">{post.linkUrl}</span>
+                    </a>
+                </div>
+            )}
+
+            {/* Topics Preview */}
+            {post.topics && post.topics.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                    {post.topics.map((topic) => (
+                        <Link
+                            href={`/t/${topic.name}`}
+                            key={topic.id}
+                            className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/30 border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                        >
+                            <span className="text-[10px] font-bold text-primary/60 group-hover:text-primary transition-colors">
+                                t/
+                            </span>
+                            <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                                {topic.name}
+                            </span>
+                        </Link>
+                    ))}
+                </div>
+            )}
+
+            {/* Media Preview  */}
             {post.media && post.media.length > 0 && post.media[0].type === 'IMAGE' && (
                 <div className="rounded-lg overflow-hidden border border-border bg-muted/50 max-h-[500px] flex justify-center mb-4">
-                    <img
-                        src={post.media[0].url}
-                        alt="Post Media"
-                        className="object-contain max-h-[500px] w-full"
-                    />
+                    <PostMediaCarousel media={post.media} />
                 </div>
             )}
 

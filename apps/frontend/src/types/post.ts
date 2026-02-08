@@ -33,11 +33,9 @@ export interface PostResponseDto {
         type: "IMAGE" | "VIDEO" | "FILE";
     }[];
     topics: {
-        topic: {
-            id: string;
-            name: string;
-            slug: string;
-        };
+        id: string;
+        name: string;
+        slug: string;
     }[];
     pollOptions?: {
         id: string;
