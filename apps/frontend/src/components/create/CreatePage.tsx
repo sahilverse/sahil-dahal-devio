@@ -11,8 +11,28 @@ import { useCreatePost } from "@/hooks/usePosts";
 import CreatePostActions from "./CreatePostActions";
 
 
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAppSelector } from "@/store/hooks";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+
 export default function CreatePage() {
     const { mutate: createPost, isPending } = useCreatePost();
+    const { user, status } = useAppSelector((state) => state.auth);
+    const { openLogin } = useAuthModal();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (status !== "loading" && !user) {
+            router.push("/");
+            openLogin();
+        }
+    }, [user, status, router, openLogin]);``
+
+    if (status === "loading" || !user) {
+        return null;
+    }
 
     return (
         <main className="max-w-3xl py-4">
