@@ -206,4 +206,32 @@ export class PostService {
         const count = await this.postRepository.count({ userId, status, visibility });
         return { count };
     }
+
+    async votePost(userId: string, postId: string, type: "UP" | "DOWN" | null): Promise<PostResponseDto> {
+        const post = await this.postRepository.findById(postId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+
+        const updatedPost = await this.postRepository.vote(postId, userId, type);
+        return plainToInstance(PostResponseDto, updatedPost, { excludeExtraneousValues: true });
+    }
+
+    async toggleSavePost(userId: string, postId: string): Promise<{ isSaved: boolean }> {
+        const post = await this.postRepository.findById(postId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+
+        const isSaved = await this.postRepository.toggleSave(postId, userId);
+        return { isSaved };
+    }
+
+    async togglePinPost(userId: string, postId: string, isPinned: boolean): Promise<PostResponseDto> {
+        const post = await this.postRepository.findById(postId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+
+        if (post.authorId !== userId) {
+            throw new ApiError("You are not authorized to pin this post", StatusCodes.FORBIDDEN);
+        }
+
+        const updatedPost = await this.postRepository.togglePin(postId, isPinned);
+        return plainToInstance(PostResponseDto, updatedPost, { excludeExtraneousValues: true });
+    }
 }

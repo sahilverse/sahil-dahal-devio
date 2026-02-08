@@ -176,7 +176,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                         <ArrowBigUp className="h-5 w-5" />
                     </Button>
                     <span className="text-xs font-bold text-foreground px-1 min-w-[20px] text-center">
-                        {formatCompactNumber(post.upvotes - post.downvotes)}
+                        {formatCompactNumber(post.voteCount)}
                     </span>
                     <Button variant="ghost" size="icon" className="h-full w-8 hover:text-blue-500 hover:bg-blue-500/10 rounded-none">
                         <ArrowBigDown className="h-5 w-5" />

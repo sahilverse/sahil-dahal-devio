@@ -52,4 +52,31 @@ export class PostController {
         const result = await this.postService.getPostCount(userId, status, visibility);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Post count fetched successfully", result);
     });
+
+    votePost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+        const { type } = req.body as { type: "UP" | "DOWN" | null };
+
+        const result = await this.postService.votePost(userId, postId, type);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Vote recorded successfully", result);
+    });
+
+    toggleSavePost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+
+        const result = await this.postService.toggleSavePost(userId, postId);
+        const message = result.isSaved ? "Post saved successfully" : "Post unsaved successfully";
+        ResponseHandler.sendResponse(res, StatusCodes.OK, message, result);
+    });
+
+    togglePinPost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+        const { isPinned } = req.body as { isPinned: boolean };
+
+        const result = await this.postService.togglePinPost(userId, postId, isPinned);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, isPinned ? "Post pinned successfully" : "Post unpinned successfully", result);
+    });
 }

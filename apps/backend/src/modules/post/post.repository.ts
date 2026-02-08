@@ -121,6 +121,84 @@ export class PostRepository {
         });
     }
 
+    async vote(postId: string, userId: string, type: "UP" | "DOWN" | null): Promise<Post> {
+        return this.prisma.$transaction(async (tx) => {
+            const existingVote = await tx.postVote.findUnique({
+                where: { postId_userId: { postId, userId } },
+            });
+
+            // 1. Remove existing vote if clicking same or if type is null
+            if (existingVote) {
+                if (existingVote.type === type || type === null) {
+                    await tx.postVote.delete({
+                        where: { id: existingVote.id },
+                    });
+
+                    return tx.post.update({
+                        where: { id: postId },
+                        data: {
+                            [existingVote.type === "UP" ? "upvotes" : "downvotes"]: { decrement: 1 },
+                        },
+                    });
+                }
+
+                // 2. Switch vote type
+                await tx.postVote.update({
+                    where: { id: existingVote.id },
+                    data: { type },
+                });
+
+                return tx.post.update({
+                    where: { id: postId },
+                    data: {
+                        [existingVote.type === "UP" ? "upvotes" : "downvotes"]: { decrement: 1 },
+                        [type === "UP" ? "upvotes" : "downvotes"]: { increment: 1 },
+                    },
+                });
+            }
+
+            // 3. New vote
+            if (type !== null) {
+                await tx.postVote.create({
+                    data: { postId, userId, type },
+                });
+
+                return tx.post.update({
+                    where: { id: postId },
+                    data: {
+                        [type === "UP" ? "upvotes" : "downvotes"]: { increment: 1 },
+                    },
+                });
+            }
+
+            // Fallback for null type with no existing vote
+            return tx.post.findUnique({ where: { id: postId } }) as Promise<Post>;
+        });
+    }
+
+    async toggleSave(postId: string, userId: string): Promise<boolean> {
+        return this.prisma.$transaction(async (tx) => {
+            const existing = await tx.savePost.findUnique({
+                where: { postId_userId: { postId, userId } },
+            });
+
+            if (existing) {
+                await tx.savePost.delete({ where: { id: existing.id } });
+                return false; // Not saved
+            }
+
+            await tx.savePost.create({ data: { postId, userId } });
+            return true; // Saved
+        });
+    }
+
+    async togglePin(postId: string, isPinned: boolean): Promise<Post> {
+        return this.prisma.post.update({
+            where: { id: postId },
+            data: { isPinned },
+        });
+    }
+
     get client() {
         return this.prisma;
     }

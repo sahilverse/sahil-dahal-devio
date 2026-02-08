@@ -233,4 +233,78 @@ router.get("/count", authMiddleware.guard, postController.getPostCount);
 router.patch("/:postId", authMiddleware.guard, postController.updatePost);
 router.delete("/:postId", authMiddleware.guard, postController.deletePost);
 
+/**
+ * @swagger
+ * /posts/{postId}/vote:
+ *   post:
+ *     summary: Vote on a post
+ *     tags: [Post]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [UP, DOWN, null]
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: Vote recorded successfully
+ * 
+ * /posts/{postId}/save:
+ *   post:
+ *     summary: Toggle save post
+ *     tags: [Post]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Post save toggled successfully
+ * 
+ * /posts/{postId}/pin:
+ *   patch:
+ *     summary: Toggle pin post
+ *     tags: [Post]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isPinned:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Post pin toggled successfully
+ */
+router.post("/:postId/vote", authMiddleware.guard, postController.votePost);
+router.post("/:postId/save", authMiddleware.guard, postController.toggleSavePost);
+router.patch("/:postId/pin", authMiddleware.guard, postController.togglePinPost);
+
 export { router };

@@ -10,8 +10,7 @@ export interface PostResponseDto {
     slug: string;
     createdAt: string;
     updatedAt: string;
-    upvotes: number;
-    downvotes: number;
+    voteCount: number;
     commentCount: number;
     viewCount?: number;
     author: {

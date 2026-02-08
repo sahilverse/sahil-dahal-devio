@@ -51,8 +51,10 @@ export class PostResponseDto {
     @Expose() status!: PostStatus;
     @Expose() visibility!: PostVisibility;
 
-    @Expose() upvotes!: number;
-    @Expose() downvotes!: number;
+    @Expose()
+    @Transform(({ obj }) => (obj.upvotes || 0) - (obj.downvotes || 0))
+    voteCount!: number;
+
     @Expose() commentCount!: number;
 
     @Expose() createdAt!: Date;
