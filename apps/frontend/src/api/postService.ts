@@ -66,5 +66,9 @@ export const PostService = {
     togglePinPost: async (postId: string, isPinned: boolean) => {
         const response = await api.patch(`/posts/${postId}/pin`, { isPinned });
         return response.data;
+    },
+    deletePost: async (postId: string) => {
+        const response = await api.delete(`/posts/${postId}`);
+        return response.data;
     }
 };

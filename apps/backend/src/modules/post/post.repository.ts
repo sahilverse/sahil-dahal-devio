@@ -89,7 +89,7 @@ export class PostRepository {
                     }
                 })
             },
-            orderBy: { createdAt: "desc" },
+            orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
             include: this.getPostInclude(currentUserId),
         });
     }

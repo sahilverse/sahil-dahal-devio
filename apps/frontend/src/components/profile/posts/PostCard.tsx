@@ -27,9 +27,11 @@ import Link from "next/link";
 import UserAvatar from "@/components/navbar/UserAvatar";
 import PostMediaCarousel from "./PostMediaCarousel";
 import { formatCompactNumber, cn } from "@/lib/utils";
-import { useVotePost, useSavePost, usePinPost } from "@/hooks/usePosts";
+import { useVotePost, useSavePost, usePinPost, useDeletePost } from "@/hooks/usePosts";
 import { useAppSelector } from "@/store/hooks";
 import { toast } from "sonner";
+import { useState } from "react";
+import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 
 
 interface PostCardProps {
@@ -39,9 +41,11 @@ interface PostCardProps {
 
 export default function PostCard({ post, isOwner }: PostCardProps) {
     const { user } = useAppSelector((state) => state.auth);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const voteMutation = useVotePost();
     const saveMutation = useSavePost();
     const pinMutation = usePinPost();
+    const deleteMutation = useDeletePost();
 
     const handleVote = (type: "UP" | "DOWN") => {
         if (!user) {
@@ -64,8 +68,19 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
         pinMutation.mutate({ postId: post.id, isPinned: !post.isPinned });
     };
 
+    const handleDelete = () => {
+        deleteMutation.mutate(post.id, {
+            onSuccess: () => {
+                setIsDeleteModalOpen(false);
+            }
+        });
+    };
+
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 transition-colors p-3">
+        <div className={cn(
+            "bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 transition-colors p-3 cursor-pointer",
+            post.isPinned && "border-primary/30 ring-1 ring-primary/10"
+        )}>
             {/* Header */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 {post.community ? (
@@ -103,6 +118,13 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
 
                 <div className="flex-1" />
 
+                {post.isPinned && (
+                    <div className="flex items-center text-brand font-medium bg-transparent rounded-full whitespace-nowrap">
+                        <Pin className="h-3 w-3 fill-current rotate-45" />
+
+                    </div>
+                )}
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground rounded-full hover:bg-muted -mr-2">
@@ -112,9 +134,6 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                     <DropdownMenuContent align="end" className="bg-card">
                         {isOwner ? (
                             <>
-                                <DropdownMenuItem className="gap-2 cursor-pointer">
-                                    <Bookmark className="h-4 w-4" /> Save
-                                </DropdownMenuItem>
                                 <DropdownMenuItem className="gap-2 cursor-pointer">
                                     <Pencil className="h-4 w-4" /> Edit
                                 </DropdownMenuItem>
@@ -137,7 +156,11 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                                         </>
                                     )}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive cursor-pointer">
+                                <DropdownMenuItem
+                                    className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                    onClick={() => setIsDeleteModalOpen(true)}
+                                    disabled={deleteMutation.isPending}
+                                >
                                     <Trash2 className="h-4 w-4" /> Delete
                                 </DropdownMenuItem>
                             </>
@@ -160,7 +183,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                 <Markdown>{post.content}</Markdown>
             </div>}
 
-            {/* Link Preview (if it's a link post) */}
+            {/* Link Preview */}
             {post.linkUrl && (
                 <div className="mb-3">
                     <a
@@ -267,6 +290,15 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
 
                 <div className="flex-1" />
             </div>
+
+            <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Post"
+                description="Are you sure you want to delete this post? This action cannot be undone."
+                isPending={deleteMutation.isPending}
+            />
         </div>
     );
 }

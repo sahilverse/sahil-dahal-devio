@@ -101,3 +101,20 @@ export function useFetchPosts(filters?: { userId?: string; communityId?: string;
         initialPageParam: undefined,
     });
 }
+
+export function useDeletePost() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (postId: string) => PostService.deletePost(postId),
+        onSuccess: () => {
+            toast.success("Post deleted successfully!");
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage || "Failed to delete post.";
+            toast.error(message);
+        },
+    });
+}
