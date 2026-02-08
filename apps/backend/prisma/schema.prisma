@@ -126,6 +126,7 @@ model User {
   triggeredNotifications Notification[]   @relation("notification_actor")
   jobs                   Job[]
   savePosts              SavePost[]
+  pinnedPosts            PinnedPost[]
 
   @@index([username])
   @@index([email])
@@ -370,6 +371,7 @@ model Community {
   posts        Post[]
   topics       CommunityTopic[]
   events       Event[]
+  pinnedPosts  PinnedPost[]
 
   @@index([name])
   @@index([visibility])
@@ -470,7 +472,6 @@ model Post {
   isBountyPaid     Boolean   @default(false) @map("is_bounty_paid")
 
   deletedAt DateTime? @map("deleted_at")
-  isPinned  Boolean   @default(false) @map("is_pinned")
 
   status     PostStatus     @default(PUBLISHED)
   visibility PostVisibility @default(PUBLIC)
@@ -491,6 +492,7 @@ model Post {
   topics         PostTopic[]
   savePosts      SavePost[]
   pollOptions    PollOption[]
+  pinnedPosts    PinnedPost[]
 
   @@index([authorId])
   @@index([communityId])
@@ -514,6 +516,26 @@ model SavePost {
   @@unique([postId, userId])
   @@index([postId])
   @@index([userId])
+}
+
+model PinnedPost {
+  id String @id @default(cuid())
+
+  postId      String  @map("post_id")
+  userId      String? @map("user_id") // Profile pin (author's profile)
+  communityId String? @map("community_id") // Community pin
+
+  createdAt DateTime @default(now())
+
+  post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@unique([postId, communityId])
+  @@index([postId])
+  @@index([userId])
+  @@index([communityId])
 }
 
 model Comment {

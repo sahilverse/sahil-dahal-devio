@@ -74,9 +74,9 @@ export class PostController {
     togglePinPost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user!.id;
         const { postId } = req.params as { postId: string };
-        const { isPinned } = req.body as { isPinned: boolean };
+        const { isPinned, communityId } = req.body as { isPinned: boolean, communityId?: string };
 
-        const result = await this.postService.togglePinPost(userId, postId, isPinned);
+        const result = await this.postService.togglePinPost(userId, postId, isPinned, communityId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, isPinned ? "Post pinned successfully" : "Post unpinned successfully", result);
     });
 }

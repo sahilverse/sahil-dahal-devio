@@ -297,8 +297,11 @@ router.delete("/:postId", authMiddleware.guard, postController.deletePost);
  *           schema:
  *             type: object
  *             properties:
- *               isPinned:
+  *               isPinned:
  *                 type: boolean
+ *               communityId:
+ *                 type: string
+ *                 description: Required if pinning to a community feed
  *     responses:
  *       200:
  *         description: Post pin toggled successfully

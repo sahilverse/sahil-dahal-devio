@@ -57,7 +57,24 @@ export class PostResponseDto {
 
     @Expose() commentCount!: number;
 
-    @Expose() isPinned!: boolean;
+    @Expose()
+    @Transform(({ obj, options }) => {
+        const queryUserId = (options as any)?.queryUserId;
+        const queryCommunityId = (options as any)?.queryCommunityId;
+
+        if (!obj.pinnedPosts) return false;
+
+        if (queryUserId) {
+            return obj.pinnedPosts.some((p: any) => p.userId === queryUserId);
+        }
+
+        if (queryCommunityId) {
+            return obj.pinnedPosts.some((p: any) => p.communityId === queryCommunityId);
+        }
+
+        return false;
+    })
+    isPinned!: boolean;
 
     @Expose()
     @Transform(({ obj, options }) => {
@@ -167,9 +184,6 @@ export class UpdatePostDto {
 
     @Expose()
     visibility?: PostVisibility;
-
-    @Expose()
-    isPinned?: boolean;
 }
 
 @Exclude()

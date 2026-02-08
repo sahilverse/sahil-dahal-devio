@@ -19,7 +19,6 @@ export default function UserMenu({ user }: UserMenuProps) {
     const handleLogout = () => {
         dispatch(logoutUser());
         setShowMobileMenu(false);
-        window.location.reload();
     };
 
     if (showMobileMenu) {

@@ -132,6 +132,21 @@ export class CommunityRepository {
         });
     }
 
+    async isModeratorOrCreator(communityId: string, userId: string): Promise<boolean> {
+        const [membership, community] = await Promise.all([
+            this.prisma.communityMember.findUnique({
+                where: { communityId_userId: { communityId, userId } },
+                select: { isMod: true }
+            }),
+            this.prisma.community.findUnique({
+                where: { id: communityId },
+                select: { createdById: true }
+            })
+        ]);
+
+        return !!membership?.isMod || community?.createdById === userId;
+    }
+
 
     get client() {
         return this.prisma;

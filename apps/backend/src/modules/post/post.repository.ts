@@ -21,6 +21,7 @@ export class PostRepository {
             media: true,
             topics: { include: { topic: true } },
             pollOptions: true,
+            pinnedPosts: true,
             ...(currentUserId && {
                 votes: { where: { userId: currentUserId } },
                 savePosts: { where: { userId: currentUserId } },
@@ -59,6 +60,8 @@ export class PostRepository {
 
         const isOwner = userId && currentUserId && userId === currentUserId;
 
+        const shouldSortByPin = (userId || communityId) && !savedByUserId;
+
         return this.prisma.post.findMany({
             take: limit + 1,
             cursor: cursor ? { id: cursor } : undefined,
@@ -89,7 +92,14 @@ export class PostRepository {
                     }
                 })
             },
-            orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+            orderBy: [
+                ...(shouldSortByPin ? [{
+                    pinnedPosts: {
+                        _count: "desc" as Prisma.SortOrder
+                    }
+                }] : []),
+                { createdAt: "desc" }
+            ],
             include: this.getPostInclude(currentUserId),
         });
     }
@@ -201,11 +211,44 @@ export class PostRepository {
         });
     }
 
-    async togglePin(postId: string, isPinned: boolean, currentUserId?: string): Promise<Post> {
-        return this.prisma.post.update({
-            where: { id: postId },
-            data: { isPinned },
-            include: this.getPostInclude(currentUserId),
+    async countPinnedPosts(userId?: string, communityId?: string): Promise<number> {
+        return this.prisma.pinnedPost.count({
+            where: {
+                ...(communityId ? { communityId } : { userId })
+            }
+        });
+    }
+
+    async togglePin(postId: string, isPinned: boolean, currentUserId?: string, communityId?: string): Promise<Post> {
+        return this.prisma.$transaction(async (tx) => {
+            if (isPinned) {
+                // Pin the post
+                await tx.pinnedPost.upsert({
+                    where: {
+                        ...(communityId
+                            ? { postId_communityId: { postId, communityId } }
+                            : { postId_userId: { postId, userId: currentUserId! } })
+                    },
+                    create: {
+                        postId,
+                        userId: communityId ? null : currentUserId,
+                        communityId: communityId || null
+                    },
+                    update: {}
+                });
+            } else {
+                await tx.pinnedPost.deleteMany({
+                    where: {
+                        postId,
+                        ...(communityId ? { communityId } : { userId: currentUserId })
+                    }
+                });
+            }
+
+            return tx.post.findUnique({
+                where: { id: postId },
+                include: this.getPostInclude(currentUserId),
+            }) as Promise<Post>;
         });
     }
 

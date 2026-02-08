@@ -7,6 +7,7 @@ import { TopicService } from "../topic/topic.service";
 import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { PostRepository } from "./post.repository";
+import { CommunityRepository } from "../community/community.repository";
 import { plainToInstance } from "class-transformer";
 import { PostResponseDto, GetPostsDto } from "./post.dto";
 
@@ -16,7 +17,8 @@ export class PostService {
     constructor(
         @inject(TYPES.PostRepository) private postRepository: PostRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
-        @inject(TYPES.TopicService) private topicService: TopicService
+        @inject(TYPES.TopicService) private topicService: TopicService,
+        @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository
     ) { }
 
     async createPost(
@@ -171,7 +173,9 @@ export class PostService {
         return {
             posts: plainToInstance(PostResponseDto, posts as any[], {
                 excludeExtraneousValues: true,
-                currentUserId
+                currentUserId,
+                queryUserId: query.userId,
+                queryCommunityId: query.communityId,
             } as any),
             nextCursor,
         };
@@ -233,18 +237,41 @@ export class PostService {
         return { isSaved };
     }
 
-    async togglePinPost(userId: string, postId: string, isPinned: boolean): Promise<PostResponseDto> {
+    async togglePinPost(userId: string, postId: string, isPinned: boolean, communityId?: string): Promise<PostResponseDto> {
         const post = await this.postRepository.findById(postId);
         if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
 
-        if (post.authorId !== userId) {
+        // Authorization check: 
+        if (communityId) {
+            const isMod = await this.communityRepository.isModeratorOrCreator(communityId, userId);
+
+            if (!isMod && post.authorId !== userId) {
+                throw new ApiError("You are not authorized to pin to this community", StatusCodes.FORBIDDEN);
+            }
+        } else if (post.authorId !== userId) {
             throw new ApiError("You are not authorized to pin this post", StatusCodes.FORBIDDEN);
         }
 
-        const updatedPost = await this.postRepository.togglePin(postId, isPinned);
+        if (isPinned) {
+            const pinCount = await this.postRepository.countPinnedPosts(
+                communityId ? undefined : userId,
+                communityId
+            );
+
+            if (pinCount >= 3) {
+                throw new ApiError(
+                    `You can only pin up to 3 posts to your ${communityId ? "community" : "profile"}`,
+                    StatusCodes.BAD_REQUEST
+                );
+            }
+        }
+
+        const updatedPost = await this.postRepository.togglePin(postId, isPinned, userId, communityId);
         return plainToInstance(PostResponseDto, updatedPost, {
             excludeExtraneousValues: true,
-            currentUserId: userId
+            currentUserId: userId,
+            queryUserId: communityId ? undefined : userId,
+            queryCommunityId: communityId
         } as any) as PostResponseDto;
     }
 }
