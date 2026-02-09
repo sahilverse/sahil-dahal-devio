@@ -9,6 +9,7 @@ import { router as topicRoutes } from "../modules/topic/topic.route";
 import { router as postRoutes } from "../modules/post/post.route";
 
 import { router as communityRoutes } from "../modules/community/community.route";
+import { router as compilerRoutes } from "../modules/compiler/compiler.route";
 
 const router: Router = Router();
 
@@ -20,6 +21,7 @@ router.use("/activity", activityRoutes);
 router.use("/topics", topicRoutes);
 router.use("/posts", postRoutes);
 router.use("/communities", communityRoutes);
+router.use("/compiler", compilerRoutes);
 
 
 

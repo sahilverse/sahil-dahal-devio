@@ -49,3 +49,5 @@ export const MINIO_USE_SSL = process.env.MINIO_USE_SSL === 'true';
 
 export const MINIO_BUCKET_NAME = process.env.MINIO_BUCKET_NAME || "devio-uploads";
 export const MINIO_BUCKET_PROBLEMS = process.env.MINIO_BUCKET_PROBLEMS || "devio-problems";
+
+export const CODE_SANDBOX_URL = process.env.CODE_SANDBOX_URL || 'http://localhost:5000';
