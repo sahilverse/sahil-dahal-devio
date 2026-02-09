@@ -28,5 +28,5 @@ export interface LanguageConfig {
     compileCommand: string[] | null;
     runCommand: string[];
     extension: string;
-    timeout: number;
+    timeout?: number;
 }

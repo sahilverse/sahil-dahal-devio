@@ -15,6 +15,7 @@ export function useCompiler() {
     const [isExecuting, setIsExecuting] = useState(false);
     const [output, setOutput] = useState<TerminalLine[]>([]);
     const [sessionId, setSessionId] = useState<string | null>(null);
+    const [lastLanguage, setLastLanguage] = useState<string | null>(null);
     const socketRef = useRef<any>(null);
 
     const appendOutput = useCallback((type: TerminalLine["type"], text: string) => {
@@ -24,38 +25,49 @@ export function useCompiler() {
     const runCode = async (language: string, code: string) => {
         if (!code.trim()) return;
 
-        const newSessionId = uuidv4();
-        setSessionId(newSessionId);
+        let activeSessionId = sessionId;
+        let isNewSession = false;
+
+        if (!activeSessionId || language !== lastLanguage) {
+            activeSessionId = uuidv4();
+            setSessionId(activeSessionId);
+            setLastLanguage(language);
+            isNewSession = true;
+        }
+
         setIsExecuting(true);
-        setOutput([]); 
+        setOutput([]);
 
         try {
-            const socket = await socketInstance.connectWithQuery("/compiler", {
-                sessionId: newSessionId
-            });
-            socketRef.current = socket;
+            if (isNewSession) {
 
-            //  Listen for output
-            socket.on("output", (data: { type: string; data: any }) => {
-                if (data.type === 'stdout' || data.type === 'stderr') {
-                    appendOutput(data.type, data.data);
-                }
+                const socket = await socketInstance.connectWithQuery("/compiler", {
+                    sessionId: activeSessionId
+                });
+                socketRef.current = socket;
 
-                if (data.type === 'exit' || data.type === 'error') {
+                //  Listen for output
+                socket.on("output", (data: { type: string; data: any }) => {
+                    if (data.type === 'stdout' || data.type === 'stderr') {
+                        appendOutput(data.type, data.data);
+                    }
+
+                    if (data.type === 'exit' || data.type === 'error') {
+                        setIsExecuting(false);
+                    }
+                });
+
+                socket.on("connect_error", (err: any) => {
+                    appendOutput("error", `Connection failed: ${err.message}\n`);
                     setIsExecuting(false);
-                }
-            });
-
-            socket.on("connect_error", (err: any) => {
-                appendOutput("error", `Connection failed: ${err.message}\n`);
-                setIsExecuting(false);
-            });
+                });
+            }
 
             // Trigger Execution via REST
             const response = await api.post("/compiler/execute", {
                 language,
                 code,
-                sessionId: newSessionId,
+                sessionId: activeSessionId,
             });
 
             if (!response.data.success) {
