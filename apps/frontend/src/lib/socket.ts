@@ -22,15 +22,37 @@ export default class SocketService {
         return SocketService.instance;
     }
 
-    async connect(token?: string): Promise<Socket> {
-        if (!this.socket || this.socket.disconnected) {
-            this.socket = io(SOCKET_URL, {
-                auth: { token: token || getAccessToken() },
-                withCredentials: true,
-                transports: ["websocket"],
-            });
-            this.setupEventHandlers();
+    async connect(token?: string, namespace: string = "/"): Promise<Socket> {
+        const url = namespace === "/" ? SOCKET_URL : `${SOCKET_URL}${namespace}`;
+
+        if (this.socket && this.socket.connected && (this.socket as any).nsp === namespace) {
+            return this.socket;
         }
+
+        this.socket = io(url, {
+            auth: { token: token || getAccessToken() },
+            withCredentials: true,
+            transports: ["websocket"],
+            query: namespace !== "/" ? {} : undefined
+        });
+
+        this.setupEventHandlers();
+        return this.socket;
+    }
+
+    async connectWithQuery(namespace: string, query: Record<string, string>): Promise<Socket> {
+        const url = `${SOCKET_URL}${namespace}`;
+
+        if (this.socket) this.socket.disconnect();
+
+        this.socket = io(url, {
+            auth: { token: getAccessToken() },
+            query,
+            withCredentials: true,
+            transports: ["websocket"],
+        });
+
+        this.setupEventHandlers();
         return this.socket;
     }
 

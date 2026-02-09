@@ -43,7 +43,7 @@ export default function Sidebar() {
 
     const resources = [
         ...(isAuthenticated ? [] : [{ name: "About Devio", href: "/about", icon: BookOpen }]),
-        { name: "Code Playground", href: "/playground", icon: SquareTerminal },
+        { name: "Code Playground", href: "/code", icon: SquareTerminal },
         { name: "Problems", href: "/problems", icon: Code },
         { name: "Cyber Labs", href: "/labs", icon: Shield },
         { name: "Events", href: "/events", icon: Calendar },
