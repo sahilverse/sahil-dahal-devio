@@ -60,16 +60,19 @@ export class ExecutionService {
         try {
             let execCmd: string[] = [];
 
+            const DEFAULT_TIMEOUT = 2;
+            const cpuTimeout = config.timeout || DEFAULT_TIMEOUT;
+
             if (language === 'java') {
                 const className = this.extractJavaClassName(code);
-                execCmd = ['bash', '-c', `stty -echo; javac ${className}.java && java ${className}`];
+                execCmd = ['bash', '-c', `stty -echo; javac ${className}.java && ulimit -t ${cpuTimeout} && java ${className}`];
             } else if (config.compileCommand) {
                 const compileCmd = config.compileCommand.map((cmd: string) => cmd.replace('{filename}', filename)).join(' ');
                 const runCmd = config.runCommand.map((cmd: string) => cmd.replace('{filename}', filename)).join(' ');
-                execCmd = ['bash', '-c', `stty -echo; ${compileCmd} && ${runCmd}`];
+                execCmd = ['bash', '-c', `stty -echo; ${compileCmd} && ulimit -t ${cpuTimeout}; ${runCmd}`];
             } else {
                 const cmd = config.runCommand.map((cmd: string) => cmd.replace('{filename}', filename)).join(' ');
-                execCmd = ['bash', '-c', `stty -echo; ${cmd}`];
+                execCmd = ['bash', '-c', `stty -echo; ulimit -t ${cpuTimeout}; ${cmd}`];
             }
 
             const exec = await container.exec({
@@ -82,45 +85,54 @@ export class ExecutionService {
                 Tty: true
             });
 
-            // Set execution timeout (kill process after config.timeout seconds)
-            const timeoutMs = (config.timeout || 15) * 1000;
+            const WALL_CLOCK_TIMEOUT = 120 * 1000;
             const timeoutTimer = setTimeout(async () => {
-                logger.warn(`Session ${sessionId} execution timed out after ${timeoutMs}ms`);
+                logger.warn(`Session ${sessionId} wall-clock limit timed out after ${WALL_CLOCK_TIMEOUT}ms`);
                 try {
                     await container.exec({
                         Cmd: ['pkill', '-9', '-u', 'sandboxuser'],
                         User: 'root'
                     }).then(e => e.start({}));
 
-                    streamData.stderr += `\n[Execution timed out after ${config.timeout}s]\n`;
+                    streamData.stderr += `\n[Execution timed out]\n`;
+                    await this.redisStreamManager.publishOutput(sessionId, 'stderr', `\n[Execution timed out]\n`);
+                    await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
+
                     if (streamData.resolveDataWait) streamData.resolveDataWait();
                 } catch (err) {
                     logger.error(`Failed to kill process for session ${sessionId}: ${err}`);
                 }
-            }, timeoutMs);
+            }, WALL_CLOCK_TIMEOUT);
 
             exec.start({ hijack: true, stdin: true }, async (err: any, stream: any) => {
                 if (err) {
                     clearTimeout(timeoutTimer);
                     logger.error(`Exec start error for session ${sessionId}: ${err.message}`);
                     await this.redisStreamManager.publishOutput(sessionId, 'error', `Exec start error: ${err.message}`);
+                    await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
                     return;
                 }
 
                 streamData.stream = stream;
                 let outputSize = 0;
                 const MAX_OUTPUT_SIZE = 1024 * 1024;
+                let streamEnded = false;
 
                 stream.on('data', async (chunk: Buffer) => {
+                    if (streamEnded) return;
+
                     const output = this.demuxStream(chunk);
 
                     // Check output size limit
                     outputSize += output.stdout.length + output.stderr.length;
                     if (outputSize > MAX_OUTPUT_SIZE) {
+                        streamEnded = true;
                         if (!streamData.stderr.includes('[Output truncated]')) {
-                            streamData.stderr += '\n[Output truncated - exceeded 1MB limit]\n';
-                            await this.redisStreamManager.publishOutput(sessionId, 'stderr', '\n[Output truncated - exceeded 1MB limit]\n');
+                            streamData.stderr += '\n[Output truncated - exceeded limit]\n';
+                            await this.redisStreamManager.publishOutput(sessionId, 'stderr', '\n[Output truncated - exceeded limit]\n');
+                            await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
                         }
+                        stream.destroy();
                         return;
                     }
 
