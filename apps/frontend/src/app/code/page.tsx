@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Editor from '@monaco-editor/react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import { LANGUAGES, Language } from '@/components/code/constants';
 import { useCompiler } from '@/hooks/useCompiler';
 import { CodeHeader } from '@/components/code/CodeHeader';
@@ -14,18 +14,10 @@ import { X } from 'lucide-react';
 import { useAppSelector } from '@/store/hooks';
 
 export default function OnlineCompilerPage() {
-    return (
-        <Suspense fallback={<div className="h-screen bg-[#0B0B0F] flex items-center justify-center text-[#9CA3AF]">Loading IDE...</div>}>
-            <OnlineCompiler />
-        </Suspense>
-    );
-}
-
-function OnlineCompiler() {
-    const { isExecuting, output, runCode, sendInput, clearOutput } = useCompiler();
+    const { isExecuting, isLoading, output, runCode, sendInput, clearOutput } = useCompiler();
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { theme } = useAppSelector((state) => state.theme);
+    const { actualTheme } = useAppSelector((state) => state.theme);
 
     const [language, setLanguage] = useState(LANGUAGES.python);
     const [code, setCode] = useState(language.boilerplate);
@@ -34,23 +26,6 @@ function OnlineCompiler() {
     // UI States
     const [activeTab, setActiveTab] = useState<'code' | 'output'>('code');
     const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-    const [editorFontSize, setEditorFontSize] = useState(14);
-
-    // Responsive font size for editor
-    useEffect(() => {
-        const updateFontSize = () => {
-            if (window.innerWidth < 640) {
-                setEditorFontSize(12);
-            } else if (window.innerWidth < 1024) {
-                setEditorFontSize(13);
-            } else {
-                setEditorFontSize(14);
-            }
-        };
-        updateFontSize();
-        window.addEventListener('resize', updateFontSize);
-        return () => window.removeEventListener('resize', updateFontSize);
-    }, []);
 
 
     // Sync from URL on mount
@@ -80,6 +55,29 @@ function OnlineCompiler() {
         if (window.innerWidth < 1024) {
             setActiveTab('output');
         }
+    };
+
+    const handleRunRef = useRef(handleRun);
+    useEffect(() => {
+        handleRunRef.current = handleRun;
+    }, [handleRun]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleRun();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleRun]);
+
+    const handleEditorDidMount: OnMount = (editor, monaco) => {
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+            handleRunRef.current();
+        });
     };
 
     const handleShare = async () => {
@@ -156,7 +154,7 @@ function OnlineCompiler() {
                 <main className="flex-1 flex flex-col min-w-0">
                     <CodeHeader
                         language={language}
-                        isExecuting={isExecuting}
+                        isLoading={isLoading}
                         onRun={handleRun}
                         onShare={handleShare}
                         showLanguageMenu={showLanguageMenu}
@@ -174,12 +172,13 @@ function OnlineCompiler() {
                             <Editor
                                 height="100%"
                                 language={language.monaco}
-                                theme={theme === 'dark' ? 'vs-dark' : 'light'}
+                                theme={actualTheme === 'dark' ? 'vs-dark' : 'light'}
                                 value={code}
                                 onChange={(value) => setCode(value || '')}
+                                onMount={handleEditorDidMount}
                                 loading={<div className="w-full h-full bg-card" />}
                                 options={{
-                                    fontSize: editorFontSize,
+                                    fontSize: 14,
                                     fontFamily: 'JetBrains Mono, Menlo, Monaco, monospace',
                                     wordWrap: 'on',
                                     minimap: { enabled: false },

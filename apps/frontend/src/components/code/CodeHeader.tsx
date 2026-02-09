@@ -11,7 +11,7 @@ import Image from "next/image";
 
 interface CodeHeaderProps {
     language: Language;
-    isExecuting: boolean;
+    isLoading: boolean;
     onRun: () => void;
     onShare: () => void;
     showLanguageMenu: boolean;
@@ -22,7 +22,7 @@ interface CodeHeaderProps {
 
 export function CodeHeader({
     language,
-    isExecuting,
+    isLoading,
     onRun,
     onShare,
     showLanguageMenu,
@@ -31,10 +31,10 @@ export function CodeHeader({
     setActiveTab
 }: CodeHeaderProps) {
     const dispatch = useAppDispatch();
-    const { theme } = useAppSelector((state) => state.theme);
+    const { actualTheme } = useAppSelector((state) => state.theme);
 
     const toggleTheme = () => {
-        const nextTheme = theme === 'dark' ? 'light' : 'dark';
+        const nextTheme = actualTheme === 'dark' ? 'light' : 'dark';
         dispatch(setReduxTheme(nextTheme));
     };
 
@@ -98,7 +98,7 @@ export function CodeHeader({
                         className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-lg hover:bg-accent"
                         title="Toggle Theme"
                     >
-                        {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        {actualTheme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
 
                     <button
@@ -111,11 +111,11 @@ export function CodeHeader({
                     {/* Desktop Run Button */}
                     <Button
                         onClick={onRun}
-                        disabled={isExecuting}
+                        disabled={isLoading}
                         size="sm"
                         className="hidden sm:flex items-center justify-center gap-1.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold cursor-pointer h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs sm:text-sm"
                     >
-                        {isExecuting ? (
+                        {isLoading ? (
                             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
@@ -130,11 +130,11 @@ export function CodeHeader({
             {/* Mobile Floating Action Button for Run */}
             <button
                 onClick={onRun}
-                disabled={isExecuting}
+                disabled={isLoading}
                 className="sm:hidden fixed bottom-6 right-6 z-50 w-14 h-14 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-full shadow-lg shadow-brand-primary/30 flex items-center justify-center cursor-pointer disabled:opacity-50 transition-all active:scale-95"
                 title="Run Code"
             >
-                {isExecuting ? (
+                {isLoading ? (
                     <div className="w-6 h-6 border-3 border-white/20 border-t-white rounded-full animate-spin" />
                 ) : (
                     <Play className="w-6 h-6 fill-current" />

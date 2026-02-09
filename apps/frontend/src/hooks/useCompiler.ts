@@ -13,6 +13,7 @@ export interface TerminalLine {
 
 export function useCompiler() {
     const [isExecuting, setIsExecuting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [output, setOutput] = useState<TerminalLine[]>([]);
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [lastLanguage, setLastLanguage] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export function useCompiler() {
         }
 
         setIsExecuting(true);
+        setIsLoading(true);
         setOutput([]);
 
         try {
@@ -50,16 +52,19 @@ export function useCompiler() {
                 socket.on("output", (data: { type: string; data: any }) => {
                     if (data.type === 'stdout' || data.type === 'stderr') {
                         appendOutput(data.type, data.data);
+                        setIsLoading(false);
                     }
 
                     if (data.type === 'exit' || data.type === 'error') {
                         setIsExecuting(false);
+                        setIsLoading(false);
                     }
                 });
 
                 socket.on("connect_error", (err: any) => {
                     appendOutput("error", `Connection failed: ${err.message}\n`);
                     setIsExecuting(false);
+                    setIsLoading(false);
                 });
             }
 
@@ -73,12 +78,14 @@ export function useCompiler() {
             if (!response.data.success) {
                 appendOutput("error", `Execution failed: ${response.data.message}\n`);
                 setIsExecuting(false);
+                setIsLoading(false);
             }
 
         } catch (err: any) {
             const message = err.response?.data?.message || err.message;
             appendOutput("error", `Error: ${message}\n`);
             setIsExecuting(false);
+            setIsLoading(false);
             toast.error("Failed to start execution");
         }
     };
@@ -108,6 +115,7 @@ export function useCompiler() {
 
     return {
         isExecuting,
+        isLoading,
         output,
         runCode,
         sendInput,

@@ -34,6 +34,10 @@ export function CodeTerminal({
     }, [output, inputValue]);
 
     const handleTerminalClick = () => {
+        const selection = window.getSelection();
+        if (selection && selection.toString().length > 0) {
+            return;
+        }
         hiddenInputRef.current?.focus();
     };
 
@@ -66,7 +70,7 @@ export function CodeTerminal({
                             <span
                                 key={i}
                                 className={cn(
-                                    isError ? "text-red-400" : "text-[#D1D5DB]",
+                                    isError ? "text-red-400" : "text-foreground",
                                     line.type === 'error' && "font-bold"
                                 )}
                             >
@@ -75,7 +79,7 @@ export function CodeTerminal({
                         );
                     })}
 
-                    {/* Inline Current Input - only show cursor when focused AND executing */}
+                    {/* Inline Current Input */}
                     {isExecuting && isFocused && (
                         <span className="relative inline-block min-w-[1px]">
                             {inputValue}
