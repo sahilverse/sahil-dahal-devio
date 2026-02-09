@@ -24,7 +24,7 @@ const dockerPool = new DockerPool(docker, {
     idleTimeout: 5 * 60 * 1000
 });
 
-const executionService = new ExecutionService(dockerPool, redisStreamManager);
+const executionService = new ExecutionService(redisStreamManager);
 const sessionManager = new SessionManager(docker, dockerPool, executionService, redisStreamManager);
 const sessionController = new SessionController(sessionManager);
 
