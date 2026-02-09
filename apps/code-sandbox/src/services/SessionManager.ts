@@ -8,17 +8,38 @@ import DockerPool from './DockerPool';
 import { ExecutionService, StreamData } from './ExecutionService';
 import { ApiError } from '../utils/ApiError';
 
-const SESSION_INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+import { RedisStreamManager } from './RedisStreamManager';
+
+const SESSION_INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
 export class SessionManager {
     private sessions: Map<string, ExecutionSession> = new Map();
     private sessionStreams: Map<string, StreamData> = new Map();
     private cleanupInterval: NodeJS.Timeout;
 
-    constructor(private docker: Docker, private pool: DockerPool, private executionService: ExecutionService) {
+    constructor(
+        private docker: Docker,
+        private pool: DockerPool,
+        private executionService: ExecutionService,
+        private redisStreamManager: RedisStreamManager
+    ) {
         this.cleanupInterval = setInterval(() => {
             this.cleanupInactiveSessions();
         }, 30 * 1000);
+    }
+
+    async initialize() {
+        logger.info('Initializing SessionManager: Recovering sessions from Redis...');
+        const sessionIds = await this.redisStreamManager.getAllSessionIds();
+        for (const sessionId of sessionIds) {
+            try {
+                await this.restoreSessionFromRedis(sessionId);
+            } catch (err: any) {
+                logger.error(`Failed to restore session ${sessionId} on startup: ${err.message}`);
+                await this.redisStreamManager.removeSession(sessionId);
+            }
+        }
+        logger.info(`SessionManager initialization complete. Recovered ${sessionIds.length} sessions.`);
     }
 
     private async cleanupInactiveSessions() {
@@ -31,8 +52,8 @@ export class SessionManager {
         }
     }
 
-    async startSession(language: string): Promise<{ sessionId: string }> {
-        const sessionId = uuidv4();
+    async startSession(language: string, providedSessionId?: string): Promise<{ sessionId: string }> {
+        const sessionId = providedSessionId || uuidv4();
         const config = LANGUAGE_CONFIG[language];
         if (!config) throw new ApiError(`Unsupported language: ${language}`, StatusCodes.BAD_REQUEST);
 
@@ -52,14 +73,45 @@ export class SessionManager {
         this.sessionStreams.set(sessionId, { stdout: '', stderr: '' });
         logger.info(`Started session ${sessionId} for ${language}`);
 
+        // Persist to Redis
+        await this.redisStreamManager.saveSession(sessionId, session);
+
+        await this.redisStreamManager.subscribeToCommands(
+            sessionId,
+            (data) => this.executeCode(sessionId, data.code).catch(e => logger.error(`Redis Execute Error: ${e.message}`)),
+            (input) => this.sendInput(sessionId, input).catch(e => logger.error(`Redis Input Error: ${e.message}`))
+        );
+
         return { sessionId };
     }
 
+    private async restoreSessionFromRedis(sessionId: string): Promise<ExecutionSession | null> {
+        const session = await this.redisStreamManager.getSession(sessionId);
+        if (session) {
+            this.sessions.set(sessionId, session);
+            this.sessionStreams.set(sessionId, { stdout: '', stderr: '' });
+
+            await this.redisStreamManager.subscribeToCommands(
+                sessionId,
+                (data) => this.executeCode(sessionId, data.code).catch(e => logger.error(`Redis Execute Error: ${e.message}`)),
+                (input) => this.sendInput(sessionId, input).catch(e => logger.error(`Redis Input Error: ${e.message}`))
+            );
+
+            logger.info(`Session ${sessionId} restored from Redis`);
+            return session;
+        }
+        return null;
+    }
+
     async executeCode(sessionId: string, code: string): Promise<SessionResponse> {
-        const session = this.sessions.get(sessionId);
+        let session = this.sessions.get(sessionId);
+        if (!session) {
+            session = await this.restoreSessionFromRedis(sessionId) || undefined;
+        }
         if (!session) throw new ApiError(`Session not found`, StatusCodes.NOT_FOUND);
 
         session.lastActivityTime = Date.now();
+        await this.redisStreamManager.saveSession(sessionId, session);
         session.code = code;
 
         const container = this.docker.getContainer(session.containerId);
@@ -128,7 +180,10 @@ export class SessionManager {
     }
 
     async sendInput(sessionId: string, input: string): Promise<SessionResponse> {
-        const session = this.sessions.get(sessionId);
+        let session = this.sessions.get(sessionId);
+        if (!session) {
+            session = await this.restoreSessionFromRedis(sessionId) || undefined;
+        }
         if (!session) throw new ApiError(`Session ${sessionId} not found`, StatusCodes.NOT_FOUND);
 
         const streamData = this.sessionStreams.get(sessionId);
@@ -176,6 +231,11 @@ export class SessionManager {
         if (!session) {
             return;
         }
+
+        // Unsubscribe from Redis Commands
+        await this.redisStreamManager.unsubscribeFromCommands(sessionId);
+        // Remove from Redis State
+        await this.redisStreamManager.removeSession(sessionId);
 
         const streamData = this.sessionStreams.get(sessionId);
         if (streamData?.stream) streamData.stream.end();

@@ -2,6 +2,7 @@ import Docker from 'dockerode';
 import { LANGUAGE_CONFIG } from '../config/languages';
 import { logger } from '../utils/logger';
 import DockerPool from './DockerPool';
+import { RedisStreamManager } from './RedisStreamManager';
 
 export interface StreamData {
     stdout: string;
@@ -12,7 +13,7 @@ export interface StreamData {
 }
 
 export class ExecutionService {
-    constructor(private pool: DockerPool) { }
+    constructor(private redisStreamManager: RedisStreamManager) { }
 
     async executeCode(
         container: Docker.Container,
@@ -98,18 +99,19 @@ export class ExecutionService {
                 }
             }, timeoutMs);
 
-            exec.start({ hijack: true, stdin: true }, (err: any, stream: any) => {
+            exec.start({ hijack: true, stdin: true }, async (err: any, stream: any) => {
                 if (err) {
                     clearTimeout(timeoutTimer);
                     logger.error(`Exec start error for session ${sessionId}: ${err.message}`);
+                    await this.redisStreamManager.publishOutput(sessionId, 'error', `Exec start error: ${err.message}`);
                     return;
                 }
 
                 streamData.stream = stream;
                 let outputSize = 0;
-                const MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB
+                const MAX_OUTPUT_SIZE = 1024 * 1024;
 
-                stream.on('data', (chunk: Buffer) => {
+                stream.on('data', async (chunk: Buffer) => {
                     const output = this.demuxStream(chunk);
 
                     // Check output size limit
@@ -117,29 +119,41 @@ export class ExecutionService {
                     if (outputSize > MAX_OUTPUT_SIZE) {
                         if (!streamData.stderr.includes('[Output truncated]')) {
                             streamData.stderr += '\n[Output truncated - exceeded 1MB limit]\n';
+                            await this.redisStreamManager.publishOutput(sessionId, 'stderr', '\n[Output truncated - exceeded 1MB limit]\n');
                         }
                         return;
                     }
 
-                    streamData.stdout += this.cleanupFilePath(output.stdout);
-                    streamData.stderr += output.stderr;
+                    if (output.stdout) {
+                        const cleanedStdout = this.cleanupFilePath(output.stdout);
+                        streamData.stdout += cleanedStdout;
+                        await this.redisStreamManager.publishOutput(sessionId, 'stdout', cleanedStdout);
+                    }
+
+                    if (output.stderr) {
+                        streamData.stderr += output.stderr;
+                        await this.redisStreamManager.publishOutput(sessionId, 'stderr', output.stderr);
+                    }
+
                     streamData.dataReceived = true;
-                    logger.debug(`Session ${sessionId} output: ${output.stdout}${output.stderr}`);
+                    logger.debug(`Session ${sessionId} output streamed to Redis`);
 
                     if (streamData.resolveDataWait) {
                         streamData.resolveDataWait();
                     }
                 });
 
-                stream.on('end', () => {
+                stream.on('end', async () => {
                     clearTimeout(timeoutTimer);
                     logger.debug(`Session ${sessionId} stream ended`);
+                    await this.redisStreamManager.publishOutput(sessionId, 'exit', 0);
                     if (streamData.resolveDataWait) streamData.resolveDataWait();
                 });
 
-                stream.on('error', (error: any) => {
+                stream.on('error', async (error: any) => {
                     clearTimeout(timeoutTimer);
                     logger.error(`Session ${sessionId} stream error: ${error.message}`);
+                    await this.redisStreamManager.publishOutput(sessionId, 'error', error.message);
                 });
             });
 

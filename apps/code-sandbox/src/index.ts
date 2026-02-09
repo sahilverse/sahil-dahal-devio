@@ -11,7 +11,12 @@ import { setupSwaggerDocs } from './docs/swagger';
 
 import { errorHandler } from './middlewares/errorHandler';
 
+import { redis } from './config';
+import { RedisStreamManager } from './services/RedisStreamManager';
+
 const app = express();
+
+const redisStreamManager = new RedisStreamManager(redis);
 
 const dockerPool = new DockerPool(docker, {
     maxPoolSize: 3,
@@ -19,8 +24,8 @@ const dockerPool = new DockerPool(docker, {
     idleTimeout: 5 * 60 * 1000
 });
 
-const executionService = new ExecutionService(dockerPool);
-const sessionManager = new SessionManager(docker, dockerPool, executionService);
+const executionService = new ExecutionService(dockerPool, redisStreamManager);
+const sessionManager = new SessionManager(docker, dockerPool, executionService, redisStreamManager);
 const sessionController = new SessionController(sessionManager);
 
 app.use(express.json({ limit: '1mb' }));
@@ -37,6 +42,7 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, async () => {
     await dockerPool.waitForInitialization();
+    await sessionManager.initialize();
     logger.info(`Server running on port ${PORT}`);
     logger.info(`Swagger docs available at http://localhost:${PORT}`);
 });

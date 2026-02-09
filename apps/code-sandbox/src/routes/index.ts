@@ -61,6 +61,9 @@ export const createRouter = (
      *                 type: string
      *                 enum: [python, javascript, c, cpp, java]
      *                 description: Programming language for the session
+     *               sessionID:
+     *                 type: string
+     *                 description: custom Session ID
      *     responses:
      *       200:
      *         description: Session started successfully
@@ -140,6 +143,42 @@ export const createRouter = (
         sessionController.executeCode.bind(sessionController)
     );
 
+
+    /**
+     * @swagger
+     * /session/{sessionId}/end:
+     *   post:
+     *     summary: End a session
+     *     tags: [Session]
+     *     description: Terminates the session and releases the Docker container back to the pool.
+     *     parameters:
+     *       - in: path
+     *         name: sessionId
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Session ID to end
+     *     responses:
+     *       200:
+     *         description: Session ended successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                   example: Session ended
+     *       400:
+     *         description: Session ID is required
+     *       500:
+     *         description: Server error
+     */
+    router.post(
+        "/session/:sessionId/end",
+        sessionController.endSession.bind(sessionController)
+    );
+
     /**
      * @swagger
      * /session/{sessionId}/input:
@@ -178,41 +217,6 @@ export const createRouter = (
         "/session/:sessionId/input",
         validateRequest,
         sessionController.sendInput.bind(sessionController)
-    );
-
-    /**
-     * @swagger
-     * /session/{sessionId}/end:
-     *   post:
-     *     summary: End a session
-     *     tags: [Session]
-     *     description: Terminates the session and releases the Docker container back to the pool.
-     *     parameters:
-     *       - in: path
-     *         name: sessionId
-     *         required: true
-     *         schema:
-     *           type: string
-     *         description: Session ID to end
-     *     responses:
-     *       200:
-     *         description: Session ended successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 message:
-     *                   type: string
-     *                   example: Session ended
-     *       400:
-     *         description: Session ID is required
-     *       500:
-     *         description: Server error
-     */
-    router.post(
-        "/session/:sessionId/end",
-        sessionController.endSession.bind(sessionController)
     );
 
     /**

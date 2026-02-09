@@ -8,8 +8,8 @@ export class SessionController {
 
     async startSession(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { language } = req.body;
-            const result = await this.sessionManager.startSession(language);
+            const { language, sessionId } = req.body;
+            const result = await this.sessionManager.startSession(language, sessionId);
             ResponseHandler.sendResponse(res, StatusCodes.OK, "Session started successfully", result);
         } catch (error) {
             next(error);
