@@ -22,3 +22,11 @@ export interface SessionResponse {
     executionTime?: number;
     error?: string;
 }
+
+export interface LanguageConfig {
+    image: string;
+    compileCommand: string[] | null;
+    runCommand: string[];
+    extension: string;
+    timeout: number;
+}

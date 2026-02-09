@@ -81,16 +81,46 @@ export class ExecutionService {
                 Tty: true
             });
 
+            // Set execution timeout (kill process after config.timeout seconds)
+            const timeoutMs = (config.timeout || 15) * 1000;
+            const timeoutTimer = setTimeout(async () => {
+                logger.warn(`Session ${sessionId} execution timed out after ${timeoutMs}ms`);
+                try {
+                    await container.exec({
+                        Cmd: ['pkill', '-9', '-u', 'sandboxuser'],
+                        User: 'root'
+                    }).then(e => e.start({}));
+
+                    streamData.stderr += `\n[Execution timed out after ${config.timeout}s]\n`;
+                    if (streamData.resolveDataWait) streamData.resolveDataWait();
+                } catch (err) {
+                    logger.error(`Failed to kill process for session ${sessionId}: ${err}`);
+                }
+            }, timeoutMs);
+
             exec.start({ hijack: true, stdin: true }, (err: any, stream: any) => {
                 if (err) {
+                    clearTimeout(timeoutTimer);
                     logger.error(`Exec start error for session ${sessionId}: ${err.message}`);
                     return;
                 }
 
                 streamData.stream = stream;
+                let outputSize = 0;
+                const MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB
 
                 stream.on('data', (chunk: Buffer) => {
                     const output = this.demuxStream(chunk);
+
+                    // Check output size limit
+                    outputSize += output.stdout.length + output.stderr.length;
+                    if (outputSize > MAX_OUTPUT_SIZE) {
+                        if (!streamData.stderr.includes('[Output truncated]')) {
+                            streamData.stderr += '\n[Output truncated - exceeded 1MB limit]\n';
+                        }
+                        return;
+                    }
+
                     streamData.stdout += this.cleanupFilePath(output.stdout);
                     streamData.stderr += output.stderr;
                     streamData.dataReceived = true;
@@ -102,10 +132,13 @@ export class ExecutionService {
                 });
 
                 stream.on('end', () => {
+                    clearTimeout(timeoutTimer);
                     logger.debug(`Session ${sessionId} stream ended`);
+                    if (streamData.resolveDataWait) streamData.resolveDataWait();
                 });
 
                 stream.on('error', (error: any) => {
+                    clearTimeout(timeoutTimer);
                     logger.error(`Session ${sessionId} stream error: ${error.message}`);
                 });
             });

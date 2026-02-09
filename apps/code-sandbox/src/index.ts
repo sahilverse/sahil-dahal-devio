@@ -6,6 +6,10 @@ import { logger } from './utils';
 import DockerPool from './services/DockerPool';
 import { SessionManager } from './services/SessionManager';
 import { ExecutionService } from './services/ExecutionService';
+import { createRouter } from './routes';
+import { setupSwaggerDocs } from './docs/swagger';
+
+import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
 
@@ -21,33 +25,20 @@ const sessionController = new SessionController(sessionManager);
 
 app.use(express.json({ limit: '1mb' }));
 
+// Setup routes 
+app.use("/api", createRouter(dockerPool, sessionController));
 
-app.get('/pool/stats', (req, res) => res.json(dockerPool.getPoolStats()));
+// Setup Swagger documentation at root
+setupSwaggerDocs(app);
 
-
-app.post('/session/start', sessionController.startSession.bind(sessionController));
-app.post('/session/:sessionId/execute', sessionController.executeCode.bind(sessionController));
-app.post('/session/:sessionId/input', sessionController.sendInput.bind(sessionController));
-app.post('/session/:sessionId/end', sessionController.endSession.bind(sessionController));
-
-app.get('/languages', (req, res) => {
-    res.json({ languages: ['python', 'javascript', 'c', 'cpp', 'java'] });
-});
-
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    logger.error('Unhandled error:', err);
-    res.json({
-        status: 500,
-        error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-    });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, async () => {
     await dockerPool.waitForInitialization();
     logger.info(`Server running on port ${PORT}`);
+    logger.info(`Swagger docs available at http://localhost:${PORT}`);
 });
 
 const gracefulShutdown = async (signal: string) => {
@@ -55,6 +46,7 @@ const gracefulShutdown = async (signal: string) => {
 
     server.close(async () => {
         try {
+            sessionManager.shutdown();
             await dockerPool.shutdown();
             logger.info('Server shut down completely');
         } catch (err: any) {

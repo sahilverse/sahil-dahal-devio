@@ -1,76 +1,53 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { SessionManager } from '../services/SessionManager';
+import { ResponseHandler } from '../utils/ResponseHandler';
 
 export class SessionController {
     constructor(private sessionManager: SessionManager) { }
 
-    async startSession(req: Request, res: Response): Promise<void> {
+    async startSession(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { language } = req.body;
-            if (!language) {
-                res.status(400).json({ error: 'Language is required' });
-                return;
-            }
-
             const result = await this.sessionManager.startSession(language);
-            res.json(result);
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            ResponseHandler.sendResponse(res, StatusCodes.OK, "Session started successfully", result);
+        } catch (error) {
+            next(error);
         }
     }
 
-    async executeCode(req: Request, res: Response): Promise<void> {
+    async executeCode(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { sessionId } = req.params;
             const { code } = req.body;
-            if (!sessionId) {
-                res.status(400).json({ error: 'Session ID is required' });
-                return;
-            }
-            if (!code) {
-                res.status(400).json({ error: 'Code is required' });
-                return;
-            }
-
+            if (!sessionId) throw new Error("Session ID is required");
             const result = await this.sessionManager.executeCode(sessionId, code);
-            res.json(result);
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            ResponseHandler.sendResponse(res, StatusCodes.OK, "Code executed successfully", result);
+        } catch (error) {
+            next(error);
         }
     }
 
-    async sendInput(req: Request, res: Response): Promise<void> {
+    async sendInput(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { sessionId } = req.params;
             const { input } = req.body;
-            if (!sessionId) {
-                res.status(400).json({ error: 'Session ID is required' });
-                return;
-            }
-            if (input === undefined) {
-                res.status(400).json({ error: 'Input is required' });
-                return;
-            }
-
+            if (!sessionId) throw new Error("Session ID is required");
             const result = await this.sessionManager.sendInput(sessionId, input);
-            res.json(result);
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            ResponseHandler.sendResponse(res, StatusCodes.OK, "Input sent successfully", result);
+        } catch (error) {
+            next(error);
         }
     }
 
-    async endSession(req: Request, res: Response): Promise<void> {
+    async endSession(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { sessionId } = req.params;
-            if (!sessionId) {
-                res.status(400).json({ error: 'Session ID is required' });
-                return;
-            }
-
+            if (!sessionId) throw new Error("Session ID is required");
             await this.sessionManager.endSession(sessionId);
-            res.json({ message: 'Session ended' });
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            ResponseHandler.sendResponse(res, StatusCodes.OK, "Session ended successfully");
+        } catch (error) {
+            next(error);
         }
     }
 }
