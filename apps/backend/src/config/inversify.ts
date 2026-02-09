@@ -17,10 +17,11 @@ import { MailService } from "../modules/mail";
 import { VerificationRepository, VerificationService } from "../modules/verification";
 import { QueueService, EmailJobService, EmailWorkerService } from "../queue";
 import { SocketService } from "../modules/socket";
+import { ISocketHandler } from "../modules/socket";
 import { StorageService } from "../modules/storage";
 import { transporter } from "./transporter";
 import { CommunityRepository, CommunityService, CommunityController } from "../modules/community";
-import { CompilerService, CompilerController } from "../modules/compiler";
+import { CompilerService, CompilerController, CompilerSocketHandler } from "../modules/compiler";
 
 
 const container = new Container();
@@ -78,7 +79,9 @@ container.bind<EmailWorkerService>(TYPES.EmailWorkerService).to(EmailWorkerServi
 container.bind(TYPES.SocketService).to(SocketService).inSingletonScope();
 container.bind<StorageService>(TYPES.StorageService).to(StorageService).inSingletonScope();
 
-container.bind<CompilerService>(TYPES.CompilerService).to(CompilerService);
-container.bind<CompilerController>(TYPES.CompilerController).to(CompilerController);
+container.bind<CompilerService>(TYPES.CompilerService).to(CompilerService).inSingletonScope();
+container.bind<CompilerController>(TYPES.CompilerController).to(CompilerController).inSingletonScope();
+container.bind<CompilerSocketHandler>(TYPES.CompilerSocketHandler).to(CompilerSocketHandler).inSingletonScope();
+container.bind<ISocketHandler>(TYPES.SocketHandler).to(CompilerSocketHandler).inSingletonScope();
 
 export { container };

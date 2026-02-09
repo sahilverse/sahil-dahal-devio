@@ -1,19 +1,22 @@
-import { injectable, inject } from "inversify";
+import { injectable, inject, multiInject } from "inversify";
 import { Server, Socket } from "socket.io";
+import { Redis } from "ioredis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { TYPES } from "../../types";
 import { RedisManager } from "../../config/redis";
 import { CLIENT_URL } from "../../config/constants";
-import { JwtManager, logger } from "../../utils";
-import { ReqUser } from "../auth";
+import { logger } from "../../utils";
 import { socketAuthMiddleware } from "./socket.middleware";
+import { ISocketHandler } from "./socket.types";
 
 @injectable()
 export class SocketService {
     private _io: Server | null = null;
+    private redisSubClient: Redis | null = null;
 
     constructor(
-        @inject(TYPES.RedisManager) private redisManager: RedisManager
+        @inject(TYPES.RedisManager) private redisManager: RedisManager,
+        @multiInject(TYPES.SocketHandler) private handlers: ISocketHandler[]
     ) { }
 
     public init(httpServer: any): void {
@@ -24,6 +27,7 @@ export class SocketService {
 
         const pubClient = this.redisManager.getPub();
         const subClient = this.redisManager.getSub();
+        this.redisSubClient = subClient.duplicate();
 
         this._io = new Server(httpServer, {
             cors: {
@@ -37,7 +41,7 @@ export class SocketService {
         this.setupMiddleware();
         this.setupEvents();
 
-        logger.info("Socket.IO initialized with Redis adapter");
+        logger.info(`Socket.IO initialized with ${this.handlers.length} handlers`);
     }
 
     public get io(): Server {
@@ -52,7 +56,9 @@ export class SocketService {
     }
 
     private setupEvents(): void {
-        this.io.on("connection", (socket: Socket) => {
+        const io = this.io;
+
+        io.on("connection", (socket: Socket) => {
             const userId = socket.data.user?.id;
             logger.info(`Socket connected: ${socket.id} (User ID: ${userId})`);
 
@@ -63,6 +69,10 @@ export class SocketService {
             socket.on("disconnect", (reason) => {
                 logger.warn(`Socket disconnected: ${socket.id} (Reason: ${reason})`);
             });
+        });
+
+        this.handlers.forEach(handler => {
+            handler.setup(io, this.redisSubClient || undefined);
         });
     }
 }

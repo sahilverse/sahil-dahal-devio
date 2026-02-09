@@ -3,6 +3,7 @@ import { container } from "../../config";
 import { TYPES } from "../../types";
 import { CompilerController } from "./compiler.controller";
 import { validateRequest } from '../../middlewares';
+import { ExecutionRequestSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const compilerController = container.get<CompilerController>(TYPES.CompilerController);
@@ -51,8 +52,6 @@ router.get("/languages", compilerController.getLanguages);
  *                 type: string
  *               code:
  *                 type: string
- *               input:
- *                 type: string
  *               sessionId:
  *                 type: string
  *     responses:
@@ -78,6 +77,7 @@ router.get("/languages", compilerController.getLanguages);
  */
 router.post(
     "/execute",
+    validateRequest(ExecutionRequestSchema),
     compilerController.executeCode
 );
 

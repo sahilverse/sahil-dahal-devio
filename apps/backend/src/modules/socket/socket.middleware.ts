@@ -24,3 +24,14 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: any) => void) 
         next(new Error("Authentication error: Invalid token"));
     }
 };
+
+
+export const compilerSocketMiddleware = (socket: Socket, next: (err?: any) => void) => {
+    const sessionId = socket.handshake.query?.sessionId as string;
+
+    if (!sessionId) {
+        return next(new Error("Authentication error: No sessionId provided"));
+    }
+    socket.data.sessionId = sessionId;
+    next();
+};

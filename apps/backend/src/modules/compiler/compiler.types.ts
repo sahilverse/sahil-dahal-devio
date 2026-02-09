@@ -1,8 +1,7 @@
 export interface ExecutionRequest {
-    language?: string;
-    code?: string;
-    input?: string;
-    sessionId?: string;
+    language: string;
+    code: string;
+    sessionId: string;
 }
 
 export interface ExecutionResult {

@@ -52,6 +52,8 @@ export const TYPES = {
 
     CompilerService: Symbol.for("CompilerService"),
     CompilerController: Symbol.for("CompilerController"),
+    CompilerSocketHandler: Symbol.for("CompilerSocketHandler"),
+    SocketHandler: Symbol.for("SocketHandler"),
 };
 
 export * from "./jwt";

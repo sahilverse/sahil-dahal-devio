@@ -16,15 +16,8 @@ export class CompilerController {
 
     executeCode = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const payload = req.body;
-        const result = await this.compilerService.executeCode(payload);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Code execution completed", result);
-    });
-
-    sendInput = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const sessionId = req.params.sessionId as string;
-        const { input } = req.body;
-        await this.compilerService.sendInput(sessionId, input);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Input sent successfully");
+        const result: { message: string } = await this.compilerService.executeCode(payload);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, result.message, null);
     });
 
     endSession = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
