@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { LANGUAGE_CONFIG } from "../config/languages";
 import { ApiError } from "../utils/ApiError";
+import { z } from "zod";
 
 const MAX_CODE_SIZE_BYTES = 51200; // 50KB
 
@@ -21,6 +22,14 @@ export const validateRequest = (
                     `Unsupported language: ${language}. Supported languages: ${Object.keys(LANGUAGE_CONFIG).join(", ")}`,
                     StatusCodes.BAD_REQUEST
                 );
+            }
+
+            if (req.body.sessionId) {
+                const uuidSchema = z.uuid();
+                const result = uuidSchema.safeParse(req.body.sessionId);
+                if (!result.success) {
+                    throw new ApiError("Invalid sessionId.", StatusCodes.BAD_REQUEST);
+                }
             }
         }
 

@@ -16,6 +16,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@devio/zod-utils": "workspace:*",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "axios": "^1.13.2",
@@ -31,7 +32,8 @@
     "swagger-ui-express": "^5.0.1",
     "tar-stream": "^3.1.7",
     "tsx": "^4.20.6",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@devio/typescript-config": "workspace:*",

@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { JwtManager, logger } from "../../utils";
 import { ReqUser } from "../auth";
+import { z } from "zod";
 
 export const socketAuthMiddleware = (socket: Socket, next: (err?: any) => void) => {
     try {
@@ -26,12 +27,21 @@ export const socketAuthMiddleware = (socket: Socket, next: (err?: any) => void) 
 };
 
 
+
 export const compilerSocketMiddleware = (socket: Socket, next: (err?: any) => void) => {
     const sessionId = socket.handshake.query?.sessionId as string;
 
     if (!sessionId) {
         return next(new Error("Authentication error: No sessionId provided"));
     }
+
+    const uuidSchema = z.uuid();
+    const result = uuidSchema.safeParse(sessionId);
+
+    if (!result.success) {
+        return next(new Error("Authentication error: Invalid sessionId format. Must be a valid UUID."));
+    }
+
     socket.data.sessionId = sessionId;
     next();
 };
