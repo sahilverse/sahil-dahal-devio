@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { success, ZodSafeParseResult } from 'zod';
+import { ZodSafeParseResult } from 'zod';
 
 export class ResponseHandler {
     static sendResponse(res: Response, statusCode: StatusCodes, message?: string, result?: any) {
