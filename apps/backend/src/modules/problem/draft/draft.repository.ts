@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient } from "../../generated/prisma/client";
-import { TYPES } from "../../types";
+import { PrismaClient } from "../../../generated/prisma/client";
+import { TYPES } from "../../../types";
 
 @injectable()
 export class ProblemDraftRepository {

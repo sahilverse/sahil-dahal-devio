@@ -8,7 +8,7 @@ import { LANGUAGE_EXTENSIONS } from "@devio/boilerplate-generator";
 import { plainToInstance } from "class-transformer";
 import { ProblemResponseDTO } from "./problem.dto";
 import { RedisManager } from "../../config/redis";
-import { ProblemDraftService } from "../problem-draft";
+import { ProblemDraftService } from "./draft";
 import { ProblemSyncService } from "./problem-sync.service";
 import { MINIO_BUCKET_PROBLEMS, PROBLEM_REDIS_TTL, PROBLEM_REDIS_KEYS } from "../../config/constants";
 

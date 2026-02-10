@@ -23,8 +23,7 @@ import { StorageService } from "../modules/storage";
 import { transporter } from "./transporter";
 import { CommunityRepository, CommunityService, CommunityController } from "../modules/community";
 import { CompilerService, CompilerController, CompilerSocketHandler } from "../modules/compiler";
-import { ProblemRepository, ProblemService, ProblemSyncService, ProblemController } from "../modules/problem";
-import { ProblemDraftRepository, ProblemDraftService } from "../modules/problem-draft";
+import { ProblemRepository, ProblemService, ProblemSyncService, ProblemController, ProblemDraftRepository, ProblemDraftService } from "../modules/problem";
 import { SubmissionService, SubmissionController, Judge0Service, SubmissionRepository } from "../modules/submission";
 import { CipherRepository, CipherService, CipherController } from "../modules/cipher";
 

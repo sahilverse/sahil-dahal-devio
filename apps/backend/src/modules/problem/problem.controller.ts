@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { ProblemService } from "./problem.service";
 import { ProblemSyncService } from "./problem-sync.service";
-import { ProblemDraftService } from "../problem-draft";
+import { ProblemDraftService } from "./draft";
 import { asyncHandler, ResponseHandler, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { SUPPORTED_LANGUAGES } from "@devio/boilerplate-generator";
