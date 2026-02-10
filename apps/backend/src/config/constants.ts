@@ -59,3 +59,6 @@ export const PROBLEM_REDIS_KEYS = {
     BOILERPLATES: (slug: string) => `problem:${slug}:boilerplates`,
     FULL_BOILERPLATES: (slug: string) => `problem:${slug}:boilerplates:full`,
 } as const;
+
+// Judge0
+export const JUDGE0_URL = process.env.JUDGE0_URL || "http://localhost:2358";
