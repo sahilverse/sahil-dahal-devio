@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { ProblemRepository } from "./problem.repository";
 import { StorageService } from "../storage/storage.service";
 import { TYPES } from "../../types";
-import { logger, ApiError } from "../../utils";
+import { logger, ApiError, normalizeContent } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { LANGUAGE_EXTENSIONS } from "@devio/boilerplate-generator";
 import { plainToInstance } from "class-transformer";
@@ -70,9 +70,9 @@ export class ProblemService {
                 const inputRaw = await this.storageService.getFile(tc.inputPath, bucket);
                 const outputRaw = await this.storageService.getFile(tc.outputPath, bucket);
 
-                // Normalizing: Remove all \r and strip trailing newlines
-                const input = inputRaw.replace(/\r/g, "").trimEnd();
-                const output = outputRaw.replace(/\r/g, "").trimEnd();
+                // Normalizing content
+                const input = normalizeContent(inputRaw);
+                const output = normalizeContent(outputRaw);
 
                 sampleCases.push({ id: tc.id, input, output });
             } catch (err: any) {
@@ -133,7 +133,8 @@ export class ProblemService {
             const ext = (LANGUAGE_EXTENSIONS as any)[language];
             if (!ext) throw new ApiError(`Unsupported language: ${language}`, StatusCodes.BAD_REQUEST);
 
-            return await this.storageService.getFile(`${folder}/${tier}/function.${ext}`, bucket);
+            const rawBoilerplate = await this.storageService.getFile(`${folder}/${tier}/function.${ext}`, bucket);
+            return normalizeContent(rawBoilerplate);
         } catch (err: any) {
             logger.error(`Error in getCachedBoilerplate(${tier}) for ${slug}/${language}: ${err}`);
             throw new ApiError(`Failed to retrieve ${tier}: ${err.message}`, StatusCodes.INTERNAL_SERVER_ERROR);

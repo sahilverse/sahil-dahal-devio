@@ -5,3 +5,4 @@ export * from './response';
 export * from './bcrypt';
 export * from './jwt';
 export * from './RequestUtil';
+export * from './StringUtils';

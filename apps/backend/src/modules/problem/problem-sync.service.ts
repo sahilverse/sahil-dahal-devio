@@ -3,7 +3,7 @@ import { ProblemRepository } from "./problem.repository";
 import { StorageService } from "../storage/storage.service";
 import { TopicService } from "../topic/topic.service";
 import { TYPES } from "../../types";
-import { logger } from "../../utils";
+import { logger, normalizeContent } from "../../utils";
 import slugify from "slugify";
 import { BoilerplateFactory, ProblemStructure, LANGUAGE_EXTENSIONS } from "@devio/boilerplate-generator";
 import { Difficulty } from "../../generated/prisma/client";
@@ -34,9 +34,10 @@ export class ProblemSyncService {
 
             let richDescription: string;
             try {
-                richDescription = await this.storageService.getFile(`${problemFolder}/description.md`, bucket);
+                const rawDescription = await this.storageService.getFile(`${problemFolder}/description.md`, bucket);
+                richDescription = normalizeContent(rawDescription);
             } catch {
-                richDescription = structureData.description || "No description provided.";
+                richDescription = normalizeContent(structureData.description || "No description provided.");
             }
 
             const { ui, full } = await this.generateAndUploadBoilerplates(structureData, problemFolder, bucket);
@@ -90,11 +91,13 @@ export class ProblemSyncService {
         const uploadTasks = [
             ...Object.entries(ui).map(([lang, code]) => {
                 const ext = (LANGUAGE_EXTENSIONS as any)[lang];
-                return this.storageService.uploadBuffer(Buffer.from(code as string), `${problemFolder}/boilerplate/function.${ext}`, "text/plain", bucket);
+                const normalizedCode = normalizeContent(code as string);
+                return this.storageService.uploadBuffer(Buffer.from(normalizedCode), `${problemFolder}/boilerplate/function.${ext}`, "text/plain", bucket);
             }),
             ...Object.entries(full).map(([lang, code]) => {
                 const ext = (LANGUAGE_EXTENSIONS as any)[lang];
-                return this.storageService.uploadBuffer(Buffer.from(code as string), `${problemFolder}/boilerplate-full/function.${ext}`, "text/plain", bucket);
+                const normalizedCode = normalizeContent(code as string);
+                return this.storageService.uploadBuffer(Buffer.from(normalizedCode), `${problemFolder}/boilerplate-full/function.${ext}`, "text/plain", bucket);
             })
         ];
 
@@ -137,9 +140,9 @@ export class ProblemSyncService {
                 const inputRaw = await this.storageService.getFile(tc.inputPath, bucket);
                 const outputRaw = await this.storageService.getFile(tc.outputPath, bucket);
 
-                // Normalizing: Remove all \r and strip trailing newlines
-                const input = inputRaw.replace(/\r/g, "").trimEnd();
-                const output = outputRaw.replace(/\r/g, "").trimEnd();
+                // Normalizing content
+                const input = normalizeContent(inputRaw);
+                const output = normalizeContent(outputRaw);
 
                 sampleCases.push({ id: tc.id, input, output });
             } catch (err: any) {
@@ -211,8 +214,15 @@ export class ProblemSyncService {
         const fullMap: Record<string, string> = {};
 
         for (const [lang, ext] of Object.entries(LANGUAGE_EXTENSIONS)) {
-            try { uiMap[lang] = await this.storageService.getFile(`${problemFolder}/boilerplate/function.${ext}`, bucket); } catch { }
-            try { fullMap[lang] = await this.storageService.getFile(`${problemFolder}/boilerplate-full/function.${ext}`, bucket); } catch { }
+            try {
+                const uiRaw = await this.storageService.getFile(`${problemFolder}/boilerplate/function.${ext}`, bucket);
+                uiMap[lang] = normalizeContent(uiRaw);
+            } catch { }
+
+            try {
+                const fullRaw = await this.storageService.getFile(`${problemFolder}/boilerplate-full/function.${ext}`, bucket);
+                fullMap[lang] = normalizeContent(fullRaw);
+            } catch { }
         }
 
         const redis = this.redisManager.getPub();

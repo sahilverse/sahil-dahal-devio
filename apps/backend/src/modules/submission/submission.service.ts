@@ -3,15 +3,15 @@ import { TYPES } from "../../types";
 import { ProblemService } from "../problem/problem.service";
 import { Judge0Service, Judge0Response } from "./judge0.service";
 import { JUDGE0_LANGUAGE_IDS, JUDGE0_STATUS, SUBMISSION_POLL_INTERVAL, SUBMISSION_MAX_POLLS } from "./submission.constants";
-import { logger, ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { SubmissionRepository } from "./submission.repository";
 import { ProblemRepository } from "../problem/problem.repository";
-import { SubmissionStatus, Problem as PrismaProblem, TestCase, ActivityType } from "../../generated/prisma/client";
+import { SubmissionStatus, Problem as PrismaProblem, TestCase, ActivityType, CipherReason, User } from "../../generated/prisma/client";
 import { StorageService } from "../storage/storage.service";
 import { ActivityService } from "../activity/activity.service";
 import { CipherService } from "../cipher";
-import { CipherReason } from "../../generated/prisma/client";
+import { MINIO_BUCKET_PROBLEMS } from "../../config/constants";
+import { logger, ApiError, normalizeContent } from "../../utils";
 
 type ProblemWithRelations = PrismaProblem & { testCases: TestCase[] };
 
@@ -48,14 +48,14 @@ export class SubmissionService {
 
         // 4. Load ALL Test Case Data from Storage
         const submissions = await Promise.all(problem.testCases.map(async (tc) => {
-            const stdin = await this.storageService.getFile(tc.inputPath, "devio-problems").catch(() => "");
-            const expectedOutput = await this.storageService.getFile(tc.outputPath, "devio-problems").catch(() => "");
+            const stdin = await this.storageService.getFile(tc.inputPath, MINIO_BUCKET_PROBLEMS).catch(() => "");
+            const expectedOutput = await this.storageService.getFile(tc.outputPath, MINIO_BUCKET_PROBLEMS).catch(() => "");
 
             return {
                 source_code: sourceCode,
                 language_id: languageId,
-                stdin: stdin.replace(/\r/g, "").trimEnd(),
-                expected_output: expectedOutput.replace(/\r/g, "").trimEnd()
+                stdin: normalizeContent(stdin),
+                expected_output: normalizeContent(expectedOutput)
             };
         }));
 
@@ -126,7 +126,7 @@ export class SubmissionService {
                 userId,
                 problem.cipherReward,
                 CipherReason.PROBLEM_SOLVED_BOUNTY,
-                problem.id // Source Ensure unique reward per problem
+                problem.id
             );
         }
 
