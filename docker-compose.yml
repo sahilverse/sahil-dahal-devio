@@ -30,7 +30,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
 
       MINIO_NOTIFY_WEBHOOK_ENABLE_problems: "on"
-      MINIO_NOTIFY_WEBHOOK_ENDPOINT_problems: "http://host.docker.internal:8000/problems/webhook/minio"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_problems: "http://host.docker.internal:8000/api/problems/webhook/minio"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
