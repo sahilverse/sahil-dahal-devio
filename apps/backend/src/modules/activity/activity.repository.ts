@@ -30,7 +30,7 @@ export class ActivityRepository {
                     select: {
                         date: true,
                         count: true,
-                        type: true 
+                        type: true
                     },
                     orderBy: {
                         date: "asc",
@@ -76,14 +76,14 @@ export class ActivityRepository {
         return years;
     }
 
-    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<void> {
+    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<{ isDailyLogin: boolean, currentStreak: number }> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         // 1. Log the Activity
         await this.prisma.activityLog.upsert({
             where: {
-                userId_date_type: { 
+                userId_date_type: {
                     userId,
                     date: today,
                     type
@@ -114,7 +114,7 @@ export class ActivityRepository {
                     lastActiveDate: today
                 }
             });
-            return;
+            return { isDailyLogin: true, currentStreak: 1 };
         }
 
         const lastActive = streak.lastActiveDate;
@@ -126,7 +126,7 @@ export class ActivityRepository {
                     lastActiveDate: today
                 }
             });
-            return;
+            return { isDailyLogin: true, currentStreak: 1 };
         }
 
         const lastActiveDate = new Date(lastActive);
@@ -135,18 +135,25 @@ export class ActivityRepository {
         const diffTime = Math.abs(today.getTime() - lastActiveDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+        let currentStreak = streak.currentStreak;
+        let isDailyLogin = false;
+
         if (diffDays === 1) {
             // Consecutive day
+            currentStreak += 1;
+            isDailyLogin = true;
             await this.prisma.userStreak.update({
                 where: { userId },
                 data: {
-                    currentStreak: { increment: 1 },
-                    longestStreak: { set: Math.max(streak.longestStreak, streak.currentStreak + 1) },
+                    currentStreak: currentStreak,
+                    longestStreak: Math.max(streak.longestStreak, currentStreak),
                     lastActiveDate: today
                 }
             });
         } else if (diffDays > 1) {
             // Streak broken
+            currentStreak = 1;
+            isDailyLogin = true;
             await this.prisma.userStreak.update({
                 where: { userId },
                 data: {
@@ -154,6 +161,11 @@ export class ActivityRepository {
                     lastActiveDate: today
                 }
             });
+        } else {
+            // Same day (diffDays === 0)
+            isDailyLogin = false;
         }
+
+        return { isDailyLogin, currentStreak };
     }
 }

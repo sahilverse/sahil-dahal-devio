@@ -16,7 +16,3 @@ export interface AuraTransactionResponse {
     createdAt: Date;
 }
 
-export interface AuraPointsResponse {
-    userId: string;
-    points: number;
-}

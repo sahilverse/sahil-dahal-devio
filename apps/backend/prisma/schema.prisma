@@ -301,7 +301,6 @@ enum AuraReason {
   ANSWER_ACCEPTED
   DAILY_LOGIN
   STREAK_MILESTONE
-  PROFILE_COMPLETED
 }
 
 model AuraTransaction {

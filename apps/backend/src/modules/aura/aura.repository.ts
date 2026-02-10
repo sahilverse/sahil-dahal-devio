@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import type { PrismaClient } from "../../generated/prisma/client";
+import type { AuraReason, PrismaClient } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 import type { CreateAuraTransactionInput, AuraTransactionResponse } from "./aura.types";
 
@@ -8,25 +8,50 @@ export class AuraRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
     async createTransaction(data: CreateAuraTransactionInput): Promise<AuraTransactionResponse> {
-        return this.prisma.auraTransaction.create({
-            data: {
-                userId: data.userId,
-                amount: data.amount,
-                reason: data.reason,
-                sourceId: data.sourceId
-            }
+        return this.prisma.$transaction(async (tx) => {
+            // 1. Create the Transaction Record
+            const transaction = await tx.auraTransaction.create({
+                data: {
+                    userId: data.userId,
+                    amount: data.amount,
+                    reason: data.reason,
+                    sourceId: data.sourceId
+                }
+            });
+
+            // 2. Atomically Update User's Aura Points
+            await tx.user.update({
+                where: { id: data.userId },
+                data: {
+                    auraPoints: {
+                        increment: data.amount
+                    }
+                }
+            });
+
+            return transaction;
         });
     }
 
     async getPoints(userId: string): Promise<number> {
-        const result = await this.prisma.auraTransaction.aggregate({
-            where: { userId },
-            _sum: {
-                amount: true
+        // Optimized: Read from User table directly
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { auraPoints: true }
+        });
+        return user?.auraPoints || 0;
+    }
+
+    async hasTransaction(userId: string, reason: AuraReason, sourceId: string): Promise<boolean> {
+        // Anti-Abuse: Check if a transaction exists for this reason/source
+        const count = await this.prisma.auraTransaction.count({
+            where: {
+                userId,
+                reason: reason,
+                sourceId
             }
         });
-
-        return result._sum.amount || 0;
+        return count > 0;
     }
 
     async getTransactions(userId: string, limit: number = 20, offset: number = 0): Promise<AuraTransactionResponse[]> {

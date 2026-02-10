@@ -211,6 +211,12 @@ export class PostRepository {
         });
     }
 
+    async getVote(postId: string, userId: string) {
+        return this.prisma.postVote.findUnique({
+            where: { postId_userId: { postId, userId } },
+        });
+    }
+
     async countPinnedPosts(userId?: string, communityId?: string): Promise<number> {
         return this.prisma.pinnedPost.count({
             where: {

@@ -9,9 +9,13 @@ export class AuraService {
     constructor(@inject(TYPES.AuraRepository) private auraRepository: AuraRepository) { }
 
     async awardAura(userId: string, amount: number, reason: AuraReason, sourceId?: string) {
-        if (amount <= 0) {
-            logger.warn(`Attempted to award non-positive Aura: ${amount} to user ${userId}`);
-            return;
+        // Anti-Abuse: Prevent duplicate points for the same source (e.g., same Problem ID)
+        if (reason === AuraReason.PROBLEM_SOLVED && sourceId) {
+            const existing = await this.auraRepository.hasTransaction(userId, reason, sourceId);
+            if (existing) {
+                logger.info(`User ${userId} already rewarded for ${reason} on ${sourceId}. Skipping.`);
+                return;
+            }
         }
 
         return this.auraRepository.createTransaction({

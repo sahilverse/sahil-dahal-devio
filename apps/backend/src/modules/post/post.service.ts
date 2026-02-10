@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { MediaType, CipherReason, PostType, PostStatus, PostVisibility } from "../../generated/prisma/client";
+import { MediaType, CipherReason, PostType, PostStatus, PostVisibility, AuraReason } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 import { CreatePostInput } from "@devio/zod-utils";
 import { StorageService } from "../storage/storage.service";
@@ -10,6 +10,7 @@ import { PostRepository } from "./post.repository";
 import { CommunityRepository } from "../community/community.repository";
 import { plainToInstance } from "class-transformer";
 import { PostResponseDto, GetPostsDto } from "./post.dto";
+import { AuraService } from "../aura/aura.service";
 
 
 @injectable()
@@ -18,7 +19,8 @@ export class PostService {
         @inject(TYPES.PostRepository) private postRepository: PostRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
         @inject(TYPES.TopicService) private topicService: TopicService,
-        @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository
+        @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
+        @inject(TYPES.AuraService) private auraService: AuraService
     ) { }
 
     async createPost(
@@ -223,7 +225,47 @@ export class PostService {
         const post = await this.postRepository.findById(postId);
         if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
 
+        // Anti-Abuse: Self-voting applies NO Aura points.
+        const isSelfVote = post.authorId === userId;
+
+        // 1. Get Existing Vote
+        const existingVote = await this.postRepository.getVote(postId, userId);
+        const existingType = existingVote?.type || null;
+
+        // 2. Calculate Aura Delta for the AUTHOR
+        let auraDelta = 0;
+        const UP_POINTS = 5;
+        const DOWN_POINTS = -2;
+
+        if (existingType === type) {
+            // Toggling off (removing vote)
+            if (type === "UP") auraDelta = -UP_POINTS;
+            if (type === "DOWN") auraDelta = -DOWN_POINTS; 
+        } else if (existingType === null) {
+            // New Vote
+            if (type === "UP") auraDelta = UP_POINTS;
+            if (type === "DOWN") auraDelta = DOWN_POINTS;
+        } else {
+            // Changing Vote (e.g., UP -> DOWN)
+            // First undo old
+            if (existingType === "UP") auraDelta -= UP_POINTS;
+            if (existingType === "DOWN") auraDelta -= DOWN_POINTS;
+
+            // Then apply new
+            if (type === "UP") auraDelta += UP_POINTS;
+            if (type === "DOWN") auraDelta += DOWN_POINTS;
+        }
+
+        // 3. Execute Vote
         const updatedPost = await this.postRepository.vote(postId, userId, type);
+
+        // 4. Award Aura to AUTHOR (if delta exists AND not self-vote)
+        if (auraDelta !== 0 && !isSelfVote) {
+            const reason = auraDelta > 0 ? AuraReason.POST_UPVOTED : AuraReason.POST_DOWNVOTED;
+
+            await this.auraService.awardAura(post.authorId, auraDelta, reason, postId);
+        }
+
         return plainToInstance(PostResponseDto, updatedPost, {
             excludeExtraneousValues: true,
             currentUserId: userId

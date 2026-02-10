@@ -4,11 +4,15 @@ import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import type { ActivityDataResponse } from "./activity.types";
-import { ActivityType } from "../../generated/prisma/client";
+import { AuraService } from "../aura/aura.service";
+import { ActivityType, AuraReason } from "../../generated/prisma/client";
 
 @injectable()
 export class ActivityService {
-    constructor(@inject(TYPES.ActivityRepository) private activityRepository: ActivityRepository) { }
+    constructor(
+        @inject(TYPES.ActivityRepository) private activityRepository: ActivityRepository,
+        @inject(TYPES.AuraService) private auraService: AuraService
+    ) { }
 
     async getActivityByYear(username: string, year: number): Promise<ActivityDataResponse> {
         const currentYear = new Date().getFullYear();
@@ -47,6 +51,18 @@ export class ActivityService {
     }
 
     async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<void> {
-        return this.activityRepository.logActivity(userId, type);
+        const { isDailyLogin, currentStreak } = await this.activityRepository.logActivity(userId, type);
+
+        if (isDailyLogin) {
+            // Award Daily Login Points
+            await this.auraService.awardAura(userId, 5, AuraReason.DAILY_LOGIN);
+
+            // Check for Streak Milestones
+            if (currentStreak === 7) {
+                await this.auraService.awardAura(userId, 50, AuraReason.STREAK_MILESTONE, "7-day streak");
+            } else if (currentStreak === 30) {
+                await this.auraService.awardAura(userId, 100, AuraReason.STREAK_MILESTONE, "30-day streak");
+            }
+        }
     }
 }
