@@ -320,17 +320,11 @@ model AuraTransaction {
 }
 
 enum CipherReason {
-  PROBLEM_SOLVED
-  DAILY_CHALLENGE
-  LAB_COMPLETED
-  CTF_ROOM_CLEARED
   CONTEST_WIN
-  HACKATHON_PLACEMENT
   ANSWER_ACCEPTED
-  ANSWER_UPVOTED
+  PROBLEM_SOLVED_BOUNTY
   LEADERBOARD_REWARD
 
-  // Spent
   COURSE_DISCOUNT
   PREMIUM_CONTENT_UNLOCK
   LAB_TIME_EXTENSION
@@ -807,6 +801,8 @@ model Problem {
 
   description String
   storagePath String @map("storage_path")
+
+  cipherReward Int @default(0) @map("cipher_reward")
 
   isPublished Boolean @default(false) @map("is_published")
 

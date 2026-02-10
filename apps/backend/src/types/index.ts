@@ -71,6 +71,11 @@ export const TYPES = {
     SubmissionService: Symbol.for("SubmissionService"),
     SubmissionController: Symbol.for("SubmissionController"),
     Judge0Service: Symbol.for("Judge0Service"),
+
+    CipherRepository: Symbol.for("CipherRepository"),
+    CipherService: Symbol.for("CipherService"),
+    CipherController: Symbol.for("CipherController"),
+    CipherRouter: Symbol.for("CipherRouter"),
 };
 
 export * from "./jwt";

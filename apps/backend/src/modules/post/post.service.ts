@@ -259,7 +259,7 @@ export class PostService {
         // 3. Execute Vote
         const updatedPost = await this.postRepository.vote(postId, userId, type);
 
-        // 4. Award Aura to AUTHOR (if delta exists AND not self-vote)
+        // 4. Award Aura to AUTHOR
         if (auraDelta !== 0 && !isSelfVote) {
             const reason = auraDelta > 0 ? AuraReason.POST_UPVOTED : AuraReason.POST_DOWNVOTED;
 

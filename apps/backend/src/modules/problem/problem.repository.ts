@@ -51,10 +51,11 @@ export class ProblemRepository {
         description: string;
         storagePath: string;
         isPublished: boolean;
+        cipherReward: number;
         topicIds: string[];
         testCases: any[];
     }) {
-        const { slug, title, difficulty, description, storagePath, isPublished, topicIds, testCases } = params;
+        const { slug, title, difficulty, description, storagePath, isPublished, cipherReward, topicIds, testCases } = params;
 
         return this.prisma.$transaction(async (tx) => {
             const problem = await tx.problem.upsert({
@@ -66,6 +67,7 @@ export class ProblemRepository {
                     description,
                     storagePath,
                     isPublished,
+                    cipherReward,
                     topics: {
                         create: topicIds.map(id => ({
                             topic: { connect: { id } }
@@ -81,6 +83,7 @@ export class ProblemRepository {
                     description,
                     storagePath,
                     isPublished,
+                    cipherReward,
                     topics: {
                         deleteMany: {},
                         create: topicIds.map(id => ({

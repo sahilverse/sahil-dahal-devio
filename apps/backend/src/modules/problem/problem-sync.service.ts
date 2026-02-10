@@ -64,6 +64,7 @@ export class ProblemSyncService {
                 description: richDescription,
                 storagePath,
                 isPublished,
+                cipherReward: structureData.cipherReward || 0,
                 topicIds,
                 testCases: testCasesData
             });

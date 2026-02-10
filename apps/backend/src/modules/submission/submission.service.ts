@@ -10,8 +10,11 @@ import { ProblemRepository } from "../problem/problem.repository";
 import { SubmissionStatus, Problem as PrismaProblem, TestCase, ActivityType } from "../../generated/prisma/client";
 import { StorageService } from "../storage/storage.service";
 import { ActivityService } from "../activity/activity.service";
+import { CipherService } from "../cipher";
+import { CipherReason } from "../../generated/prisma/client";
 
 type ProblemWithRelations = PrismaProblem & { testCases: TestCase[] };
+
 
 @injectable()
 export class SubmissionService {
@@ -21,7 +24,8 @@ export class SubmissionService {
         @inject(TYPES.ProblemRepository) private problemRepository: ProblemRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
         @inject(TYPES.Judge0Service) private judge0Service: Judge0Service,
-        @inject(TYPES.ActivityService) private activityService: ActivityService
+        @inject(TYPES.ActivityService) private activityService: ActivityService,
+        @inject(TYPES.CipherService) private cipherService: CipherService
     ) { }
 
     async submit(slug: string, code: string, language: string, userId: string, eventId?: string) {
@@ -115,6 +119,16 @@ export class SubmissionService {
         // 9. Log Activity
         const activityType = finalScore === 100 ? ActivityType.PROBLEM_SOLVED : ActivityType.PROBLEM_ATTEMPT;
         await this.activityService.logActivity(userId, activityType);
+
+        // 10. Award Cipher (Bounty) if applicable
+        if (finalScore === 100 && problem.cipherReward > 0) {
+            await this.cipherService.awardCipher(
+                userId,
+                problem.cipherReward,
+                CipherReason.PROBLEM_SOLVED_BOUNTY,
+                problem.id // Source Ensure unique reward per problem
+            );
+        }
 
         return { ...submission, results };
     }
