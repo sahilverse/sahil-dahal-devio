@@ -69,10 +69,6 @@ export class ProblemController {
 
         const code = await this.problemService.getBoilerplate(slug, language, userId);
 
-        if (!code) {
-            return ResponseHandler.sendError(res, StatusCodes.NOT_FOUND, "Boilerplate not found");
-        }
-
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Boilerplate retrieved", { code });
     });
 

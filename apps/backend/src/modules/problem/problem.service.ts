@@ -131,12 +131,12 @@ export class ProblemService {
             );
 
             const ext = (LANGUAGE_EXTENSIONS as any)[language];
-            if (!ext) return null;
+            if (!ext) throw new ApiError(`Unsupported language: ${language}`, StatusCodes.BAD_REQUEST);
 
             return await this.storageService.getFile(`${folder}/${tier}/function.${ext}`, bucket);
-        } catch (err) {
+        } catch (err: any) {
             logger.error(`Error in getCachedBoilerplate(${tier}) for ${slug}/${language}: ${err}`);
-            return null;
+            throw new ApiError(`Failed to retrieve ${tier}: ${err.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 }
