@@ -12,6 +12,7 @@ import { router as communityRoutes } from "../modules/community/community.route"
 import { router as compilerRoutes } from "../modules/compiler/compiler.route";
 import problemRoutes from "../modules/problem/problem.route";
 import submissionRoutes from "../modules/submission/submission.route";
+import { auraRouter } from "../modules/aura/aura.route";
 
 const router: Router = Router();
 
@@ -26,6 +27,7 @@ router.use("/communities", communityRoutes);
 router.use("/compiler", compilerRoutes);
 router.use("/problems", problemRoutes);
 router.use("/submissions", submissionRoutes);
+router.use("/aura", auraRouter);
 
 
 

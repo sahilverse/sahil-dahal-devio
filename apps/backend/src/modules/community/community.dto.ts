@@ -1,9 +1,8 @@
 import { Exclude, Expose, Type } from "class-transformer";
-import { CreateCommunityInput } from "@devio/zod-utils";
 import { CommunityVisibility } from "../../generated/prisma/client";
 
 @Exclude()
-export class CreateCommunityDto implements CreateCommunityInput {
+export class CreateCommunityDto {
     @Expose() name!: string;
     @Expose() description?: string;
     @Expose() visibility!: CommunityVisibility;

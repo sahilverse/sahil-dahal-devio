@@ -5,6 +5,7 @@ import { AuthService, AuthController, AuthRepository, TokenService, OAuthService
 import { UserRepository, UserService, UserController } from "../modules/user";
 import { CompanyRepository, CompanyService, CompanyController } from "../modules/company";
 import { ActivityRepository, ActivityService, ActivityController } from "../modules/activity";
+import { AuraRepository, AuraService, AuraController } from "../modules/aura";
 import { SkillRepository, SkillService, SkillController } from "../modules/skill";
 import { TopicRepository, TopicService, TopicController } from "../modules/topic";
 import { PostRepository } from "../modules/post/post.repository";
@@ -51,6 +52,10 @@ container.bind<UserController>(TYPES.UserController).to(UserController).inSingle
 container.bind<ActivityRepository>(TYPES.ActivityRepository).to(ActivityRepository).inSingletonScope();
 container.bind<ActivityService>(TYPES.ActivityService).to(ActivityService).inSingletonScope();
 container.bind<ActivityController>(TYPES.ActivityController).to(ActivityController).inSingletonScope();
+
+container.bind<AuraRepository>(TYPES.AuraRepository).to(AuraRepository).inSingletonScope();
+container.bind<AuraService>(TYPES.AuraService).to(AuraService).inSingletonScope();
+container.bind<AuraController>(TYPES.AuraController).to(AuraController).inSingletonScope();
 
 container.bind<CompanyRepository>(TYPES.CompanyRepository).to(CompanyRepository).inSingletonScope();
 container.bind<CompanyService>(TYPES.CompanyService).to(CompanyService).inSingletonScope();

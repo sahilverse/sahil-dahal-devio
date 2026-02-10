@@ -20,6 +20,10 @@ export const TYPES = {
     ActivityService: Symbol.for("ActivityService"),
     ActivityController: Symbol.for("ActivityController"),
 
+    AuraRepository: Symbol.for("AuraRepository"),
+    AuraService: Symbol.for("AuraService"),
+    AuraController: Symbol.for("AuraController"),
+
     VerificationRepository: Symbol.for("VerificationRepository"),
     VerificationService: Symbol.for("VerificationService"),
 
