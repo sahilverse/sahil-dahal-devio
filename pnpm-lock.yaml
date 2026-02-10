@@ -23,6 +23,12 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.983.0
         version: 3.983.0
+      '@devio/boilerplate-generator':
+        specifier: workspace:*
+        version: link:../../packages/boilerplate-generator
+      '@devio/zod-utils':
+        specifier: workspace:*
+        version: link:../../packages/zod
       '@prisma/adapter-pg':
         specifier: ^7.1.0
         version: 7.1.0
@@ -129,9 +135,6 @@ importers:
       '@devio/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      '@devio/zod-utils':
-        specifier: workspace:*
-        version: link:../../packages/zod
       '@types/compression':
         specifier: ^1.8.1
         version: 1.8.1
@@ -253,6 +256,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@devio/zod-utils':
+        specifier: workspace:*
+        version: link:../../packages/zod
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.1(react@19.2.3))
@@ -383,9 +389,6 @@ importers:
       '@devio/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      '@devio/zod-utils':
-        specifier: workspace:*
-        version: link:../../packages/zod
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.18
@@ -431,6 +434,9 @@ importers:
       '@types/node':
         specifier: ^24.10.0
         version: 24.10.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.2)(yaml@2.8.2)
       tsx:
         specifier: ^4.20.6
         version: 4.20.6
@@ -13808,6 +13814,34 @@ snapshots:
       strip-bom: 3.0.0
 
   tslib@2.8.1: {}
+
+  tsup@8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.2)(yaml@2.8.2):
+    dependencies:
+      bundle-require: 5.1.0(esbuild@0.27.1)
+      cac: 6.7.14
+      chokidar: 4.0.3
+      consola: 3.4.2
+      debug: 4.4.3
+      esbuild: 0.27.1
+      fix-dts-default-cjs-exports: 1.0.1
+      joycon: 3.1.1
+      picocolors: 1.1.1
+      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(yaml@2.8.2)
+      resolve-from: 5.0.0
+      rollup: 4.53.3
+      source-map: 0.7.6
+      sucrase: 3.35.1
+      tinyexec: 0.3.2
+      tinyglobby: 0.2.15
+      tree-kill: 1.2.2
+    optionalDependencies:
+      postcss: 8.5.6
+      typescript: 5.9.2
+    transitivePeerDependencies:
+      - jiti
+      - supports-color
+      - tsx
+      - yaml
 
   tsup@8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.2):
     dependencies:

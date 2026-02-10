@@ -119,14 +119,15 @@ model User {
   skills         UserSkill[]
 
   // Job Board
-  ownedCompanies         Company[]        @relation("company_owner")
+  ownedCompanies         Company[]          @relation("company_owner")
   jobApplications        JobApplication[]
-  postedJobs             Job[]            @relation("job_poster")
+  postedJobs             Job[]              @relation("job_poster")
   notifications          Notification[]
-  triggeredNotifications Notification[]   @relation("notification_actor")
+  triggeredNotifications Notification[]     @relation("notification_actor")
   jobs                   Job[]
   savePosts              SavePost[]
   pinnedPosts            PinnedPost[]
+  problemDrafts          UserProblemDraft[]
 
   @@index([username])
   @@index([email])
@@ -798,10 +799,25 @@ model Problem {
 
   submissions Submission[]
   topics      ProblemTopic[]
+  testCases   TestCase[]
+  drafts      UserProblemDraft[]
 
   @@index([slug])
   @@index([difficulty])
   @@index([isPublished])
+}
+
+model TestCase {
+  id         String  @id @default(cuid())
+  problemId  String  @map("problem_id")
+  inputPath  String  @map("input_path")
+  outputPath String  @map("output_path")
+  isPublic   Boolean @default(false) @map("is_public")
+  order      Int     @default(0)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
 }
 
 model ProblemTopic {
@@ -815,6 +831,22 @@ model ProblemTopic {
   @@unique([problemId, topicId])
   @@index([problemId])
   @@index([topicId])
+}
+
+model UserProblemDraft {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  problemId String   @map("problem_id")
+  language  String
+  code      String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId, language])
+  @@index([userId])
+  @@index([problemId])
 }
 
 model Submission {

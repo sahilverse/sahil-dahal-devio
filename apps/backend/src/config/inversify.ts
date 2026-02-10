@@ -22,6 +22,8 @@ import { StorageService } from "../modules/storage";
 import { transporter } from "./transporter";
 import { CommunityRepository, CommunityService, CommunityController } from "../modules/community";
 import { CompilerService, CompilerController, CompilerSocketHandler } from "../modules/compiler";
+import { ProblemRepository, ProblemService, ProblemController } from "../modules/problem";
+import { ProblemDraftRepository, ProblemDraftService } from "../modules/problem-draft";
 
 
 const container = new Container();
@@ -83,5 +85,12 @@ container.bind<CompilerService>(TYPES.CompilerService).to(CompilerService).inSin
 container.bind<CompilerController>(TYPES.CompilerController).to(CompilerController).inSingletonScope();
 container.bind<CompilerSocketHandler>(TYPES.CompilerSocketHandler).to(CompilerSocketHandler).inSingletonScope();
 container.bind<ISocketHandler>(TYPES.SocketHandler).to(CompilerSocketHandler).inSingletonScope();
+
+container.bind<ProblemRepository>(TYPES.ProblemRepository).to(ProblemRepository).inSingletonScope();
+container.bind<ProblemService>(TYPES.ProblemService).to(ProblemService).inSingletonScope();
+container.bind<ProblemController>(TYPES.ProblemController).to(ProblemController).inSingletonScope();
+
+container.bind<ProblemDraftRepository>(TYPES.ProblemDraftRepository).to(ProblemDraftRepository).inSingletonScope();
+container.bind<ProblemDraftService>(TYPES.ProblemDraftService).to(ProblemDraftService).inSingletonScope();
 
 export { container };

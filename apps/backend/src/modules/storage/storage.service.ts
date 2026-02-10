@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { S3Client, PutObjectCommand, DeleteObjectCommand, ObjectCannedACL, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ObjectCannedACL, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand } from "@aws-sdk/client-s3";
 import { MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_BUCKET_PROBLEMS } from "../../config/constants";
 import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
@@ -58,6 +58,46 @@ export class StorageService {
                     logger.error(`Error checking/creating bucket "${bucket}": ${error.message}`);
                 }
             }
+        }
+    }
+
+    async getFile(path: string, bucketName: string = MINIO_BUCKET_NAME): Promise<string> {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: bucketName,
+                Key: path,
+            });
+
+            const response = await this.s3Client.send(command);
+            const stream = response.Body as any;
+
+            return new Promise((resolve, reject) => {
+                const chunks: any[] = [];
+                stream.on("data", (chunk: any) => chunks.push(chunk));
+                stream.on("error", (err: any) => reject(err));
+                stream.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+            });
+        } catch (error: any) {
+            logger.error(`Failed to get file from MinIO: ${error.message}`);
+            throw new ApiError(`Failed to get file: ${error.message}`, StatusCodes.NOT_FOUND);
+        }
+    }
+
+    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string = MINIO_BUCKET_NAME): Promise<string> {
+        try {
+            const command = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: path,
+                Body: buffer,
+                ContentType: mimetype,
+                ACL: "public-read" as ObjectCannedACL,
+            });
+
+            await this.s3Client.send(command);
+            return `${MINIO_ENDPOINT}/${bucketName}/${path}`;
+        } catch (error: any) {
+            logger.error(`Failed to upload buffer to MinIO: ${error.message}`);
+            throw new ApiError(`Failed to upload buffer: ${error.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 

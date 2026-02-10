@@ -48,12 +48,13 @@
     "swagger-ui-express": "^5.0.1",
     "ua-parser-js": "^2.0.6",
     "uuid": "^13.0.0",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "@devio/boilerplate-generator": "workspace:*",
+    "@devio/zod-utils": "workspace:*"
   },
   "devDependencies": {
     "@devio/eslint-config": "workspace:*",
     "@devio/typescript-config": "workspace:*",
-    "@devio/zod-utils": "workspace:*",
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",

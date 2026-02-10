@@ -10,6 +10,7 @@ import { router as postRoutes } from "../modules/post/post.route";
 
 import { router as communityRoutes } from "../modules/community/community.route";
 import { router as compilerRoutes } from "../modules/compiler/compiler.route";
+import problemRoutes from "../modules/problem/problem.route";
 
 const router: Router = Router();
 
@@ -22,6 +23,7 @@ router.use("/topics", topicRoutes);
 router.use("/posts", postRoutes);
 router.use("/communities", communityRoutes);
 router.use("/compiler", compilerRoutes);
+router.use("/problems", problemRoutes);
 
 
 

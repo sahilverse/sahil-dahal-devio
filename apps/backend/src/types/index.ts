@@ -54,6 +54,13 @@ export const TYPES = {
     CompilerController: Symbol.for("CompilerController"),
     CompilerSocketHandler: Symbol.for("CompilerSocketHandler"),
     SocketHandler: Symbol.for("SocketHandler"),
+
+    ProblemRepository: Symbol.for("ProblemRepository"),
+    ProblemService: Symbol.for("ProblemService"),
+    ProblemController: Symbol.for("ProblemController"),
+
+    ProblemDraftRepository: Symbol.for("ProblemDraftRepository"),
+    ProblemDraftService: Symbol.for("ProblemDraftService"),
 };
 
 export * from "./jwt";

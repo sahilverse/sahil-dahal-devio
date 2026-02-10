@@ -11,7 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
- 
+
   redis:
     image: redis:8-alpine
     container_name: devio-redis
@@ -28,6 +28,11 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+      MINIO_NOTIFY_WEBHOOK_ENABLE_problems: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_problems: "http://host.docker.internal:8000/problems/webhook/minio"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "9000:9000"
       - "9001:9001"
