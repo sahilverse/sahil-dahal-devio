@@ -522,7 +522,7 @@ model PinnedPost {
   id String @id @default(cuid())
 
   postId      String  @map("post_id")
-  userId      String? @map("user_id") 
+  userId      String? @map("user_id")
   communityId String? @map("community_id")
 
   createdAt DateTime @default(now())
@@ -660,10 +660,11 @@ model Topic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts       PostTopic[]
-  communities CommunityTopic[]
-  courses     CourseTopic[]
-  jobs        JobTopic[]
+  posts         PostTopic[]
+  communities   CommunityTopic[]
+  courses       CourseTopic[]
+  jobs          JobTopic[]
+  problemTopics ProblemTopic[]
 
   @@index([slug])
 }
@@ -790,30 +791,30 @@ model Problem {
   description String
   storagePath String @map("storage_path")
 
-  testCaseCount Int     @default(0) @map("test_case_count")
-  isPublished   Boolean @default(false) @map("is_published")
+  isPublished Boolean @default(false) @map("is_published")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   submissions Submission[]
-  tags        ProblemTag[]
+  topics      ProblemTopic[]
 
   @@index([slug])
   @@index([difficulty])
   @@index([isPublished])
 }
 
-model ProblemTag {
+model ProblemTopic {
   id        String @id @default(cuid())
   problemId String @map("problem_id")
-  tag       String
+  topicId   String @map("topic_id")
 
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
-  @@unique([problemId, tag])
+  @@unique([problemId, topicId])
   @@index([problemId])
-  @@index([tag])
+  @@index([topicId])
 }
 
 model Submission {
