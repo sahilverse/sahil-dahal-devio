@@ -57,6 +57,7 @@ export const TYPES = {
 
     ProblemRepository: Symbol.for("ProblemRepository"),
     ProblemService: Symbol.for("ProblemService"),
+    ProblemSyncService: Symbol.for("ProblemSyncService"),
     ProblemController: Symbol.for("ProblemController"),
 
     ProblemDraftRepository: Symbol.for("ProblemDraftRepository"),

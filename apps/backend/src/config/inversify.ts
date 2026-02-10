@@ -22,7 +22,7 @@ import { StorageService } from "../modules/storage";
 import { transporter } from "./transporter";
 import { CommunityRepository, CommunityService, CommunityController } from "../modules/community";
 import { CompilerService, CompilerController, CompilerSocketHandler } from "../modules/compiler";
-import { ProblemRepository, ProblemService, ProblemController } from "../modules/problem";
+import { ProblemRepository, ProblemService, ProblemSyncService, ProblemController } from "../modules/problem";
 import { ProblemDraftRepository, ProblemDraftService } from "../modules/problem-draft";
 
 
@@ -88,6 +88,7 @@ container.bind<ISocketHandler>(TYPES.SocketHandler).to(CompilerSocketHandler).in
 
 container.bind<ProblemRepository>(TYPES.ProblemRepository).to(ProblemRepository).inSingletonScope();
 container.bind<ProblemService>(TYPES.ProblemService).to(ProblemService).inSingletonScope();
+container.bind<ProblemSyncService>(TYPES.ProblemSyncService).to(ProblemSyncService).inSingletonScope();
 container.bind<ProblemController>(TYPES.ProblemController).to(ProblemController).inSingletonScope();
 
 container.bind<ProblemDraftRepository>(TYPES.ProblemDraftRepository).to(ProblemDraftRepository).inSingletonScope();

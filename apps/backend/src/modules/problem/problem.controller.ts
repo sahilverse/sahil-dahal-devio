@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { ProblemService } from "./problem.service";
+import { ProblemSyncService } from "./problem-sync.service";
 import { ProblemDraftService } from "../problem-draft";
 import { asyncHandler, ResponseHandler, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
@@ -11,9 +12,9 @@ import { SUPPORTED_LANGUAGES } from "@devio/boilerplate-generator";
 export class ProblemController {
     constructor(
         @inject(TYPES.ProblemService) private problemService: ProblemService,
+        @inject(TYPES.ProblemSyncService) private syncService: ProblemSyncService,
         @inject(TYPES.ProblemDraftService) private draftService: ProblemDraftService
     ) { }
-
 
     getLanguages = asyncHandler(async (_req: Request, res: Response) => {
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Supported languages", { languages: SUPPORTED_LANGUAGES });
@@ -21,10 +22,14 @@ export class ProblemController {
 
     handleMinioWebhook = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const payload = req.body;
+        const eventName = payload.EventName || (payload.Records?.[0]?.eventName);
 
         if (payload.Event === 's3:TestEvent') {
-            logger.info("Received MinIO TestEvent");
             return ResponseHandler.sendResponse(res, StatusCodes.OK, "Test event received");
+        }
+
+        if (eventName !== 's3:ObjectCreated:Put') {
+            return ResponseHandler.sendResponse(res, StatusCodes.OK, "Event ignored");
         }
 
         if (payload.Records && Array.isArray(payload.Records)) {
@@ -32,67 +37,68 @@ export class ProblemController {
                 const bucket = record.s3.bucket.name;
                 const key = decodeURIComponent(record.s3.object.key);
 
-                this.problemService.handleMinioEvent(bucket, key).catch(err => {
-                    logger.error(`Error in fire-and-forget MinIO event processing: ${err.message}`);
+                this.syncService.handleMinioEvent(bucket, key).catch((err: Error) => {
+                    logger.error(`MinIO event bridge failed for ${key}: ${err.message}`);
                 });
             }
         }
 
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Processing triggered");
     });
 
     getProblem = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const slug = req.params.slug;
 
         if (!slug) {
-            return ResponseHandler.sendResponse(res, StatusCodes.BAD_REQUEST, "Problem slug is required");
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Slug is required");
         }
 
         const problem = await this.problemService.getProblemBySlug(slug);
 
         if (!problem) {
-            return ResponseHandler.sendResponse(res, StatusCodes.NOT_FOUND, "Problem not found");
+            return ResponseHandler.sendError(res, StatusCodes.NOT_FOUND, "Problem not found");
         }
 
-        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem retrieved successfully", problem);
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem retrieved", problem);
     });
 
     getBoilerplate = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const { slug } = req.params;
-        const { language } = req.query;
+        const slug = req.params.slug;
+        const language = req.query.language as string;
+        const userId = req.user?.id;
 
         if (!slug || !language) {
-            return ResponseHandler.sendResponse(res, StatusCodes.BAD_REQUEST, "Problem slug and language are required");
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Slug and language are required");
         }
 
-        const code = await this.problemService.getBoilerplate(slug, language as string, req.user?.id);
+        const code = await this.problemService.getBoilerplate(slug, language, userId);
 
         if (!code) {
-            return ResponseHandler.sendResponse(res, StatusCodes.NOT_FOUND, "Boilerplate not found for this language");
+            return ResponseHandler.sendError(res, StatusCodes.NOT_FOUND, "Boilerplate not found");
         }
 
-        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Boilerplate retrieved successfully", { code });
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Boilerplate retrieved", { code });
     });
 
     saveDraft = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const { slug } = req.params;
+        const slug = req.params.slug;
         const { language, code } = req.body;
         const userId = req.user?.id;
 
         if (!userId) {
-            return ResponseHandler.sendResponse(res, StatusCodes.UNAUTHORIZED, "User not authenticated");
+            return ResponseHandler.sendError(res, StatusCodes.UNAUTHORIZED, "User not authenticated");
         }
 
-        if (!slug || !language || code === undefined) {
-            return ResponseHandler.sendResponse(res, StatusCodes.BAD_REQUEST, "Problem slug, language, and code are required");
+        if (!slug || !language || !code) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Missing required fields");
         }
 
-        // We need the problemId for the draft record
         const problem = await this.problemService.getProblemBySlug(slug);
         if (!problem) {
-            return ResponseHandler.sendResponse(res, StatusCodes.NOT_FOUND, "Problem not found");
+            return ResponseHandler.sendError(res, StatusCodes.NOT_FOUND, "Problem not found");
         }
 
-        await this.draftService.saveDraft(userId, problem.id, language, code);
+        await this.draftService.saveDraft(userId, (problem as any).id, language, code);
 
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Draft saved successfully");
     });

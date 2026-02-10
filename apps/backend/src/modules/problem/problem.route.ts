@@ -26,29 +26,6 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *       required: true
  *       content:
  *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               Event:
- *                 type: string
- *               Records:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     s3:
- *                       type: object
- *                       properties:
- *                         bucket:
- *                           type: object
- *                           properties:
- *                             name:
- *                               type: string
- *                         object:
- *                           type: object
- *                           properties:
- *                             key:
- *                               type: string
  *     responses:
  *       200:
  *         description: Webhook received and processing started

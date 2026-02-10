@@ -51,3 +51,11 @@ export const MINIO_BUCKET_NAME = process.env.MINIO_BUCKET_NAME || "devio-uploads
 export const MINIO_BUCKET_PROBLEMS = process.env.MINIO_BUCKET_PROBLEMS || "devio-problems";
 
 export const CODE_SANDBOX_URL = process.env.CODE_SANDBOX_URL || 'http://localhost:5000';
+
+// Problem Redis Keys & TTL
+export const PROBLEM_REDIS_TTL = 60 * 60 * 24 * 7;
+export const PROBLEM_REDIS_KEYS = {
+    SAMPLES: (slug: string) => `problem:${slug}:samples`,
+    BOILERPLATES: (slug: string) => `problem:${slug}:boilerplates`,
+    FULL_BOILERPLATES: (slug: string) => `problem:${slug}:boilerplates:full`,
+} as const;

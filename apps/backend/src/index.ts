@@ -32,7 +32,7 @@ async function startServer() {
         socketService.init(server);
 
 
-        server.listen(PORT, () => {
+        server.listen(Number(PORT), '0.0.0.0', () => {
             logger.info(`Server is running on port ${PORT}`);
         });
 

@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ObjectCannedACL, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ObjectCannedACL, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_BUCKET_PROBLEMS } from "../../config/constants";
 import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
@@ -26,7 +26,6 @@ export class StorageService {
 
         for (const bucket of buckets) {
             try {
-
                 await this.s3Client.send(new HeadBucketCommand({ Bucket: bucket }));
                 logger.debug(`Bucket "${bucket}" already exists.`);
             } catch (error: any) {
@@ -34,18 +33,15 @@ export class StorageService {
                     logger.info(`Creating bucket "${bucket}"...`);
                     await this.s3Client.send(new CreateBucketCommand({ Bucket: bucket }));
 
-                    // Set Public Read Policy
                     const policy = {
                         Version: "2012-10-17",
-                        Statement: [
-                            {
-                                Sid: "PublicRead",
-                                Effect: "Allow",
-                                Principal: "*",
-                                Action: ["s3:GetObject"],
-                                Resource: [`arn:aws:s3:::${bucket}/*`],
-                            },
-                        ],
+                        Statement: [{
+                            Sid: "PublicRead",
+                            Effect: "Allow",
+                            Principal: "*",
+                            Action: ["s3:GetObject"],
+                            Resource: [`arn:aws:s3:::${bucket}/*`],
+                        }],
                     };
 
                     await this.s3Client.send(new PutBucketPolicyCommand({
@@ -53,9 +49,9 @@ export class StorageService {
                         Policy: JSON.stringify(policy),
                     }));
 
-                    logger.info(`Bucket "${bucket}" created and policy set to public.`);
+                    logger.info(`Bucket "${bucket}" initialized with public-read policy.`);
                 } else {
-                    logger.error(`Error checking/creating bucket "${bucket}": ${error.message}`);
+                    logger.error(`Storage initialization failed for "${bucket}": ${error.message}`);
                 }
             }
         }
@@ -116,6 +112,21 @@ export class StorageService {
         } catch (error: any) {
             logger.error(`Failed to upload file to MinIO: ${error.message}`);
             throw new ApiError(`Failed to upload file: ${error.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async listFiles(bucketName: string = MINIO_BUCKET_NAME, prefix?: string): Promise<string[]> {
+        try {
+            const command = new ListObjectsV2Command({
+                Bucket: bucketName,
+                Prefix: prefix,
+            });
+
+            const response = await this.s3Client.send(command);
+            return response.Contents?.map((obj) => obj.Key || "") || [];
+        } catch (error: any) {
+            logger.error(`Failed to list files from MinIO: ${error.message}`);
+            return [];
         }
     }
 
