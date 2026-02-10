@@ -77,4 +77,61 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  */
 router.post("/run", authMiddleware.guard, controller.run);
 
+/**
+ * @swagger
+ * /submissions/submit:
+ *   post:
+ *     summary: Submit a solution for grading
+ *     tags: [Submissions]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Submits code for full grading against all test cases. Persists the result and updates user/event stats.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [slug, code, language]
+ *             properties:
+ *               slug:
+ *                 type: string
+ *                 description: Unique slug of the problem
+ *               code:
+ *                 type: string
+ *                 description: The user's code to submit
+ *               language:
+ *                 type: string
+ *                 description: Programming language (e.g., 'python')
+ *               eventId:
+ *                 type: string
+ *                 description: Optional ID of the event this submission belongs to
+ *     responses:
+ *       200:
+ *         description: Submission processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 submission:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     score:
+ *                       type: integer
+ *                     runtime:
+ *                       type: integer
+ *                     memory:
+ *                       type: integer
+ *                     error:
+ *                       type: string
+ */
+router.post("/submit", authMiddleware.guard, controller.submit);
+
 export default router;

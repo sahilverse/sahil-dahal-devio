@@ -34,4 +34,20 @@ export class SubmissionController {
             }))
         });
     });
+
+    submit = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+        const { slug, code, language, eventId } = req.body;
+        const userId = req.user.id;
+
+        if (!slug || !code || !language) {
+            return res.status(400).json({ message: "Slug, code, and language are required" });
+        }
+
+        const submission = await this.submissionService.submit(slug, code, language, userId, eventId);
+
+        res.status(200).json({
+            message: "Submission processed",
+            submission
+        });
+    });
 }

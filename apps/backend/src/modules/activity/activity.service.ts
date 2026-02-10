@@ -4,6 +4,7 @@ import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import type { ActivityDataResponse } from "./activity.types";
+import { ActivityType } from "../../generated/prisma/client";
 
 @injectable()
 export class ActivityService {
@@ -43,5 +44,9 @@ export class ActivityService {
         }
 
         return years;
+    }
+
+    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<void> {
+        return this.activityRepository.logActivity(userId, type);
     }
 }

@@ -24,7 +24,7 @@ import { CommunityRepository, CommunityService, CommunityController } from "../m
 import { CompilerService, CompilerController, CompilerSocketHandler } from "../modules/compiler";
 import { ProblemRepository, ProblemService, ProblemSyncService, ProblemController } from "../modules/problem";
 import { ProblemDraftRepository, ProblemDraftService } from "../modules/problem-draft";
-import { SubmissionService, SubmissionController, Judge0Service } from "../modules/submission";
+import { SubmissionService, SubmissionController, Judge0Service, SubmissionRepository } from "../modules/submission";
 
 
 const container = new Container();
@@ -92,6 +92,7 @@ container.bind<ProblemService>(TYPES.ProblemService).to(ProblemService).inSingle
 container.bind<ProblemSyncService>(TYPES.ProblemSyncService).to(ProblemSyncService).inSingletonScope();
 
 container.bind<Judge0Service>(TYPES.Judge0Service).to(Judge0Service).inSingletonScope();
+container.bind<SubmissionRepository>(TYPES.SubmissionRepository).to(SubmissionRepository).inSingletonScope();
 container.bind<SubmissionService>(TYPES.SubmissionService).to(SubmissionService).inSingletonScope();
 container.bind<SubmissionController>(TYPES.SubmissionController).to(SubmissionController).inSingletonScope();
 container.bind<ProblemController>(TYPES.ProblemController).to(ProblemController).inSingletonScope();

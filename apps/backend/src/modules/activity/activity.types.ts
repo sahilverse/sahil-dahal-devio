@@ -8,3 +8,4 @@ export interface ActivityDataResponse {
     activityMap: ActivityLogEntry[];
     totalActivities: number;
 }
+

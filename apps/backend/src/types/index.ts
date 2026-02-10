@@ -63,6 +63,7 @@ export const TYPES = {
     ProblemDraftRepository: Symbol.for("ProblemDraftRepository"),
     ProblemDraftService: Symbol.for("ProblemDraftService"),
 
+    SubmissionRepository: Symbol.for("SubmissionRepository"),
     SubmissionService: Symbol.for("SubmissionService"),
     SubmissionController: Symbol.for("SubmissionController"),
     Judge0Service: Symbol.for("Judge0Service"),

@@ -95,7 +95,8 @@ model User {
   messages                 Message[]
   pollVotes                PollVote[]
 
-  submissions Submission[]
+  submissions     Submission[]
+  problemStatuses UserProblemStatus[]
 
   cyberRoomEnrollments CyberRoomEnrollment[]
   ctfSubmissions       CTFSubmission[]
@@ -262,9 +263,19 @@ model UserStreak {
   @@index([userId])
 }
 
+enum ActivityType {
+  PROBLEM_SOLVED
+  PROBLEM_ATTEMPT
+  EVENT_PARTICIPATION
+  COMMUNITY_CREATE
+  POST_CREATE
+  COMMENT_CREATE
+}
+
 model ActivityLog {
-  id     String @id @default(cuid())
-  userId String @map("user_id")
+  id     String       @id @default(cuid())
+  userId String       @map("user_id")
+  type   ActivityType @default(PROBLEM_SOLVED)
 
   date  DateTime @db.Date
   count Int      @default(1)
@@ -276,7 +287,7 @@ model ActivityLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, date])
+  @@unique([userId, date, type])
   @@index([userId])
   @@index([date])
 }
@@ -783,6 +794,12 @@ enum SubmissionStatus {
   COMPILE_ERROR
 }
 
+enum ProblemSolutionStatus {
+  UNSOLVED
+  ATTEMPTED
+  SOLVED
+}
+
 model Problem {
   id         String     @id @default(cuid())
   title      String
@@ -797,10 +814,12 @@ model Problem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  submissions Submission[]
-  topics      ProblemTopic[]
-  testCases   TestCase[]
-  drafts      UserProblemDraft[]
+  submissions   Submission[]
+  topics        ProblemTopic[]
+  testCases     TestCase[]
+  drafts        UserProblemDraft[]
+  eventProblems EventProblem[]
+  userStatuses  UserProblemStatus[]
 
   @@index([slug])
   @@index([difficulty])
@@ -860,11 +879,15 @@ model Submission {
 
   runtime Int?
   memory  Int?
+  score   Int     @default(0)
+  error   String? @db.Text
+  eventId String? @map("event_id")
 
   createdAt DateTime @default(now())
 
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
   @@index([problemId, userId])
   @@index([problemId])
@@ -1044,6 +1067,8 @@ model Event {
   community    Community?         @relation(fields: [communityId], references: [id], onDelete: SetNull)
   participants EventParticipant[]
   prizes       EventPrize[]
+  problems     EventProblem[]
+  submissions  Submission[]
 
   @@index([slug])
   @@index([type])
@@ -1611,4 +1636,36 @@ model Notification {
 
   @@index([userId])
   @@index([actorId])
+}
+
+model EventProblem {
+  eventId   String @map("event_id")
+  problemId String @map("problem_id")
+  order     Int    @default(0)
+
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, problemId])
+  @@index([eventId])
+  @@index([problemId])
+}
+
+model UserProblemStatus {
+  userId    String                @map("user_id")
+  problemId String                @map("problem_id")
+  status    ProblemSolutionStatus @default(ATTEMPTED)
+  bestScore Int                   @default(0) @map("best_score")
+  attempts  Int                   @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@id([userId, problemId])
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
 }
