@@ -2,7 +2,8 @@ import { injectable, inject } from "inversify";
 import { ProblemRepository } from "./problem.repository";
 import { StorageService } from "../storage/storage.service";
 import { TYPES } from "../../types";
-import { logger } from "../../utils";
+import { logger, ApiError } from "../../utils";
+import { StatusCodes } from "http-status-codes";
 import { LANGUAGE_EXTENSIONS } from "@devio/boilerplate-generator";
 import { plainToInstance } from "class-transformer";
 import { ProblemResponseDTO } from "./problem.dto";
@@ -28,9 +29,9 @@ export class ProblemService {
         return { bucket, folder };
     }
 
-    async getProblemBySlug(slug: string): Promise<ProblemResponseDTO | null> {
+    async getProblemBySlug(slug: string): Promise<ProblemResponseDTO> {
         const problem = await this.problemRepository.findBySlug(slug);
-        if (!problem) return null;
+        if (!problem) throw new ApiError("Problem not found", StatusCodes.NOT_FOUND);
 
         const dto = plainToInstance(ProblemResponseDTO, problem, { excludeExtraneousValues: true });
 
@@ -66,8 +67,13 @@ export class ProblemService {
         const sampleCases = [];
         for (const tc of testCases) {
             try {
-                const input = await this.storageService.getFile(tc.inputPath, bucket);
-                const output = await this.storageService.getFile(tc.outputPath, bucket);
+                const inputRaw = await this.storageService.getFile(tc.inputPath, bucket);
+                const outputRaw = await this.storageService.getFile(tc.outputPath, bucket);
+
+                // Normalizing: Remove all \r and strip trailing newlines
+                const input = inputRaw.replace(/\r/g, "").trimEnd();
+                const output = outputRaw.replace(/\r/g, "").trimEnd();
+
                 sampleCases.push({ id: tc.id, input, output });
             } catch (err: any) {
                 logger.error(`Failed to fetch test case (ID: ${tc.id}): ${err.message}`);

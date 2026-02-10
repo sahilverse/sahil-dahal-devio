@@ -55,10 +55,6 @@ export class ProblemController {
 
         const problem = await this.problemService.getProblemBySlug(slug);
 
-        if (!problem) {
-            return ResponseHandler.sendError(res, StatusCodes.NOT_FOUND, "Problem not found");
-        }
-
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem retrieved", problem);
     });
 

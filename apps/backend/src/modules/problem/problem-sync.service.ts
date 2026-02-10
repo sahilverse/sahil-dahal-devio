@@ -133,8 +133,13 @@ export class ProblemSyncService {
         const sampleCases = [];
         for (const tc of testCases) {
             try {
-                const input = await this.storageService.getFile(tc.inputPath, bucket);
-                const output = await this.storageService.getFile(tc.outputPath, bucket);
+                const inputRaw = await this.storageService.getFile(tc.inputPath, bucket);
+                const outputRaw = await this.storageService.getFile(tc.outputPath, bucket);
+
+                // Normalizing: Remove all \r and strip trailing newlines
+                const input = inputRaw.replace(/\r/g, "").trimEnd();
+                const output = outputRaw.replace(/\r/g, "").trimEnd();
+
                 sampleCases.push({ id: tc.id, input, output });
             } catch (err: any) {
                 logger.error(`Failed to fetch test case (ID: ${tc.id}): ${err.message}`);
