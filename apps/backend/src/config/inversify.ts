@@ -30,6 +30,8 @@ import { AchievementRepository, AchievementService } from "../modules/achievemen
 import { CommentRepository, CommentService, CommentController } from "../modules/comment";
 import { NotificationRepository, NotificationService, NotificationController } from "../modules/notification";
 import { MentionService } from "../modules/mention/mention.service";
+import { ConversationRepository, ConversationService, ConversationController } from "../modules/conversation";
+import { ConversationSocketHandler } from "../modules/conversation/conversation.socket";
 
 
 const container = new Container();
@@ -127,5 +129,10 @@ container.bind<NotificationService>(TYPES.NotificationService).to(NotificationSe
 container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController).inSingletonScope();
 
 container.bind<MentionService>(TYPES.MentionService).to(MentionService).inSingletonScope();
+
+container.bind<ConversationRepository>(TYPES.ConversationRepository).to(ConversationRepository).inSingletonScope();
+container.bind<ConversationService>(TYPES.ConversationService).to(ConversationService).inSingletonScope();
+container.bind<ConversationController>(TYPES.ConversationController).to(ConversationController).inSingletonScope();
+container.bind<ISocketHandler>(TYPES.SocketHandler).to(ConversationSocketHandler).inSingletonScope();
 
 export { container };

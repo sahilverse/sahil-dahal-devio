@@ -13,5 +13,6 @@ export * from "./community.schema";
 export * from "./compiler.schema";
 export * from "./submission.schema";
 export * from "./problem.schema";
+export * from "./chat.schema";
 export * from "./utils";
 

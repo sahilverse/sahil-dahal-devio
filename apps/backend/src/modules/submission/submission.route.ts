@@ -133,6 +133,6 @@ router.post("/run", authMiddleware.guard, validateRequest(RunSubmissionSchema), 
  *                     error:
  *                       type: string
  */
-router.post("/submit", authMiddleware.guard, validateRequest(SubmitSubmissionSchema), controller.submit);
+router.post("/submit", authMiddleware.guard, authMiddleware.verifiedOnly, validateRequest(SubmitSubmissionSchema), controller.submit);
 
 export default router;

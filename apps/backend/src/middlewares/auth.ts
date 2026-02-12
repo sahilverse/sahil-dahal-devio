@@ -61,6 +61,19 @@ export class AuthMiddleware {
         }
     }
 
+    verifiedOnly = async (req: Request, res: Response, next: NextFunction) => {
+        const user = req.user as ReqUser;
+        if (!user) {
+            return ResponseHandler.sendError(res, StatusCodes.UNAUTHORIZED, 'Authentication required');
+        }
+
+        if (!user.emailVerified) {
+            return ResponseHandler.sendError(res, StatusCodes.FORBIDDEN, 'Please verify your email to perform this action');
+        }
+
+        next();
+    }
+
     extractUser = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers['authorization'];

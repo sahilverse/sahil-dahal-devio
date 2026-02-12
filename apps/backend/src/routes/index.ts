@@ -16,6 +16,7 @@ import { auraRouter } from "../modules/aura/aura.route";
 import { router as cipherRoutes } from "../modules/cipher/cipher.route";
 import { router as commentRoutes } from "../modules/comment/comment.route";
 import { router as notificationRoutes } from "../modules/notification/notification.route";
+import { router as conversationRoutes } from "../modules/conversation/conversation.route";
 
 const router: Router = Router();
 
@@ -34,6 +35,7 @@ router.use("/aura", auraRouter);
 router.use("/cipher", cipherRoutes);
 router.use("/notifications", notificationRoutes);
 router.use(commentRoutes);
+router.use("/conversations", conversationRoutes);
 
 
 

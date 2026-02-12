@@ -45,6 +45,17 @@ export class PostService {
             }
         }
 
+        // Aura Check for Community
+        if (data.communityId) {
+            const settings = await this.communityRepository.findSettings(data.communityId);
+            if (settings && settings.minAuraToPost > 0) {
+                const userAura = await this.auraService.getPoints(userId);
+                if (userAura < settings.minAuraToPost) {
+                    throw new ApiError(`You need at least ${settings.minAuraToPost} Aura points to post in this community`, StatusCodes.FORBIDDEN);
+                }
+            }
+        }
+
         // 2. Resolve Topics
         const topicIds: string[] = [];
         if (data.topics && data.topics.length > 0) {

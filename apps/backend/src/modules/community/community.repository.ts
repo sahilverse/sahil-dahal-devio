@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Community, Prisma, CommunityJoinRequest, JoinRequestStatus } from "../../generated/prisma/client";
+import { PrismaClient, Community, Prisma, CommunityJoinRequest, JoinRequestStatus, CommunitySettings } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -222,7 +222,7 @@ export class CommunityRepository {
         });
     }
 
-    async findByName(name: string, userId?: string): Promise<(Community & { _count: { members: number; posts: number }; members?: { userId: string }[] }) | null> {
+    async findByName(name: string, userId?: string): Promise<(Community & { _count: { members: number; posts: number }; members?: { userId: string }[]; settings: CommunitySettings | null }) | null> {
         return this.prisma.community.findFirst({
             where: {
                 name: {
@@ -243,7 +243,8 @@ export class CommunityRepository {
                         select: { userId: true },
                         take: 1
                     }
-                })
+                }),
+                settings: true
             }
         });
     }

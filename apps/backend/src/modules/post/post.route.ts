@@ -69,6 +69,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 router.post(
     "/",
     authMiddleware.guard,
+    authMiddleware.verifiedOnly,
     upload.array("media", 5),
     sanitizePostRequest,
     validateRequest(createPostSchema),
@@ -168,7 +169,7 @@ router.get(
  *       403:
  *         description: Unauthorized
  */
-router.get("/count", authMiddleware.guard, postController.getPostCount);
+router.get("/count", authMiddleware.guard, authMiddleware.verifiedOnly, postController.getPostCount);
 
 /**
  * @swagger

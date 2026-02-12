@@ -407,6 +407,7 @@ model CommunitySettings {
   requirePostApproval Boolean @default(false) @map("require_post_approval")
   minAuraToPost       Int     @default(0) @map("min_aura_to_post")
   minAuraToComment    Int     @default(0) @map("min_aura_to_comment")
+  minAuraToJoin       Int     @default(0) @map("min_aura_to_join")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -655,6 +656,7 @@ model Media {
   id        String  @id @default(cuid())
   postId    String? @map("post_id")
   commentId String? @map("comment_id")
+  messageId String? @map("message_id")
 
   url  String
   type MediaType
@@ -667,9 +669,11 @@ model Media {
 
   post    Post?    @relation("post_media", fields: [postId], references: [id], onDelete: Cascade)
   comment Comment? @relation("comment_media", fields: [commentId], references: [id], onDelete: Cascade)
+  message Message? @relation("message_media", fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@index([commentId])
+  @@index([messageId])
 }
 
 model Topic {
@@ -720,18 +724,34 @@ enum ConversationType {
   GROUP
 }
 
+enum ConversationStatus {
+  INVITE_PENDING
+  ACCEPTED
+  DECLINED
+}
+
 enum MessageType {
   TEXT
   IMAGE
-  VOICE
+  VIDEO
   FILE
   LINK
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  SEEN
+  FAILED
 }
 
 model Conversation {
   id   String           @id @default(cuid())
   type ConversationType @default(DIRECT)
   name String?
+
+  status         ConversationStatus @default(ACCEPTED)
+  inviteSenderId String?            @map("invite_sender_id")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -740,6 +760,7 @@ model Conversation {
   messages     Message[]
 
   @@index([type])
+  @@index([status])
   @@index([updatedAt])
 }
 
@@ -751,6 +772,9 @@ model ConversationParticipant {
   isAdmin    Boolean   @default(false) @map("is_admin")
   joinedAt   DateTime  @default(now()) @map("joined_at")
   lastReadAt DateTime? @map("last_read_at")
+
+  hasDeleted        Boolean   @default(false) @map("has_deleted")
+  messagesClearedAt DateTime? @map("messages_cleared_at")
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -765,13 +789,11 @@ model Message {
   conversationId String @map("conversation_id")
   senderId       String @map("sender_id")
 
-  type    MessageType @default(TEXT)
+  type    MessageType   @default(TEXT)
+  status  MessageStatus @default(SENT)
   content String?
 
-  mediaUrl String? @map("media_url")
-  fileName String? @map("file_name")
-  fileSize Int?    @map("file_size")
-  duration Int?
+  deletedByParticipantIds String[] @default([]) @map("deleted_by_participant_ids")
 
   deletedAt DateTime? @map("deleted_at")
   editedAt  DateTime? @map("edited_at")
@@ -780,6 +802,8 @@ model Message {
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  media Media[] @relation("message_media")
 
   @@index([conversationId, createdAt])
   @@index([senderId])

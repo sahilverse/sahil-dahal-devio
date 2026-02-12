@@ -12,6 +12,7 @@ import { ActivityService } from "../activity/activity.service";
 import { ActivityType, JoinRequestStatus, NotificationType, CommunityVisibility } from "../../generated/prisma/client";
 import { NotificationService } from "../notification";
 import { StorageService } from "../storage";
+import { AuraService } from "../aura/aura.service";
 import { logger } from "../../utils";
 
 @injectable()
@@ -21,7 +22,8 @@ export class CommunityService {
         @inject(TYPES.TopicService) private topicService: TopicService,
         @inject(TYPES.ActivityService) private activityService: ActivityService,
         @inject(TYPES.NotificationService) private notificationService: NotificationService,
-        @inject(TYPES.StorageService) private storageService: StorageService
+        @inject(TYPES.StorageService) private storageService: StorageService,
+        @inject(TYPES.AuraService) private auraService: AuraService
     ) { }
 
     async createCommunity(userId: string, data: CreateCommunityInput): Promise<CommunityResponseDto> {
@@ -282,6 +284,13 @@ export class CommunityService {
 
         const isMember = community.members && community.members.length > 0;
         if (isMember) throw new ApiError("Already a member", StatusCodes.BAD_REQUEST);
+
+        // Aura Check
+        const userAura = await this.auraService.getPoints(userId);
+        const minAura = community.settings?.minAuraToJoin || 0;
+        if (userAura < minAura) {
+            throw new ApiError(`You need at least ${minAura} Aura points to join this community`, StatusCodes.FORBIDDEN);
+        }
 
         if (community.visibility === CommunityVisibility.PUBLIC) {
             // Public - Join Directly

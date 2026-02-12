@@ -79,6 +79,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 router.post(
     "/posts/:postId/comments",
     authMiddleware.guard,
+    authMiddleware.verifiedOnly,
     upload.array("media", 3),
     commentController.createComment
 );
@@ -123,6 +124,7 @@ router.get(
 router.post(
     "/posts/:postId/accept-answer",
     authMiddleware.guard,
+    authMiddleware.verifiedOnly,
     commentController.acceptAnswer
 );
 

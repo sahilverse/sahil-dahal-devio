@@ -89,6 +89,9 @@ export const TYPES = {
     NotificationController: Symbol.for("NotificationController"),
 
     MentionService: Symbol.for("MentionService"),
+    ConversationRepository: Symbol.for("ConversationRepository"),
+    ConversationService: Symbol.for("ConversationService"),
+    ConversationController: Symbol.for("ConversationController"),
 };
 
 export * from "./jwt";

@@ -36,6 +36,17 @@ export class CommentService {
         const post = await this.postRepository.findById(postId);
         if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
 
+        // Aura Check for Community
+        if (post.communityId) {
+            const settings = await this.communityRepository.findSettings(post.communityId);
+            if (settings && settings.minAuraToComment > 0) {
+                const userAura = await this.auraService.getPoints(userId);
+                if (userAura < settings.minAuraToComment) {
+                    throw new ApiError(`You need at least ${settings.minAuraToComment} Aura points to comment in this community`, StatusCodes.FORBIDDEN);
+                }
+            }
+        }
+
         // 2. If reply, validate parent comment exists and belongs to same post
         if (data.parentId) {
             const parent = await this.commentRepository.findById(data.parentId);
