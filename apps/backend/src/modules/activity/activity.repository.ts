@@ -41,12 +41,21 @@ export class ActivityRepository {
 
         if (!user) return null;
 
+        const logsMap = new Map<string, number>();
+
+        user.activityLogs.forEach((log) => {
+            const dateStr = log.date.toISOString().split("T")[0]!;
+            const currentCount = logsMap.get(dateStr) || 0;
+            logsMap.set(dateStr, currentCount + log.count);
+        });
+
+        const aggregatedLogs: ActivityLogEntry[] = Array.from(logsMap.entries()).map(
+            ([date, count]) => ({ date, count })
+        ).sort((a, b) => a.date.localeCompare(b.date));
+
         return {
             userId: user.id,
-            logs: user.activityLogs.map((log) => ({
-                date: log.date.toISOString().split("T")[0]!,
-                count: log.count,
-            })),
+            logs: aggregatedLogs,
         };
     }
 
@@ -76,7 +85,7 @@ export class ActivityRepository {
         return years;
     }
 
-    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<{ isDailyLogin: boolean, currentStreak: number }> {
+    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<{ isFirstActivityOfDay: boolean, currentStreak: number }> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -114,7 +123,7 @@ export class ActivityRepository {
                     lastActiveDate: today
                 }
             });
-            return { isDailyLogin: true, currentStreak: 1 };
+            return { isFirstActivityOfDay: true, currentStreak: 1 };
         }
 
         const lastActive = streak.lastActiveDate;
@@ -126,46 +135,51 @@ export class ActivityRepository {
                     lastActiveDate: today
                 }
             });
-            return { isDailyLogin: true, currentStreak: 1 };
+            return { isFirstActivityOfDay: true, currentStreak: 1 };
         }
 
         const lastActiveDate = new Date(lastActive);
-        lastActiveDate.setHours(0, 0, 0, 0);
 
-        const diffTime = Math.abs(today.getTime() - lastActiveDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const todayStr = today.toISOString().split("T")[0]!;
+        const lastActiveStr = lastActiveDate.toISOString().split("T")[0]!;
 
         let currentStreak = streak.currentStreak;
-        let isDailyLogin = false;
+        let isFirstActivityOfDay = false;
 
-        if (diffDays === 1) {
-            // Consecutive day
-            currentStreak += 1;
-            isDailyLogin = true;
-            await this.prisma.userStreak.update({
-                where: { userId },
-                data: {
-                    currentStreak: currentStreak,
-                    longestStreak: Math.max(streak.longestStreak, currentStreak),
-                    lastActiveDate: today
-                }
-            });
-        } else if (diffDays > 1) {
-            // Streak broken
-            currentStreak = 1;
-            isDailyLogin = true;
-            await this.prisma.userStreak.update({
-                where: { userId },
-                data: {
-                    currentStreak: 1,
-                    lastActiveDate: today
-                }
-            });
+        if (todayStr === lastActiveStr) {
+            isFirstActivityOfDay = false;
         } else {
-            // Same day (diffDays === 0)
-            isDailyLogin = false;
+            // Calculate "Yesterday" in UTC
+            const yesterday = new Date(today);
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split("T")[0]!;
+
+            if (lastActiveStr === yesterdayStr) {
+                // Consecutive day
+                currentStreak += 1;
+                isFirstActivityOfDay = true;
+                await this.prisma.userStreak.update({
+                    where: { userId },
+                    data: {
+                        currentStreak: currentStreak,
+                        longestStreak: Math.max(streak.longestStreak, currentStreak),
+                        lastActiveDate: today
+                    }
+                });
+            } else {
+                // Streak broken (more than 1 day difference)
+                currentStreak = 1;
+                isFirstActivityOfDay = true;
+                await this.prisma.userStreak.update({
+                    where: { userId },
+                    data: {
+                        currentStreak: 1,
+                        lastActiveDate: today
+                    }
+                });
+            }
         }
 
-        return { isDailyLogin, currentStreak };
+        return { isFirstActivityOfDay, currentStreak };
     }
 }

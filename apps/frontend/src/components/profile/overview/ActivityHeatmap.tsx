@@ -141,7 +141,7 @@ export default function ActivityHeatmap({ username }: ActivityHeatmapProps) {
                             </g>
                         )}
                         labels={{
-                            totalCount: `{{count}} activities in ${selectedYear}`,
+                            totalCount: `${data?.totalActivities} activities in ${selectedYear}`,
                         }}
                     />
                 )}

@@ -26,6 +26,7 @@ import { CompilerService, CompilerController, CompilerSocketHandler } from "../m
 import { ProblemRepository, ProblemService, ProblemSyncService, ProblemController, ProblemDraftRepository, ProblemDraftService } from "../modules/problem";
 import { SubmissionService, SubmissionController, Judge0Service, SubmissionRepository } from "../modules/submission";
 import { CipherRepository, CipherService, CipherController } from "../modules/cipher";
+import { AchievementRepository, AchievementService } from "../modules/achievement";
 
 
 const container = new Container();
@@ -110,5 +111,8 @@ container.bind<CipherController>(TYPES.CipherController).to(CipherController).in
 
 container.bind<ProblemDraftRepository>(TYPES.ProblemDraftRepository).to(ProblemDraftRepository).inSingletonScope();
 container.bind<ProblemDraftService>(TYPES.ProblemDraftService).to(ProblemDraftService).inSingletonScope();
+
+container.bind<AchievementRepository>(TYPES.AchievementRepository).to(AchievementRepository).inSingletonScope();
+container.bind<AchievementService>(TYPES.AchievementService).to(AchievementService).inSingletonScope();
 
 export { container };

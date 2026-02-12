@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { MediaType, CipherReason, PostType, PostStatus, PostVisibility, AuraReason } from "../../generated/prisma/client";
+import { MediaType, CipherReason, PostType, PostStatus, PostVisibility, AuraReason, ActivityType } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 import { CreatePostInput } from "@devio/zod-utils";
 import { StorageService } from "../storage/storage.service";
@@ -11,6 +11,7 @@ import { CommunityRepository } from "../community/community.repository";
 import { plainToInstance } from "class-transformer";
 import { PostResponseDto, GetPostsDto } from "./post.dto";
 import { AuraService } from "../aura/aura.service";
+import { ActivityService } from "../activity/activity.service";
 
 
 @injectable()
@@ -20,7 +21,8 @@ export class PostService {
         @inject(TYPES.StorageService) private storageService: StorageService,
         @inject(TYPES.TopicService) private topicService: TopicService,
         @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
-        @inject(TYPES.AuraService) private auraService: AuraService
+        @inject(TYPES.AuraService) private auraService: AuraService,
+        @inject(TYPES.ActivityService) private activityService: ActivityService
     ) { }
 
     async createPost(
@@ -147,7 +149,11 @@ export class PostService {
 
             });
 
-            return plainToInstance(PostResponseDto, post, { excludeExtraneousValues: true });
+            const postResponse = plainToInstance(PostResponseDto, post, { excludeExtraneousValues: true });
+
+            await this.activityService.logActivity(userId, ActivityType.POST_CREATE);
+
+            return postResponse;
         });
     }
 
@@ -240,7 +246,7 @@ export class PostService {
         if (existingType === type) {
             // Toggling off (removing vote)
             if (type === "UP") auraDelta = -UP_POINTS;
-            if (type === "DOWN") auraDelta = -DOWN_POINTS; 
+            if (type === "DOWN") auraDelta = -DOWN_POINTS;
         } else if (existingType === null) {
             // New Vote
             if (type === "UP") auraDelta = UP_POINTS;

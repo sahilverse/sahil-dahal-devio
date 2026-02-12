@@ -5,13 +5,15 @@ import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
 import type { ActivityDataResponse } from "./activity.types";
 import { AuraService } from "../aura/aura.service";
+import { AchievementService } from "../achievement/achievement.service";
 import { ActivityType, AuraReason } from "../../generated/prisma/client";
 
 @injectable()
 export class ActivityService {
     constructor(
         @inject(TYPES.ActivityRepository) private activityRepository: ActivityRepository,
-        @inject(TYPES.AuraService) private auraService: AuraService
+        @inject(TYPES.AuraService) private auraService: AuraService,
+        @inject(TYPES.AchievementService) private achievementService: AchievementService
     ) { }
 
     async getActivityByYear(username: string, year: number): Promise<ActivityDataResponse> {
@@ -51,18 +53,29 @@ export class ActivityService {
     }
 
     async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<void> {
-        const { isDailyLogin, currentStreak } = await this.activityRepository.logActivity(userId, type);
+        const { isFirstActivityOfDay, currentStreak } = await this.activityRepository.logActivity(userId, type);
 
-        if (isDailyLogin) {
-            // Award Daily Login Points
-            await this.auraService.awardAura(userId, 5, AuraReason.DAILY_LOGIN);
+        if (isFirstActivityOfDay) {
+            // Award Daily Activity Bonus
+            await this.auraService.awardAura(userId, 5, AuraReason.DAILY_ACTIVITY);
+        }
 
-            // Check for Streak Milestones
-            if (currentStreak === 7) {
-                await this.auraService.awardAura(userId, 50, AuraReason.STREAK_MILESTONE, "7-day streak");
-            } else if (currentStreak === 30) {
-                await this.auraService.awardAura(userId, 100, AuraReason.STREAK_MILESTONE, "30-day streak");
-            }
+        // Check Streak Achievements
+        await this.achievementService.checkAndUnlock(userId, "STREAK_DAYS", currentStreak);
+
+        // Check Activity-Specific Achievements
+        const criteriaMap: Record<string, string> = {
+            PROBLEM_SOLVED: "PROBLEM_SOLVED",
+            POST_CREATE: "POSTS_CREATED",
+            COMMENT_CREATE: "COMMENTS_CREATED",
+            COMMUNITY_CREATE: "COMMUNITY_CREATED",
+        };
+
+        const criteria = criteriaMap[type];
+        if (criteria) {
+            const count = await this.achievementService.getUserCount(userId, criteria);
+            await this.achievementService.checkAndUnlock(userId, criteria, count);
         }
     }
 }
+

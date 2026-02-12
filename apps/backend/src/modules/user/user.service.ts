@@ -89,11 +89,17 @@ export class UserService {
         const devioAge = this.formatDevioAge(diffDays);
         const weeklyContributions = await this.userRepository.getWeeklyContributions(user.id);
 
-        const activityMap = user.activityLogs.filter((log) => {
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-            return new Date(log.date) >= oneYearAgo;
+        const logsMap = new Map<string, number>();
+        user.activityLogs.forEach((log: any) => {
+            const dateStr = new Date(log.date).toISOString().split('T')[0]!;
+            const currentCount = logsMap.get(dateStr) || 0;
+            logsMap.set(dateStr, currentCount + log.count);
         });
+
+        const activityMap = Array.from(logsMap.entries()).map(([date, count]) => ({
+            date: date as string,
+            count: count as number,
+        })).sort((a, b) => a.date.localeCompare(b.date));
 
         const achievements = {
             latest: user.userAchievements.map((ua: any) => ua.achievement),

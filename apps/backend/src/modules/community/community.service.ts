@@ -8,12 +8,15 @@ import { CreateCommunityInput } from "@devio/zod-utils";
 import { plainToInstance } from "class-transformer";
 import { CommunityResponseDto } from "./community.dto";
 import { TopicService } from "../topic/topic.service";
+import { ActivityService } from "../activity/activity.service";
+import { ActivityType } from "../../generated/prisma/client";
 
 @injectable()
 export class CommunityService {
     constructor(
         @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
-        @inject(TYPES.TopicService) private topicService: TopicService
+        @inject(TYPES.TopicService) private topicService: TopicService,
+        @inject(TYPES.ActivityService) private activityService: ActivityService
     ) { }
 
     async createCommunity(userId: string, data: CreateCommunityInput): Promise<CommunityResponseDto> {
@@ -75,7 +78,11 @@ export class CommunityService {
             return com;
         });
 
-        return plainToInstance(CommunityResponseDto, community, { excludeExtraneousValues: true });
+        const response = plainToInstance(CommunityResponseDto, community, { excludeExtraneousValues: true });
+
+        await this.activityService.logActivity(userId, ActivityType.COMMUNITY_CREATE);
+
+        return response;
     }
 
     async getCommunityByName(name: string, userId?: string): Promise<CommunityResponseDto> {

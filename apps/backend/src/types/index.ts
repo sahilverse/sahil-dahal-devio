@@ -76,6 +76,9 @@ export const TYPES = {
     CipherService: Symbol.for("CipherService"),
     CipherController: Symbol.for("CipherController"),
     CipherRouter: Symbol.for("CipherRouter"),
+
+    AchievementRepository: Symbol.for("AchievementRepository"),
+    AchievementService: Symbol.for("AchievementService"),
 };
 
 export * from "./jwt";
