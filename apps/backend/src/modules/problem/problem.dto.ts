@@ -50,3 +50,37 @@ export class ProblemResponseDTO {
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
 }
+
+@Exclude()
+export class ProblemListItemDTO {
+    @Expose() id!: string;
+    @Expose() title!: string;
+    @Expose() slug!: string;
+    @Expose() difficulty!: Difficulty;
+
+    @Expose()
+    @Transform(({ obj }) => obj.topics?.map((t: any) => ({
+        name: t.topic?.name,
+        slug: t.topic?.slug
+    })))
+    @Type(() => TopicDTO)
+    topics!: TopicDTO[];
+
+    @Expose()
+    @Transform(({ obj }) => {
+        if (!obj.userStatuses || obj.userStatuses.length === 0) return "TODO";
+        return obj.userStatuses[0].status;
+    })
+    status!: string;
+
+    @Expose() createdAt!: Date;
+}
+
+@Exclude()
+export class PaginatedProblemsResponseDTO {
+    @Expose()
+    @Type(() => ProblemListItemDTO)
+    items!: ProblemListItemDTO[];
+
+    @Expose() nextCursor!: string | null;
+}

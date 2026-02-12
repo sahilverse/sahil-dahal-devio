@@ -6,8 +6,10 @@ import { logger, ApiError, normalizeContent } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { LANGUAGE_EXTENSIONS } from "@devio/boilerplate-generator";
 import { plainToInstance } from "class-transformer";
-import { ProblemResponseDTO } from "./problem.dto";
+import { ProblemResponseDTO, ProblemListItemDTO, PaginatedProblemsResponseDTO } from "./problem.dto";
 import { RedisManager } from "../../config/redis";
+import { GetProblemsQuery } from "@devio/zod-utils";
+import { Difficulty } from "../../generated/prisma/client";
 import { ProblemDraftService } from "./draft";
 import { ProblemSyncService } from "./problem-sync.service";
 import { MINIO_BUCKET_PROBLEMS, PROBLEM_REDIS_TTL, PROBLEM_REDIS_KEYS } from "../../config/constants";
@@ -139,5 +141,28 @@ export class ProblemService {
             logger.error(`Error in getCachedBoilerplate(${tier}) for ${slug}/${language}: ${err}`);
             throw new ApiError(`Failed to retrieve ${tier}: ${err.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    async getListing(query: GetProblemsQuery, userId?: string): Promise<PaginatedProblemsResponseDTO> {
+        const { cursor, limit = 10, search, difficulty, topics, status } = query;
+
+        const results = await this.problemRepository.findMany({
+            cursor,
+            limit,
+            search,
+            difficulties: difficulty as Difficulty[],
+            topicSlugs: topics,
+            status,
+            userId
+        });
+
+        const hasNextPage = results.length > limit;
+        const items = hasNextPage ? results.slice(0, limit) : results;
+        const nextCursor = hasNextPage ? items[items.length - 1]?.id || null : null;
+
+        return plainToInstance(PaginatedProblemsResponseDTO, {
+            items,
+            nextCursor
+        }, { excludeExtraneousValues: true });
     }
 }

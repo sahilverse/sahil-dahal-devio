@@ -2,7 +2,8 @@ import { Router } from "express";
 import { container } from "../../config/inversify";
 import { TYPES } from "../../types";
 import { ProblemController } from "./problem.controller";
-import { AuthMiddleware } from "../../middlewares";
+import { AuthMiddleware, validateQuery, validateRequest } from "../../middlewares";
+import { GetProblemsSchema, GetBoilerplateSchema, SaveDraftSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const problemController = container.get<ProblemController>(TYPES.ProblemController);
@@ -14,6 +15,53 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *   name: Problems
  *   description: Coding problem management and automated processing
  */
+
+/**
+ * @swagger
+ * /problems:
+ *   get:
+ *     summary: List all problems with filtering and pagination
+ *     tags: [Problems]
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Cursor for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: difficulty
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [EASY, MEDIUM, HARD]
+ *       - in: query
+ *         name: topics
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [TODO, ATTEMPTED, SOLVED]
+ *     responses:
+ *       200:
+ *         description: Problems retrieved
+ */
+router.get("/", authMiddleware.extractUser, validateQuery(GetProblemsSchema), problemController.list);
 
 /**
  * @swagger
@@ -151,7 +199,7 @@ router.get("/:slug", problemController.getProblem);
  *       404:
  *         description: Problem not found
  */
-router.patch("/:slug/draft", authMiddleware.guard, problemController.saveDraft);
+router.patch("/:slug/draft", authMiddleware.guard, validateRequest(SaveDraftSchema), problemController.saveDraft);
 
 /**
  * @swagger
@@ -194,6 +242,6 @@ router.patch("/:slug/draft", authMiddleware.guard, problemController.saveDraft);
  *       404:
  *         description: Boilerplate not found
  */
-router.get("/:slug/boilerplate", authMiddleware.extractUser, problemController.getBoilerplate);
+router.get("/:slug/boilerplate", authMiddleware.extractUser, validateQuery(GetBoilerplateSchema), problemController.getBoilerplate);
 
 export default router;

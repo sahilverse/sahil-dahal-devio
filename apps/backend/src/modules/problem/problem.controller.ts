@@ -7,6 +7,7 @@ import { ProblemDraftService } from "./draft";
 import { asyncHandler, ResponseHandler, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { SUPPORTED_LANGUAGES } from "@devio/boilerplate-generator";
+import { GetProblemsQuery, GetBoilerplateQuery, SaveDraftRequest } from "@devio/zod-utils";
 
 @injectable()
 export class ProblemController {
@@ -18,6 +19,15 @@ export class ProblemController {
 
     getLanguages = asyncHandler(async (_req: Request, res: Response) => {
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Supported languages", { languages: SUPPORTED_LANGUAGES });
+    });
+
+    list = asyncHandler(async (req: any, res: Response) => {
+        const query = req.query as GetProblemsQuery;
+        const userId = req.user?.id;
+
+        const results = await this.problemService.getListing(query, userId);
+
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Problems retrieved", results);
     });
 
     handleMinioWebhook = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -58,9 +68,9 @@ export class ProblemController {
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem retrieved", problem);
     });
 
-    getBoilerplate = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    getBoilerplate = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
         const slug = req.params.slug;
-        const language = req.query.language as string;
+        const { language } = req.query as GetBoilerplateQuery;
         const userId = req.user?.id;
 
         if (!slug || !language) {
@@ -72,9 +82,9 @@ export class ProblemController {
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Boilerplate retrieved", { code });
     });
 
-    saveDraft = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    saveDraft = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
         const slug = req.params.slug;
-        const { language, code } = req.body;
+        const { language, code } = req.body as SaveDraftRequest;
         const userId = req.user?.id;
 
         if (!userId) {

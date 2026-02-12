@@ -19,14 +19,91 @@ export class ProblemRepository {
 
     async findMany(params: {
         cursor?: string;
-        limit?: number;
+        limit?: number | string;
+        search?: string;
+        difficulties?: Difficulty[];
+        topicSlugs?: string[];
+        status?: string[];
+        userId?: string;
     }) {
-        const { cursor, limit = 10 } = params;
+        const { cursor, search, difficulties, topicSlugs, status, userId } = params;
+        const limit = params.limit ? parseInt(params.limit.toString(), 10) : 10;
+
+        const where: Prisma.ProblemWhereInput = {
+            isPublished: true,
+        };
+
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } }
+            ];
+        }
+
+        if (difficulties && difficulties.length > 0) {
+            where.difficulty = { in: difficulties };
+        }
+
+        if (topicSlugs && topicSlugs.length > 0) {
+            where.topics = {
+                some: {
+                    topic: {
+                        slug: { in: topicSlugs }
+                    }
+                }
+            };
+        }
+
+        if (userId && status && status.length > 0) {
+            const statusFilters: Prisma.ProblemWhereInput[] = [];
+
+            if (status.includes("TODO")) {
+                statusFilters.push({
+                    userStatuses: {
+                        none: { userId }
+                    }
+                });
+            }
+
+            if (status.includes("ATTEMPTED")) {
+                statusFilters.push({
+                    userStatuses: {
+                        some: { userId, status: "ATTEMPTED" }
+                    }
+                });
+            }
+
+            if (status.includes("SOLVED")) {
+                statusFilters.push({
+                    userStatuses: {
+                        some: { userId, status: "SOLVED" }
+                    }
+                });
+            }
+
+            if (statusFilters.length > 0) {
+                where.AND = [
+                    ...(where.AND as Prisma.ProblemWhereInput[] || []),
+                    { OR: statusFilters }
+                ];
+            }
+        }
+
         return this.prisma.problem.findMany({
             take: limit + 1,
             cursor: cursor ? { id: cursor } : undefined,
+            where,
             orderBy: { createdAt: "desc" },
-            include: this.getProblemInclude()
+            include: {
+                topics: {
+                    include: {
+                        topic: true
+                    }
+                },
+                userStatuses: userId ? {
+                    where: { userId }
+                } : false
+            }
         });
     }
 
