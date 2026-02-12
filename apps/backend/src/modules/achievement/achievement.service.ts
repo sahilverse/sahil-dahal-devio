@@ -2,14 +2,16 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../types";
 import { AchievementRepository } from "./achievement.repository";
 import { AuraService } from "../aura/aura.service";
-import { AuraReason } from "../../generated/prisma/client";
+import { AuraReason, NotificationType } from "../../generated/prisma/client";
+import { NotificationService } from "../notification";
 import { logger } from "../../utils";
 
 @injectable()
 export class AchievementService {
     constructor(
         @inject(TYPES.AchievementRepository) private achievementRepository: AchievementRepository,
-        @inject(TYPES.AuraService) private auraService: AuraService
+        @inject(TYPES.AuraService) private auraService: AuraService,
+        @inject(TYPES.NotificationService) private notificationService: NotificationService
     ) { }
 
     async checkAndUnlock(userId: string, criteria: string, currentValue: number): Promise<void> {
@@ -40,7 +42,18 @@ export class AchievementService {
                 );
             }
 
-            logger.info(`🏆 Achievement unlocked: "${achievement.name}" for user ${userId}`);
+            // Notify User
+            await this.notificationService.notify({
+                userId,
+                type: NotificationType.ACHIEVEMENT_UNLOCKED,
+                message: `Congratulations! You've unlocked the "${achievement.name}" achievement!`,
+                actionUrl: `/profile/achievements`,
+                data: {
+                    achievementId: achievement.id,
+                    slug: achievement.slug,
+                    auraReward: achievement.auraReward
+                }
+            }).catch(err => logger.error(`Failed to send achievement notification: ${err}`));
         }
     }
 
