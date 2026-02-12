@@ -28,7 +28,7 @@ import { SubmissionService, SubmissionController, Judge0Service, SubmissionRepos
 import { CipherRepository, CipherService, CipherController } from "../modules/cipher";
 import { AchievementRepository, AchievementService } from "../modules/achievement";
 import { CommentRepository, CommentService, CommentController } from "../modules/comment";
-import { NotificationRepository, NotificationService } from "../modules/notification";
+import { NotificationRepository, NotificationService, NotificationController } from "../modules/notification";
 import { MentionService } from "../modules/mention/mention.service";
 
 
@@ -124,6 +124,7 @@ container.bind<CommentController>(TYPES.CommentController).to(CommentController)
 
 container.bind<NotificationRepository>(TYPES.NotificationRepository).to(NotificationRepository).inSingletonScope();
 container.bind<NotificationService>(TYPES.NotificationService).to(NotificationService).inSingletonScope();
+container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController).inSingletonScope();
 
 container.bind<MentionService>(TYPES.MentionService).to(MentionService).inSingletonScope();
 

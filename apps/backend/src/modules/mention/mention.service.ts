@@ -57,7 +57,7 @@ export class MentionService {
                     });
                 }
             } catch (error) {
-                logger.error(`Error processing user mention for ${username}: ${error}`);
+                logger.error(error as Error, `Error processing user mention for ${username}`);
             }
         }
 

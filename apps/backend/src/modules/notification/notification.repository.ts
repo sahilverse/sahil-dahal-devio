@@ -36,13 +36,25 @@ export class NotificationRepository {
                 skip: 1,
                 cursor: { id: cursor },
             }),
+            include: {
+                actor: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatarUrl: true,
+                    }
+                }
+            },
             orderBy: { createdAt: "desc" },
         });
     }
 
-    async markAsRead(id: string): Promise<Notification> {
+    async markAsRead(id: string, userId: string): Promise<Notification> {
         return this.prisma.notification.update({
-            where: { id },
+            where: {
+                id,
+                userId // Ensure user owns the notification
+            },
             data: { read_at: new Date() }
         });
     }
