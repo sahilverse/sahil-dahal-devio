@@ -377,10 +377,25 @@ model Community {
   topics       CommunityTopic[]
   events       Event[]
   pinnedPosts  PinnedPost[]
+  rules        Json?
+
+  views CommunityView[]
 
   @@index([name])
   @@index([visibility])
   @@index([createdById])
+}
+
+model CommunityView {
+  id          String   @id @default(cuid())
+  communityId String   @map("community_id")
+  userId      String?  @map("user_id")
+  viewedAt    DateTime @default(now()) @map("viewed_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@index([communityId])
+  @@index([viewedAt])
 }
 
 model CommunitySettings {
@@ -1602,13 +1617,14 @@ model JobApplication {
 enum NotificationType {
   SYSTEM
   FOLLOW
-  UPVOTE
   COMMENT
   MENTION
   ACHIEVEMENT_UNLOCKED
   COURSE_ENROLLMENT
   JOB_APPLICATION_UPDATE
-  COMMUNITY_INVITE
+  COMMUNITY_JOIN_REQUEST
+  COMMUNITY_MODERATOR_ASSIGNED
+  COMMUNITY_MODERATOR_REMOVED
 }
 
 model Notification {

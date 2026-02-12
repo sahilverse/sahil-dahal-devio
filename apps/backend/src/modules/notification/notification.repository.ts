@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Notification, NotificationType } from "../../generated/prisma/client";
+import { PrismaClient, Notification, NotificationType, Prisma } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -70,6 +70,26 @@ export class NotificationRepository {
         return this.prisma.notification.count({
             where: { userId, read_at: null }
         });
+    }
+
+    async updateManyByData(dataQuery: any, update: Prisma.NotificationUpdateInput): Promise<void> {
+        const notifications = await this.prisma.notification.findMany({
+            where: {
+                data: {
+                    path: ["requestId"],
+                    equals: dataQuery.requestId
+                }
+            }
+        });
+
+        if (notifications.length > 0) {
+            await this.prisma.notification.updateMany({
+                where: {
+                    id: { in: notifications.map(n => n.id) }
+                },
+                data: update
+            });
+        }
     }
 
     async delete(id: string): Promise<void> {

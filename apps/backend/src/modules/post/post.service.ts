@@ -222,7 +222,14 @@ export class PostService {
         if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
 
         if (post.authorId !== userId) {
-            throw new ApiError("You are not authorized to delete this post", StatusCodes.FORBIDDEN);
+            let isModerator = false;
+            if (post.communityId) {
+                isModerator = await this.communityRepository.checkMemberPermission(post.communityId, userId, 'managePostsAndComments');
+            }
+
+            if (!isModerator) {
+                throw new ApiError("You are not authorized to delete this post", StatusCodes.FORBIDDEN);
+            }
         }
         const deletedPost = await this.postRepository.delete(postId);
 

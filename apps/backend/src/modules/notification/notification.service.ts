@@ -4,6 +4,8 @@ import { TYPES } from "../../types";
 import { NotificationRepository } from "./notification.repository";
 import { SocketService } from "../socket/socket.service";
 import { logger } from "../../utils/logger";
+import { plainToInstance } from "class-transformer";
+import { NotificationResponseDto } from "./notification.dto";
 
 @injectable()
 export class NotificationService {
@@ -22,10 +24,9 @@ export class NotificationService {
         data?: any;
     }) {
         const notification = await this.notificationRepository.create(data);
-
-        // Emit Real-time Socket Event
         try {
-            this.socketService.io.to(`user:${data.userId}`).emit("notification:new", notification);
+            const dto = plainToInstance(NotificationResponseDto, notification, { excludeExtraneousValues: true });
+            this.socketService.io.to(`user:${data.userId}`).emit("notification:new", dto);
         } catch (error) {
             logger.error(error as Error, `Failed to emit real-time notification to user ${data.userId}`);
         }
@@ -55,5 +56,9 @@ export class NotificationService {
 
     async getUnreadCount(userId: string) {
         return this.notificationRepository.countUnread(userId);
+    }
+
+    async updateNotificationsByData(dataQuery: any, update: any) {
+        return this.notificationRepository.updateManyByData(dataQuery, update);
     }
 }
