@@ -28,7 +28,7 @@ export class ProblemController {
             return ResponseHandler.sendResponse(res, StatusCodes.OK, "Test event received");
         }
 
-        if (eventName !== 's3:ObjectCreated:Put') {
+        if (!eventName?.startsWith('s3:ObjectCreated:')) {
             return ResponseHandler.sendResponse(res, StatusCodes.OK, "Event ignored");
         }
 
