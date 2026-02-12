@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { UserRepository } from "./user.repository";
 import { ApiError } from "../../utils/ApiError";
 import type { User } from "../../generated/prisma/client";
-import { AccountStatus } from "../../generated/prisma/client";
+import { AccountStatus, Difficulty } from "../../generated/prisma/client";
 import type {
     OnboardingPayload,
     UserProfile,
@@ -226,9 +226,9 @@ export class UserService {
         submissions.forEach((s) => {
             stats.total++;
             const diff = s.problem?.difficulty;
-            if (diff === 'EASY') stats.easy++;
-            else if (diff === 'MEDIUM') stats.medium++;
-            else if (diff === 'HARD') stats.hard++;
+            if (diff === Difficulty.EASY) stats.easy++;
+            else if (diff === Difficulty.MEDIUM) stats.medium++;
+            else if (diff === Difficulty.HARD) stats.hard++;
         });
         return stats;
     }
@@ -240,9 +240,9 @@ export class UserService {
         enrollments.forEach((e) => {
             stats.total++;
             const diff = e.room?.difficulty;
-            if (diff === 'EASY') stats.easy++;
-            else if (diff === 'MEDIUM') stats.medium++;
-            else if (diff === 'HARD') stats.hard++;
+            if (diff === Difficulty.EASY) stats.easy++;
+            else if (diff === Difficulty.MEDIUM) stats.medium++;
+            else if (diff === Difficulty.HARD) stats.hard++;
         });
         return stats;
     }
