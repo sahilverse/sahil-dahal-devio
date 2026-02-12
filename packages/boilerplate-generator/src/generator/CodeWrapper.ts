@@ -28,9 +28,10 @@ export class WrapperGenerator {
             }
         }).join('\n');
 
-        return `##USER_CODE_HERE##
-
+        return `from typing import List, Optional, Dict, Set, Any
 import sys
+
+##USER_CODE_HERE##
 
 lines = []
 for line in sys.stdin:

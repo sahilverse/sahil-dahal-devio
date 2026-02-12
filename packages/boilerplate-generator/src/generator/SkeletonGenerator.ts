@@ -20,14 +20,17 @@ export class SkeletonGenerator {
         pass`;
     }
 
-
     static javascript(structure: ProblemStructure): string {
         const { functionName, inputStructure } = structure;
         const params = inputStructure.map(field => field.name).join(', ');
 
-        return `function ${functionName}(${params}) {
-        
-    }`;
+        return `/**
+ * @param {${inputStructure.map(f => convertType(f.type, 'javascript')).join(', ')}}
+ * @return {${convertType(structure.outputStructure.type, 'javascript')}}
+ */
+var ${functionName} = function(${params}) {
+    
+};`;
     }
 
     static java(structure: ProblemStructure): string {
@@ -38,12 +41,11 @@ export class SkeletonGenerator {
         const returnType = convertType(outputStructure.type, 'java');
 
         return `class Solution {
-        public ${returnType} ${functionName}(${params}) {
-            
-        }
-    }`;
+    public ${returnType} ${functionName}(${params}) {
+        
     }
-
+}`;
+    }
 
     static cpp(structure: ProblemStructure): string {
         const { functionName, inputStructure, outputStructure } = structure;
@@ -53,11 +55,11 @@ export class SkeletonGenerator {
         const returnType = convertType(outputStructure.type, 'cpp');
 
         return `class Solution {
-    public:
-        ${returnType} ${functionName}(${params}) {
-            
-        }
-    };`;
+public:
+    ${returnType} ${functionName}(${params}) {
+        
+    }
+};`;
     }
 
     static csharp(structure: ProblemStructure): string {
@@ -68,12 +70,11 @@ export class SkeletonGenerator {
         const returnType = convertType(outputStructure.type, 'csharp');
 
         return `public class Solution {
-        public ${returnType} ${toPascalCase(functionName)}(${params}) {
-            
-        }
-    }`;
+    public ${returnType} ${toPascalCase(functionName)}(${params}) {
+        
     }
-
+}`;
+    }
 
     static rust(structure: ProblemStructure): string {
         const { functionName, inputStructure, outputStructure } = structure;
@@ -83,12 +84,11 @@ export class SkeletonGenerator {
         const returnType = convertType(outputStructure.type, 'rust');
 
         return `impl Solution {
-        pub fn ${toSnakeCase(functionName)}(&self, ${params}) -> ${returnType} {
-
-        }
-    }`;
+    pub fn ${toSnakeCase(functionName)}(&self, ${params}) -> ${returnType} {
+        
     }
-
+}`;
+    }
 
     static go(structure: ProblemStructure): string {
         const { functionName, inputStructure, outputStructure } = structure;
@@ -98,19 +98,21 @@ export class SkeletonGenerator {
         const returnType = convertType(outputStructure.type, 'go');
 
         return `func ${functionName}(${params}) ${returnType} {
-        
-    }`;
+    
+}`;
     }
-
-
 
     static php(structure: ProblemStructure): string {
         const { functionName, inputStructure } = structure;
         const params = inputStructure.map(field => `$${field.name}`).join(', ');
 
         return `class Solution {
+    /**
+     * @param ${inputStructure.map(f => convertType(f.type, 'php')).join(', ')}
+     * @return ${convertType(structure.outputStructure.type, 'php')}
+     */
     function ${functionName}(${params}) {
-            
+        
     }
 }`;
     }
