@@ -1,7 +1,3 @@
-/**
- * Judge0 Language IDs
- * Source: https://ce.judge0.com/languages/
- */
 export const JUDGE0_LANGUAGE_IDS: Record<string, number> = {
     "cpp": 54,        // C++ (GCC 9.2.0)
     "java": 62,       // Java (OpenJDK 13.0.1)

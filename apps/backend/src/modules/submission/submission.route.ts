@@ -2,7 +2,8 @@ import { Router } from "express";
 import { SubmissionController } from "./submission.controller";
 import { container } from "../../config/inversify";
 import { TYPES } from "../../types";
-import { AuthMiddleware } from "../../middlewares";
+import { AuthMiddleware, validateRequest } from "../../middlewares";
+import { RunSubmissionSchema, SubmitSubmissionSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const controller = container.get<SubmissionController>(TYPES.SubmissionController);
@@ -22,7 +23,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *     summary: Run code against sample test cases
  *     tags: [Submissions]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     description: Executes the student's code against a problem's sample test cases using the Judge0 engine.
  *     requestBody:
  *       required: true
@@ -75,7 +76,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *                       memory:
  *                         type: integer
  */
-router.post("/run", authMiddleware.guard, controller.run);
+router.post("/run", authMiddleware.guard, validateRequest(RunSubmissionSchema), controller.run);
 
 /**
  * @swagger
@@ -84,7 +85,7 @@ router.post("/run", authMiddleware.guard, controller.run);
  *     summary: Submit a solution for grading
  *     tags: [Submissions]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     description: Submits code for full grading against all test cases. Persists the result and updates user/event stats.
  *     requestBody:
  *       required: true
@@ -132,6 +133,6 @@ router.post("/run", authMiddleware.guard, controller.run);
  *                     error:
  *                       type: string
  */
-router.post("/submit", authMiddleware.guard, controller.submit);
+router.post("/submit", authMiddleware.guard, validateRequest(SubmitSubmissionSchema), controller.submit);
 
 export default router;

@@ -130,7 +130,23 @@ export class SubmissionService {
             );
         }
 
-        return { ...submission, results };
+        const resultsMapped = results.map((res, index) => {
+            const tc = problem.testCases[index];
+            const isPublic = tc?.isPublic || false;
+
+            return {
+                status: res.status?.description || "Unknown",
+                isPublic,
+                stdout: isPublic ? res.stdout : null,
+                stderr: isPublic ? res.stderr : null,
+                compile_output: isPublic ? res.compile_output : null,
+                message: res.message,
+                time: res.time,
+                memory: res.memory
+            };
+        });
+
+        return { ...submission, results: resultsMapped };
     }
 
     private mapJudge0ToSubmissionStatus(judge0StatusId: number): SubmissionStatus {
@@ -176,7 +192,17 @@ export class SubmissionService {
         const tokens = await this.judge0Service.createBatchSubmissions(submissions);
 
         // 5. Poll for Results
-        return this.pollBatchResults(tokens);
+        const results = await this.pollBatchResults(tokens);
+
+        return results.map(res => ({
+            status: res.status?.description || "Unknown",
+            stdout: res.stdout,
+            stderr: res.stderr,
+            compile_output: res.compile_output,
+            message: res.message,
+            time: res.time,
+            memory: res.memory
+        }));
     }
 
     private async pollBatchResults(tokens: string[]): Promise<Judge0Response[]> {

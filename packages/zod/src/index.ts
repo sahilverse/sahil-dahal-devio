@@ -11,5 +11,6 @@ export * from "./topic.schema";
 export * from "./post.schema";
 export * from "./community.schema";
 export * from "./compiler.schema";
+export * from "./submission.schema";
 export * from "./utils";
 

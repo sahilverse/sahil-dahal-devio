@@ -120,7 +120,7 @@ router.get("/:slug", problemController.getProblem);
  *     summary: Auto-save code draft
  *     tags: [Problems]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     description: Atomically updates the student's current code progress for a specific language. This enables a seamless cross-device "resume" experience.
  *     parameters:
  *       - in: path
