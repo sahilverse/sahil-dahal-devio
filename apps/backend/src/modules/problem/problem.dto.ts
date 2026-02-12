@@ -1,5 +1,5 @@
 import { Exclude, Expose, Transform, Type } from "class-transformer";
-import { Difficulty } from "../../generated/prisma/client";
+import { Difficulty, ProblemSolutionStatus } from "../../generated/prisma/client";
 import { TopicDTO } from "../topic/topic.dto";
 
 @Exclude()
@@ -68,10 +68,10 @@ export class ProblemListItemDTO {
 
     @Expose()
     @Transform(({ obj }) => {
-        if (!obj.userStatuses || obj.userStatuses.length === 0) return "TODO";
+        if (!obj.userStatuses || obj.userStatuses.length === 0) return ProblemSolutionStatus.UNSOLVED;
         return obj.userStatuses[0].status;
     })
-    status!: string;
+    status!: ProblemSolutionStatus;
 
     @Expose() createdAt!: Date;
 }

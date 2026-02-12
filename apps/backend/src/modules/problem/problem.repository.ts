@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Problem, Prisma, Difficulty } from "../../generated/prisma/client";
+import { PrismaClient, Problem, Prisma, Difficulty, ProblemSolutionStatus } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -57,7 +57,7 @@ export class ProblemRepository {
         if (userId && status && status.length > 0) {
             const statusFilters: Prisma.ProblemWhereInput[] = [];
 
-            if (status.includes("TODO")) {
+            if (status.includes(ProblemSolutionStatus.UNSOLVED) || status.includes("TODO")) {
                 statusFilters.push({
                     userStatuses: {
                         none: { userId }
@@ -65,18 +65,18 @@ export class ProblemRepository {
                 });
             }
 
-            if (status.includes("ATTEMPTED")) {
+            if (status.includes(ProblemSolutionStatus.ATTEMPTED)) {
                 statusFilters.push({
                     userStatuses: {
-                        some: { userId, status: "ATTEMPTED" }
+                        some: { userId, status: ProblemSolutionStatus.ATTEMPTED }
                     }
                 });
             }
 
-            if (status.includes("SOLVED")) {
+            if (status.includes(ProblemSolutionStatus.SOLVED)) {
                 statusFilters.push({
                     userStatuses: {
-                        some: { userId, status: "SOLVED" }
+                        some: { userId, status: ProblemSolutionStatus.SOLVED }
                     }
                 });
             }

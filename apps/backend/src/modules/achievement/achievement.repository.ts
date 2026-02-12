@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient, Difficulty, UserProblemStatus, SubmissionStatus } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -31,22 +31,22 @@ export class AchievementRepository {
         switch (criteria) {
             case "PROBLEM_SOLVED":
                 return this.prisma.submission.count({
-                    where: { userId, status: "ACCEPTED" }
+                    where: { userId, status: SubmissionStatus.ACCEPTED }
                 });
 
             case "EASY_SOLVED":
                 return this.prisma.submission.count({
-                    where: { userId, status: "ACCEPTED", problem: { difficulty: "EASY" } }
+                    where: { userId, status: SubmissionStatus.ACCEPTED, problem: { difficulty: Difficulty.EASY } }
                 });
 
             case "MEDIUM_SOLVED":
                 return this.prisma.submission.count({
-                    where: { userId, status: "ACCEPTED", problem: { difficulty: "MEDIUM" } }
+                    where: { userId, status: SubmissionStatus.ACCEPTED, problem: { difficulty: Difficulty.MEDIUM } }
                 });
 
             case "HARD_SOLVED":
                 return this.prisma.submission.count({
-                    where: { userId, status: "ACCEPTED", problem: { difficulty: "HARD" } }
+                    where: { userId, status: SubmissionStatus.ACCEPTED, problem: { difficulty: Difficulty.HARD } }
                 });
 
             case "POSTS_CREATED":

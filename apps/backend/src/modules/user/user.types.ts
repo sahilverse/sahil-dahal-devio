@@ -1,4 +1,4 @@
-import { AccountStatus, ProviderType } from "../../generated/prisma/client";
+import { AccountStatus, ProviderType, SubmissionStatus } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 
 export interface CreateUserPayload {
@@ -75,7 +75,7 @@ export type UserProfile = Prisma.UserGetPayload<{
             };
         };
         submissions: {
-            where: { status: "ACCEPTED" };
+            where: { status: "ACCEPTED" },
             select: {
                 createdAt: true;
                 problem: {

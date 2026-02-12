@@ -56,7 +56,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *           type: array
  *           items:
  *             type: string
- *             enum: [TODO, ATTEMPTED, SOLVED]
+ *             enum: [UNSOLVED, ATTEMPTED, SOLVED]
  *     responses:
  *       200:
  *         description: Problems retrieved
