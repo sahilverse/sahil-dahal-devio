@@ -79,6 +79,15 @@ export const TYPES = {
 
     AchievementRepository: Symbol.for("AchievementRepository"),
     AchievementService: Symbol.for("AchievementService"),
+
+    CommentRepository: Symbol.for("CommentRepository"),
+    CommentService: Symbol.for("CommentService"),
+    CommentController: Symbol.for("CommentController"),
+
+    NotificationRepository: Symbol.for("NotificationRepository"),
+    NotificationService: Symbol.for("NotificationService"),
+
+    MentionService: Symbol.for("MentionService"),
 };
 
 export * from "./jwt";

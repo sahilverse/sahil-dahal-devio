@@ -27,6 +27,9 @@ import { ProblemRepository, ProblemService, ProblemSyncService, ProblemControlle
 import { SubmissionService, SubmissionController, Judge0Service, SubmissionRepository } from "../modules/submission";
 import { CipherRepository, CipherService, CipherController } from "../modules/cipher";
 import { AchievementRepository, AchievementService } from "../modules/achievement";
+import { CommentRepository, CommentService, CommentController } from "../modules/comment";
+import { NotificationRepository, NotificationService } from "../modules/notification";
+import { MentionService } from "../modules/mention/mention.service";
 
 
 const container = new Container();
@@ -114,5 +117,14 @@ container.bind<ProblemDraftService>(TYPES.ProblemDraftService).to(ProblemDraftSe
 
 container.bind<AchievementRepository>(TYPES.AchievementRepository).to(AchievementRepository).inSingletonScope();
 container.bind<AchievementService>(TYPES.AchievementService).to(AchievementService).inSingletonScope();
+
+container.bind<CommentRepository>(TYPES.CommentRepository).to(CommentRepository).inSingletonScope();
+container.bind<CommentService>(TYPES.CommentService).to(CommentService).inSingletonScope();
+container.bind<CommentController>(TYPES.CommentController).to(CommentController).inSingletonScope();
+
+container.bind<NotificationRepository>(TYPES.NotificationRepository).to(NotificationRepository).inSingletonScope();
+container.bind<NotificationService>(TYPES.NotificationService).to(NotificationService).inSingletonScope();
+
+container.bind<MentionService>(TYPES.MentionService).to(MentionService).inSingletonScope();
 
 export { container };

@@ -12,6 +12,8 @@ import { plainToInstance } from "class-transformer";
 import { PostResponseDto, GetPostsDto } from "./post.dto";
 import { AuraService } from "../aura/aura.service";
 import { ActivityService } from "../activity/activity.service";
+import { MentionService } from "../mention/mention.service";
+import { logger } from "../../utils/logger";
 
 
 @injectable()
@@ -22,7 +24,8 @@ export class PostService {
         @inject(TYPES.TopicService) private topicService: TopicService,
         @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
         @inject(TYPES.AuraService) private auraService: AuraService,
-        @inject(TYPES.ActivityService) private activityService: ActivityService
+        @inject(TYPES.ActivityService) private activityService: ActivityService,
+        @inject(TYPES.MentionService) private mentionService: MentionService
     ) { }
 
     async createPost(
@@ -152,6 +155,15 @@ export class PostService {
             const postResponse = plainToInstance(PostResponseDto, post, { excludeExtraneousValues: true });
 
             await this.activityService.logActivity(userId, ActivityType.POST_CREATE);
+
+            // 8. Process Mentions (Non-blocking)
+            this.mentionService.processMentions({
+                content: `${data.title} ${data.content || ""}`,
+                authorId: userId,
+                sourceType: "POST",
+                sourceId: post.id,
+                actionUrl: `/posts/${post.id}`,
+            }).catch(err => logger.error(`Mention processing failed for post ${post.id}:`, err));
 
             return postResponse;
         });

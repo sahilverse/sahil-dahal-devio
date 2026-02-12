@@ -14,6 +14,7 @@ import problemRoutes from "../modules/problem/problem.route";
 import submissionRoutes from "../modules/submission/submission.route";
 import { auraRouter } from "../modules/aura/aura.route";
 import { router as cipherRoutes } from "../modules/cipher/cipher.route";
+import { router as commentRoutes } from "../modules/comment/comment.route";
 
 const router: Router = Router();
 
@@ -30,6 +31,7 @@ router.use("/problems", problemRoutes);
 router.use("/submissions", submissionRoutes);
 router.use("/aura", auraRouter);
 router.use("/cipher", cipherRoutes);
+router.use(commentRoutes);
 
 
 
