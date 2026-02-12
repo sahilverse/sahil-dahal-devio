@@ -66,6 +66,12 @@ export class NotificationRepository {
         });
     }
 
+    async countUnread(userId: string): Promise<number> {
+        return this.prisma.notification.count({
+            where: { userId, read_at: null }
+        });
+    }
+
     async delete(id: string): Promise<void> {
         await this.prisma.notification.delete({ where: { id } });
     }

@@ -52,4 +52,8 @@ export class NotificationService {
     async markAllRead(userId: string) {
         await this.notificationRepository.markAllAsRead(userId);
     }
+
+    async getUnreadCount(userId: string) {
+        return this.notificationRepository.countUnread(userId);
+    }
 }

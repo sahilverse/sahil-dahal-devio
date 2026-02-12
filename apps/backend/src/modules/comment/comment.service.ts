@@ -89,7 +89,7 @@ export class CommentService {
             authorId: userId,
             sourceType: "COMMENT",
             sourceId: comment.id,
-            actionUrl: `/posts/${comment.postId}`,
+            actionUrl: `/posts/${comment.postId}#comment-${comment.id}`,
         }).catch(err => logger.error(`Mention processing failed for comment ${comment.id}:`, err));
 
         return plainToInstance(CommentResponseDto, comment, {

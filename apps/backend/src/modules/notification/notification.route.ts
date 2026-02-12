@@ -40,6 +40,22 @@ router.get("/", controller.getNotifications);
 
 /**
  * @swagger
+ * /notifications/unread-count:
+ *   get:
+ *     summary: Get count of unread notifications
+ *     tags: [Notification]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unread count fetched successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/unread-count", controller.getUnreadCount);
+
+/**
+ * @swagger
  * /notifications/read-all:
  *   patch:
  *     summary: Mark all current user's unread notifications as read

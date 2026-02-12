@@ -44,4 +44,10 @@ export class NotificationController {
         await this.notificationService.markAllRead(userId);
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "All notifications marked as read");
     });
+
+    getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user!.id;
+        const count = await this.notificationService.getUnreadCount(userId);
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Unread count fetched successfully", { count });
+    });
 }

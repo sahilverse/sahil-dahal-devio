@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { UserRepository } from "./user.repository";
 import { ApiError } from "../../utils/ApiError";
 import type { User } from "../../generated/prisma/client";
-import { AccountStatus, Difficulty } from "../../generated/prisma/client";
+import { AccountStatus, Difficulty, NotificationType } from "../../generated/prisma/client";
 import type {
     OnboardingPayload,
     UserProfile,
@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { AuthUserDto } from "../auth";
 import { plainToInstance } from "class-transformer";
 import { CommunityRepository, GetJoinedCommunitiesResponseDto } from "../community";
+import { NotificationService } from "../notification";
 
 @injectable()
 export class UserService {
@@ -34,7 +35,8 @@ export class UserService {
         @inject(TYPES.UserRepository) private userRepository: UserRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
         @inject(TYPES.SkillService) private skillService: SkillService,
-        @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository
+        @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
+        @inject(TYPES.NotificationService) private notificationService: NotificationService
     ) { }
 
     async completeOnboarding(userId: string, payload: OnboardingPayload): Promise<AuthUserDto> {
@@ -189,7 +191,15 @@ export class UserService {
 
         await this.userRepository.followUser(followerId, targetUser.id);
 
-        // TODO: Trigger notification
+        // Trigger notification
+        const follower = await this.userRepository.findById(followerId);
+        await this.notificationService.notify({
+            userId: targetUser.id,
+            type: NotificationType.FOLLOW,
+            actorId: followerId,
+            message: `followed you`,
+            actionUrl: `/u/${follower?.username}`,
+        });
     }
 
     async unfollowUser(targetUsername: string, followerId: string): Promise<void> {
