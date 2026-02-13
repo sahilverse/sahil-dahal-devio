@@ -74,4 +74,12 @@ export class CommentController {
         await this.commentService.acceptAnswer(userId, postId, commentId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Answer accepted successfully");
     });
+
+    unacceptAnswer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+
+        await this.commentService.unacceptAnswer(userId, postId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Answer unaccepted successfully");
+    });
 }

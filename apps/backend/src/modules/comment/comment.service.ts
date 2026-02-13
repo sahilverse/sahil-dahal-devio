@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { ActivityType, AuraReason, CipherReason, MediaType, PostType } from "../../generated/prisma/client";
+import { ActivityType, AuraReason, CipherReason, MediaType, PostType, NotificationType } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 import { CommentRepository } from "./comment.repository";
 import { CommentResponseDto, GetCommentsDto } from "./comment.dto";
@@ -13,6 +13,7 @@ import { plainToInstance } from "class-transformer";
 import { CommunityRepository } from "../community/community.repository";
 import { MentionService } from "../mention/mention.service";
 import { logger } from "../../utils/logger";
+import { NotificationService } from "../notification/notification.service";
 
 @injectable()
 export class CommentService {
@@ -24,6 +25,7 @@ export class CommentService {
         @inject(TYPES.ActivityService) private activityService: ActivityService,
         @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
         @inject(TYPES.MentionService) private mentionService: MentionService,
+        @inject(TYPES.NotificationService) private notificationService: NotificationService,
     ) { }
 
     async createComment(
@@ -48,14 +50,15 @@ export class CommentService {
         }
 
         // 2. If reply, validate parent comment exists and belongs to same post
+        let parentComment: any = null;
         if (data.parentId) {
-            const parent = await this.commentRepository.findById(data.parentId);
-            if (!parent) throw new ApiError("Parent comment not found", StatusCodes.NOT_FOUND);
-            if (parent.postId !== postId) throw new ApiError("Parent comment does not belong to this post", StatusCodes.BAD_REQUEST);
+            parentComment = await this.commentRepository.findById(data.parentId);
+            if (!parentComment) throw new ApiError("Parent comment not found", StatusCodes.NOT_FOUND);
+            if (parentComment.postId !== postId) throw new ApiError("Parent comment does not belong to this post", StatusCodes.BAD_REQUEST);
 
             // Flatten nested replies: if parent has a parent, reply to the parent's parent instead
-            if (parent.parentId) {
-                data.parentId = parent.parentId;
+            if (parentComment.parentId) {
+                data.parentId = parentComment.parentId;
             }
         }
 
@@ -95,13 +98,74 @@ export class CommentService {
         await this.activityService.logActivity(userId, ActivityType.COMMENT_CREATE);
 
         // 6. Process Mentions (Non-blocking)
-        this.mentionService.processMentions({
+        const mentionResultsPromise = this.mentionService.processMentions({
             content: comment.content,
             authorId: userId,
             sourceType: "COMMENT",
             sourceId: comment.id,
             actionUrl: `/post/${comment.postId}#comment-${comment.id}`,
-        }).catch(err => logger.error(`Mention processing failed for comment ${comment.id}:`, err));
+        });
+
+        // 7. Handle Post & Parent Author Notifications (Non-blocking)
+        (async () => {
+            try {
+                const { notifiedUserIds } = await mentionResultsPromise;
+                const notifiedSet = new Set(notifiedUserIds);
+
+                const commentUrl = `/post/${comment.postId}#comment-${comment.id}`;
+
+                // A. Notify Post Author
+                if (post.authorId !== userId && !notifiedSet.has(post.authorId)) {
+                    await this.notificationService.notify({
+                        userId: post.authorId,
+                        type: NotificationType.COMMENT,
+                        actorId: userId,
+                        message: `commented on your post: "${post.title}"`,
+                        actionUrl: commentUrl,
+                        data: { postId: post.id, commentId: comment.id }
+                    });
+                    notifiedSet.add(post.authorId);
+                }
+
+                // B. Notify Parent Comment Author (if reply)
+                if (parentComment && parentComment.authorId !== userId && !notifiedSet.has(parentComment.authorId)) {
+                    await this.notificationService.notify({
+                        userId: parentComment.authorId,
+                        type: NotificationType.COMMENT,
+                        actorId: userId,
+                        message: `replied to your comment`,
+                        actionUrl: commentUrl,
+                        data: { postId: post.id, commentId: comment.id, parentId: parentComment.id }
+                    });
+                    notifiedSet.add(parentComment.authorId);
+                }
+
+                // C. Notify users mentioned in parent comment (if reply)
+                if (parentComment) {
+                    const { users: parentMentionedUsernames } = this.mentionService.parseMentions(parentComment.content);
+                    for (const username of parentMentionedUsernames) {
+                        try {
+                            const user = await this.postRepository.client.user.findUnique({ where: { username }, select: { id: true } });
+                            if (user && user.id !== userId && !notifiedSet.has(user.id)) {
+                                await this.notificationService.notify({
+                                    userId: user.id,
+                                    type: NotificationType.COMMENT,
+                                    actorId: userId,
+                                    message: `replied to a comment you were mentioned in`,
+                                    actionUrl: commentUrl,
+                                    data: { postId: post.id, commentId: comment.id, parentId: parentComment.id }
+                                });
+                                notifiedSet.add(user.id);
+                            }
+                        } catch (e) {
+                            // Ignore user lookup errors
+                        }
+                    }
+                }
+            } catch (err) {
+                logger.error(`Notification processing failed for comment ${comment.id}: ${err}`);
+            }
+        })();
 
         return plainToInstance(CommentResponseDto, comment, {
             excludeExtraneousValues: true,
@@ -283,6 +347,9 @@ export class CommentService {
         if (comment.parentId) throw new ApiError("Only top-level comments can be accepted as answers", StatusCodes.BAD_REQUEST);
 
         // 3. Transaction: update accepted answer + transfer bounty
+        let bountyAwarded = false;
+        const bountyAmount = (post as any).bountyAmount;
+
         await this.commentRepository.client.$transaction(async (tx) => {
             // Set accepted answer
             await tx.post.update({
@@ -291,7 +358,6 @@ export class CommentService {
             });
 
             // Transfer bounty if exists and not yet paid
-            const bountyAmount = (post as any).bountyAmount;
             const isBountyPaid = (post as any).isBountyPaid;
             const isSelfAnswer = comment.authorId === userId;
 
@@ -317,6 +383,8 @@ export class CommentService {
                     where: { id: postId },
                     data: { isBountyPaid: true },
                 });
+
+                bountyAwarded = true;
             }
         });
 
@@ -324,5 +392,56 @@ export class CommentService {
         if (comment.authorId !== userId) {
             await this.auraService.awardAura(comment.authorId, 15, AuraReason.ANSWER_ACCEPTED, postId);
         }
+
+        // 5. Real-time Notifications
+        if (comment.authorId !== userId) {
+            const postUrl = `/post/${postId}#comment-${commentId}`;
+
+            // Notify: answer accepted
+            this.notificationService.notify({
+                userId: comment.authorId,
+                type: NotificationType.COMMENT,
+                actorId: userId,
+                message: `accepted your answer on "${(post as any).title}"`,
+                actionUrl: postUrl,
+                data: { postId, commentId, event: "answer_accepted" },
+            }).catch(err => logger.error(`Notification failed for answer accept: ${err}`));
+
+            // Notify: bounty awarded
+            if (bountyAwarded && bountyAmount) {
+                this.notificationService.notify({
+                    userId: comment.authorId,
+                    type: NotificationType.SYSTEM,
+                    actorId: userId,
+                    message: `You received ${bountyAmount} Ciphers bounty for your answer!`,
+                    actionUrl: postUrl,
+                    data: { postId, commentId, bountyAmount, event: "bounty_awarded" },
+                }).catch(err => logger.error(`Notification failed for bounty award: ${err}`));
+            }
+        }
+    }
+
+    async unacceptAnswer(
+        userId: string,
+        postId: string
+    ): Promise<void> {
+        // 1. Validate post exists and is QUESTION type
+        const post = await this.postRepository.findById(postId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+        if ((post as any).type !== PostType.QUESTION) {
+            throw new ApiError("Only QUESTION posts can have accepted answers", StatusCodes.BAD_REQUEST);
+        }
+        if ((post as any).authorId !== userId) {
+            throw new ApiError("Only the post author can unaccept an answer", StatusCodes.FORBIDDEN);
+        }
+        if (!(post as any).acceptedAnswerId) {
+            throw new ApiError("No answer is currently accepted", StatusCodes.BAD_REQUEST);
+        }
+
+        // 2. Clear accepted answer (no bounty refund, no aura clawback)
+        await this.commentRepository.client.post.update({
+            where: { id: postId },
+            data: { acceptedAnswerId: null },
+        });
     }
 }

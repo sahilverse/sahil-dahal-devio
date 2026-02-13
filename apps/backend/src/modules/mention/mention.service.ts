@@ -38,6 +38,7 @@ export class MentionService {
         actionUrl: string;
     }) {
         const { users, communities } = this.parseMentions(params.content);
+        const notifiedUserIds: string[] = [];
 
         // 1. Process User Mentions -> Notifications
         for (const username of users) {
@@ -55,12 +56,13 @@ export class MentionService {
                             sourceId: params.sourceId,
                         }
                     });
+                    notifiedUserIds.push(user.id);
                 }
             } catch (error) {
                 logger.error(error as Error, `Error processing user mention for ${username}`);
             }
         }
 
-        return { users, communities };
+        return { users, communities, notifiedUserIds };
     }
 }

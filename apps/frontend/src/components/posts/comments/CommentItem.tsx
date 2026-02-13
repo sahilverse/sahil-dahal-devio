@@ -13,13 +13,14 @@ import {
     MoreHorizontal,
     Pencil,
     Trash2,
-    CheckCircle2
+    CheckCircle2,
+    XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Markdown from "react-markdown";
-import { useVoteComment, useFetchReplies, useDeleteComment, useAcceptAnswer } from "@/hooks/useComments";
+import { useVoteComment, useFetchReplies, useDeleteComment, useAcceptAnswer, useUnacceptAnswer } from "@/hooks/useComments";
 import { useAppSelector } from "@/store/hooks";
 import { CommentInput } from "./CommentInput";
 import {
@@ -39,6 +40,7 @@ interface CommentItemProps {
     isAccepted?: boolean;
     postAuthorId?: string;
     isQuestionPost?: boolean;
+    acceptedAnswerId?: string;
 }
 
 export function CommentItem({
@@ -46,7 +48,8 @@ export function CommentItem({
     isReply,
     isAccepted,
     postAuthorId,
-    isQuestionPost
+    isQuestionPost,
+    acceptedAnswerId
 }: CommentItemProps) {
     const { user } = useAppSelector((state) => state.auth);
     const [isReplying, setIsReplying] = useState(false);
@@ -65,6 +68,7 @@ export function CommentItem({
     });
     const deleteMutation = useDeleteComment();
     const acceptMutation = useAcceptAnswer();
+    const unacceptMutation = useUnacceptAnswer();
     const { openLogin } = useAuthModal();
 
     const {
@@ -99,8 +103,14 @@ export function CommentItem({
         acceptMutation.mutate({ postId: comment.postId, commentId: comment.id });
     };
 
+    const handleUnaccept = () => {
+        unacceptMutation.mutate({ postId: comment.postId });
+    };
+
     const isAuthor = user?.id === comment.author.id;
-    const canAccept = isQuestionPost && user?.id === postAuthorId && !comment.parentId && !isAccepted;
+    const isPostAuthor = user?.id === postAuthorId;
+    const canAccept = isQuestionPost && isPostAuthor && !comment.parentId && !isAccepted;
+    const canUnaccept = isQuestionPost && isPostAuthor && isAccepted;
 
     return (
         <div
@@ -160,6 +170,11 @@ export function CommentItem({
                                 {canAccept && (
                                     <DropdownMenuItem onClick={handleAccept} className="cursor-pointer">
                                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Mark as Solution
+                                    </DropdownMenuItem>
+                                )}
+                                {canUnaccept && (
+                                    <DropdownMenuItem onClick={handleUnaccept} className="cursor-pointer">
+                                        <XCircle className="mr-2 h-4 w-4 text-amber-500" /> Unmark Solution
                                     </DropdownMenuItem>
                                 )}
                                 {!isAuthor && (

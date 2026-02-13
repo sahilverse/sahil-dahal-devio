@@ -89,6 +89,13 @@ export class CommentRepository {
     ) {
         const { cursor, limit, sort, currentUserId, replyPreviewLimit = 3 } = options;
 
+        // Look up the accepted answer to pin it to the top
+        const post = await this.prisma.post.findUnique({
+            where: { id: postId },
+            select: { acceptedAnswerId: true },
+        });
+        const acceptedAnswerId = post?.acceptedAnswerId;
+
         let orderBy: Prisma.CommentOrderByWithRelationInput[];
         switch (sort) {
             case "newest":
@@ -103,7 +110,7 @@ export class CommentRepository {
                 break;
         }
 
-        return this.prisma.comment.findMany({
+        const comments = await this.prisma.comment.findMany({
             where: {
                 postId,
                 parentId: null, // Top-level comments only
@@ -125,6 +132,17 @@ export class CommentRepository {
                 },
             },
         });
+
+        // Pin accepted answer to the top
+        if (acceptedAnswerId) {
+            const acceptedIdx = comments.findIndex(c => c.id === acceptedAnswerId);
+            if (acceptedIdx > 0) {
+                const [accepted] = comments.splice(acceptedIdx, 1);
+                if (accepted) comments.unshift(accepted);
+            }
+        }
+
+        return comments;
     }
 
     async findReplies(

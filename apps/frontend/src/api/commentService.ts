@@ -49,5 +49,10 @@ export const CommentService = {
     acceptAnswer: async (postId: string, commentId: string) => {
         const response = await api.post(`/posts/${postId}/accept-answer`, { commentId });
         return response.data;
+    },
+
+    unacceptAnswer: async (postId: string) => {
+        const response = await api.delete(`/posts/${postId}/accept-answer`);
+        return response.data;
     }
 };

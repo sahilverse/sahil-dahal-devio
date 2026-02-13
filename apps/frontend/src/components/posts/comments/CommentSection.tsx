@@ -11,9 +11,12 @@ import { Loader2, MessageSquare } from "lucide-react";
 interface CommentSectionProps {
     postId: string;
     commentCount: number;
+    postAuthorId?: string;
+    isQuestionPost?: boolean;
+    acceptedAnswerId?: string;
 }
 
-export function CommentSection({ postId, commentCount }: CommentSectionProps) {
+export function CommentSection({ postId, commentCount, postAuthorId, isQuestionPost, acceptedAnswerId }: CommentSectionProps) {
     const [params, setParams] = useState<GetCommentsParams>({
         limit: 20,
         sort: "best",
@@ -84,7 +87,14 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
 
             <div className="space-y-4">
                 {comments.map((comment) => (
-                    <CommentItem key={comment.id} comment={comment} />
+                    <CommentItem
+                        key={comment.id}
+                        comment={comment}
+                        isAccepted={comment.id === acceptedAnswerId}
+                        postAuthorId={postAuthorId}
+                        isQuestionPost={isQuestionPost}
+                        acceptedAnswerId={acceptedAnswerId}
+                    />
                 ))}
 
                 {isLoading && (

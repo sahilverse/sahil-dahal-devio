@@ -128,6 +128,13 @@ router.post(
     commentController.acceptAnswer
 );
 
+router.delete(
+    "/posts/:postId/accept-answer",
+    authMiddleware.guard,
+    authMiddleware.verifiedOnly,
+    commentController.unacceptAnswer
+);
+
 /**
  * @swagger
  * /comments/{commentId}/replies:

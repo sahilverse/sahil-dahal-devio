@@ -45,4 +45,5 @@ export interface PostResponseDto {
     isSaved?: boolean;
     isPinned: boolean;
     visibility: "PUBLIC" | "PRIVATE";
+    acceptedAnswerId?: string;
 }

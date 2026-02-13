@@ -222,3 +222,22 @@ export function useAcceptAnswer() {
         }
     });
 }
+
+export function useUnacceptAnswer() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ postId }: { postId: string }) =>
+            CommentService.unacceptAnswer(postId),
+        onSuccess: (_, variables) => {
+            toast.success("Answer unmarked.");
+            queryClient.invalidateQueries({ queryKey: ["comments", variables.postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage || "Failed to unmark answer.";
+            toast.error(message);
+        }
+    });
+}

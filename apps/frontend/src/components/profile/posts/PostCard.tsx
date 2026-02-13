@@ -13,7 +13,10 @@ import {
     EyeOff,
     Pin,
     Pencil,
-    Eye
+    Eye,
+    HelpCircle,
+    Coins,
+    CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -222,6 +225,25 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                 </DropdownMenu>
             </div>
 
+            {/* Question / Bounty / Solved Badges */}
+            {post.type === "QUESTION" && (
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-500 border border-violet-500/20 text-[11px] font-bold uppercase tracking-wider">
+                        <HelpCircle className="h-3 w-3" /> Question
+                    </span>
+                    {post.bountyAmount && post.bountyAmount > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[11px] font-bold uppercase tracking-wider">
+                            <Coins className="h-3 w-3" /> {post.bountyAmount} Bounty
+                        </span>
+                    )}
+                    {post.acceptedAnswerId && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 text-[11px] font-bold uppercase tracking-wider">
+                            <CheckCircle2 className="h-3 w-3" /> Solved
+                        </span>
+                    )}
+                </div>
+            )}
+
             {/* Title */}
             <p className="text-lg font-semibold leading-snug text-foreground mb-2">
                 {post.title}
@@ -373,6 +395,9 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                 <CommentSection
                     postId={post.id}
                     commentCount={post.commentCount}
+                    postAuthorId={post.author.id}
+                    isQuestionPost={post.type === "QUESTION"}
+                    acceptedAnswerId={post.acceptedAnswerId}
                 />
             )}
 
