@@ -57,14 +57,9 @@ export class MessageDTO {
     }
 
     @Expose()
-    get content(): string | null {
-        if (this.deletedAt) return "This message was removed";
-        return this._content;
-    }
-    set content(value: string | null) {
-        this._content = value;
-    }
-    private _content!: string | null;
+    @Transform(({ obj, value }) => (obj.deletedAt ? "This message was removed" : value))
+    content!: string | null;
+
 }
 
 @Exclude()
