@@ -19,6 +19,8 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
         sort: "best",
     });
 
+    const [isAddingComment, setIsAddingComment] = useState(false);
+
     const {
         data,
         fetchNextPage,
@@ -65,7 +67,20 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
                 </div>
             </div>
 
-            <CommentInput postId={postId} />
+            {isAddingComment ? (
+                <CommentInput
+                    postId={postId}
+                    onCancel={() => setIsAddingComment(false)}
+                    onSuccess={() => setIsAddingComment(false)}
+                />
+            ) : (
+                <button
+                    onClick={() => setIsAddingComment(true)}
+                    className="w-full text-left px-4 py-3 bg-muted/30 border border-border/50 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all cursor-pointer font-medium"
+                >
+                    Add a comment...
+                </button>
+            )}
 
             <div className="space-y-4">
                 {comments.map((comment) => (
