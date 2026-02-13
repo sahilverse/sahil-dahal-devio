@@ -77,7 +77,7 @@ export default function NotificationsPage() {
     }
 
     return (
-        <div className="py-8 space-y-6 pr-70 animate-in fade-in duration-500">
+        <div className="py-4 lg:py-8 space-y-6 lg:pr-70 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
