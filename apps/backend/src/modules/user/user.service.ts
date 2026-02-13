@@ -231,9 +231,14 @@ export class UserService {
 
     private calculateProblemStats(submissions: any[]) {
         const stats = { total: 0, easy: 0, medium: 0, hard: 0 };
+        const seenProblems = new Set<string>();
+
         if (!submissions) return stats;
 
         submissions.forEach((s) => {
+            if (seenProblems.has(s.problem.id)) return;
+            seenProblems.add(s.problem.id);
+
             stats.total++;
             const diff = s.problem?.difficulty;
             if (diff === Difficulty.EASY) stats.easy++;

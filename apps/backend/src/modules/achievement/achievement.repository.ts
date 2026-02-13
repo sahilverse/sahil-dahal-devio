@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Difficulty, UserProblemStatus, SubmissionStatus } from "../../generated/prisma/client";
+import { PrismaClient, Difficulty, UserProblemStatus, SubmissionStatus, ProblemSolutionStatus } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -30,23 +30,23 @@ export class AchievementRepository {
     async getUserCriteriaCount(userId: string, criteria: string): Promise<number> {
         switch (criteria) {
             case "PROBLEM_SOLVED":
-                return this.prisma.submission.count({
-                    where: { userId, status: SubmissionStatus.ACCEPTED }
+                return this.prisma.userProblemStatus.count({
+                    where: { userId, status: ProblemSolutionStatus.SOLVED }
                 });
 
             case "EASY_SOLVED":
-                return this.prisma.submission.count({
-                    where: { userId, status: SubmissionStatus.ACCEPTED, problem: { difficulty: Difficulty.EASY } }
+                return this.prisma.userProblemStatus.count({
+                    where: { userId, status: ProblemSolutionStatus.SOLVED, problem: { difficulty: Difficulty.EASY } }
                 });
 
             case "MEDIUM_SOLVED":
-                return this.prisma.submission.count({
-                    where: { userId, status: SubmissionStatus.ACCEPTED, problem: { difficulty: Difficulty.MEDIUM } }
+                return this.prisma.userProblemStatus.count({
+                    where: { userId, status: ProblemSolutionStatus.SOLVED, problem: { difficulty: Difficulty.MEDIUM } }
                 });
 
             case "HARD_SOLVED":
-                return this.prisma.submission.count({
-                    where: { userId, status: SubmissionStatus.ACCEPTED, problem: { difficulty: Difficulty.HARD } }
+                return this.prisma.userProblemStatus.count({
+                    where: { userId, status: ProblemSolutionStatus.SOLVED, problem: { difficulty: Difficulty.HARD } }
                 });
 
             case "POSTS_CREATED":
