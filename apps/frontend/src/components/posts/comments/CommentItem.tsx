@@ -53,8 +53,16 @@ export function CommentItem({
     const [isEditing, setIsEditing] = useState(false);
     const [showReplies, setShowReplies] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isHighlighted, setIsHighlighted] = useState(false);
 
     const voteMutation = useVoteComment();
+
+    useState(() => {
+        if (typeof window !== "undefined" && window.location.hash === `#comment-${comment.id}`) {
+            setIsHighlighted(true);
+            setTimeout(() => setIsHighlighted(false), 3000);
+        }
+    });
     const deleteMutation = useDeleteComment();
     const acceptMutation = useAcceptAnswer();
     const { openLogin } = useAuthModal();
@@ -95,11 +103,15 @@ export function CommentItem({
     const canAccept = isQuestionPost && user?.id === postAuthorId && !comment.parentId && !isAccepted;
 
     return (
-        <div className={cn(
-            "group relative transition-all",
-            isReply ? "mt-4 ml-4 pl-4 border-l-2 border-border/30" : "bg-card/30 rounded-xl p-4 border border-border/50",
-            isAccepted && "border-green-500/30 bg-green-500/5 ring-1 ring-green-500/10"
-        )}>
+        <div
+            id={`comment-${comment.id}`}
+            className={cn(
+                "group relative transition-all duration-1000 scroll-mt-24",
+                isReply ? "mt-4 ml-4 pl-4 border-l-2 border-border/30" : "bg-card/30 rounded-xl p-4 border border-border/50",
+                isAccepted && "border-green-500/30 bg-green-500/5 ring-1 ring-green-500/10",
+                isHighlighted && "ring-2 ring-brand-primary bg-brand-primary/5 shadow-lg shadow-brand-primary/10"
+            )}
+        >
             {isAccepted && (
                 <div className="absolute -left-3 top-4 bg-background p-1 rounded-full text-green-500 border border-green-500/50 shadow-sm z-10">
                     <CheckCircle2 className="h-4 w-4 fill-current" />

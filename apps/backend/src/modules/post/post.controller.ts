@@ -28,6 +28,15 @@ export class PostController {
         const result = await this.postService.getPosts(query, currentUserId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Posts fetched successfully", result);
     });
+
+    getPost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { postId } = req.params as { postId: string };
+        const currentUserId = req.user?.id;
+
+        const result = await this.postService.getPost(postId, currentUserId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Post fetched successfully", result);
+    });
+    
     updatePost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user!.id;
         const { postId } = req.params as { postId: string };

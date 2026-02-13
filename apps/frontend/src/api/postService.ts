@@ -53,6 +53,11 @@ export const PostService = {
         return data.result;
     },
 
+    getPostById: async (postId: string) => {
+        const { data } = await api.get(`/posts/${postId}`);
+        return data.result;
+    },
+
     votePost: async (postId: string, type: "UP" | "DOWN" | null) => {
         const { data } = await api.post(`/posts/${postId}/vote`, { type });
         return data.result;

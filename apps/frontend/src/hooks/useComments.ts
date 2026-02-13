@@ -10,17 +10,40 @@ export function useCreateComment() {
     return useMutation({
         mutationFn: ({ postId, content, parentId, media }: { postId: string; content: string; parentId?: string; media?: File[] }) =>
             CommentService.createComment(postId, content, parentId, media),
+        onMutate: async ({ postId, parentId }) => {
+            if (parentId) return; // Don't optimistically update post count for replies (optional)
+
+            await queryClient.cancelQueries({ queryKey: ["post", postId] });
+            const previousPost = queryClient.getQueryData(["post", postId]);
+
+            if (previousPost) {
+                queryClient.setQueryData(["post", postId], (old: any) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        commentCount: old.commentCount + 1
+                    };
+                });
+            }
+
+            return { previousPost };
+        },
+        onError: (error: any, { postId, parentId }, context) => {
+            if (context?.previousPost) {
+                queryClient.setQueryData(["post", postId], context.previousPost);
+            }
+            const message = error.errorMessage || "Failed to post comment.";
+            toast.error(message);
+        },
         onSuccess: (_, variables) => {
             toast.success(variables.parentId ? "Reply posted!" : "Comment posted!");
             queryClient.invalidateQueries({ queryKey: ["comments", variables.postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
             if (variables.parentId) {
                 queryClient.invalidateQueries({ queryKey: ["replies", variables.parentId] });
             }
         },
-        onError: (error: any) => {
-            const message = error.errorMessage || "Failed to post comment.";
-            toast.error(message);
-        }
     });
 }
 
@@ -65,6 +88,7 @@ export function useVoteComment() {
         onSuccess: (response) => {
             const comment = response.result;
             queryClient.invalidateQueries({ queryKey: ["comments", comment.postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", comment.postId] });
             if (comment.parentId) {
                 queryClient.invalidateQueries({ queryKey: ["replies", comment.parentId] });
             }
@@ -86,6 +110,7 @@ export function useUpdateComment() {
             const comment = response.result;
             toast.success("Comment updated!");
             queryClient.invalidateQueries({ queryKey: ["comments", comment.postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", comment.postId] });
             if (comment.parentId) {
                 queryClient.invalidateQueries({ queryKey: ["replies", comment.parentId] });
             }
@@ -170,6 +195,7 @@ export function useDeleteComment() {
             }
             // Also invalidate posts to get updated commentCount
             queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
         },
 
         onSuccess: () => {
@@ -187,6 +213,7 @@ export function useAcceptAnswer() {
         onSuccess: (_, variables) => {
             toast.success("Answer accepted!");
             queryClient.invalidateQueries({ queryKey: ["comments", variables.postId] });
+            queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
             queryClient.invalidateQueries({ queryKey: ["posts"] });
         },
         onError: (error: any) => {

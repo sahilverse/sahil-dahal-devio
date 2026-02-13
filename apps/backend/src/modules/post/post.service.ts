@@ -173,11 +173,21 @@ export class PostService {
                 authorId: userId,
                 sourceType: "POST",
                 sourceId: post.id,
-                actionUrl: `/posts/${post.id}`,
+                actionUrl: `/post/${post.id}`,
             }).catch(err => logger.error(`Mention processing failed for post ${post.id}:`, err));
 
             return postResponse;
         });
+    }
+
+    async getPost(postId: string, currentUserId?: string): Promise<PostResponseDto> {
+        const post = await this.postRepository.findById(postId, currentUserId);
+        if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
+
+        return plainToInstance(PostResponseDto, post, {
+            excludeExtraneousValues: true,
+            currentUserId
+        } as any);
     }
 
     async getPosts(

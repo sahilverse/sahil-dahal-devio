@@ -2,7 +2,7 @@
 
 import { useFetchComments } from "@/hooks/useComments";
 import { GetCommentsParams } from "@/types/comment";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CommentItem } from "./CommentItem";
 import { CommentInput } from "./CommentInput";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,18 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
     } = useFetchComments(postId, params);
 
     const comments = data?.pages.flatMap((page) => page.comments) || [];
+
+    useEffect(() => {
+        if (!isLoading && comments.length > 0 && typeof window !== "undefined") {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith("#comment-")) {
+                const element = document.getElementById(hash.substring(1));
+                if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
+        }
+    }, [isLoading, comments]);
 
     return (
         <div className="mt-6 space-y-6 pt-6 border-t border-border/50">
