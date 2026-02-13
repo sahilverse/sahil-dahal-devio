@@ -189,9 +189,7 @@ export default function ProblemsListPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-3 w-12 text-center">
-                                            {problem.status === "SOLVED" && (
-                                                <span className="text-xs font-mono text-muted-foreground">Solved</span>
-                                            )}
+                                            <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-brand-primary transition-colors mx-auto" />
                                         </td>
                                     </tr>
                                 ))
