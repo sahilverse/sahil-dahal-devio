@@ -67,10 +67,11 @@ export class ProblemSyncService {
                 isPublished,
                 cipherReward: structureData.cipherReward || 0,
                 topicIds,
-                testCases: testCasesData
+                testCases: testCasesData,
+                inputStructure: structureData.inputStructure
             });
 
-            this.runBackgroundCaching(slug, result.testCases, ui, full, bucket);
+            this.runBackgroundCaching(slug, (result as any).testCases, ui, full, bucket);
 
             logger.info(`Successfully synced problem: ${structureData.title} (${slug})`);
         } catch (error: any) {

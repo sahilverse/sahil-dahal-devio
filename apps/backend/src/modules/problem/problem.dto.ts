@@ -25,6 +25,7 @@ export class ProblemResponseDTO {
     @Expose() slug!: string;
     @Expose() difficulty!: Difficulty;
     @Expose() description!: string;
+    @Expose() inputStructure?: any;
 
     @Expose()
     @Transform(({ obj }) => obj.topics?.map((t: any) => ({

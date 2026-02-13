@@ -131,8 +131,9 @@ export class ProblemRepository {
         cipherReward: number;
         topicIds: string[];
         testCases: any[];
+        inputStructure?: any;
     }) {
-        const { slug, title, difficulty, description, storagePath, isPublished, cipherReward, topicIds, testCases } = params;
+        const { slug, title, difficulty, description, storagePath, isPublished, cipherReward, topicIds, testCases, inputStructure } = params;
 
         return this.prisma.$transaction(async (tx) => {
             const problem = await tx.problem.upsert({
@@ -152,7 +153,8 @@ export class ProblemRepository {
                     },
                     testCases: {
                         create: testCases
-                    }
+                    },
+                    inputStructure
                 },
                 update: {
                     title,
@@ -170,7 +172,8 @@ export class ProblemRepository {
                     testCases: {
                         deleteMany: {},
                         create: testCases
-                    }
+                    },
+                    inputStructure
                 },
                 include: {
                     testCases: {

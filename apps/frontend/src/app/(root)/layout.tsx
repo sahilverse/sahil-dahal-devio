@@ -1,5 +1,5 @@
 import Navbar from "@/components/navbar/Navbar";
-import HomeLayout from "@/components/layout/HomeLayout";
+import DynamicLayout from "./DynamicLayout";
 
 export default function MainLayout({
     children,
@@ -9,9 +9,9 @@ export default function MainLayout({
     return (
         <>
             <Navbar />
-            <HomeLayout>
+            <DynamicLayout>
                 {children}
-            </HomeLayout>
+            </DynamicLayout>
         </>
     );
 }

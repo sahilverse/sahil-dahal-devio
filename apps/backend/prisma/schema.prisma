@@ -843,7 +843,8 @@ model Problem {
 
   cipherReward Int @default(0) @map("cipher_reward")
 
-  isPublished Boolean @default(false) @map("is_published")
+  isPublished    Boolean @default(false) @map("is_published")
+  inputStructure Json?   @map("input_structure")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
