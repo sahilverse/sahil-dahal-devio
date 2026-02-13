@@ -59,13 +59,13 @@ export class CommunityController {
     joinCommunity = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user!.id;
         const { name } = req.params;
-        const { message } = req.body;
+        const { message } = req.body || {};
 
         if (!name) {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community name is required");
         }
 
-        const result = await this.communityService.joinCommunity(userId, name, message);
+        const result = await this.communityService.joinCommunity(name, userId, message);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Join request processed", result);
     });
 
@@ -214,5 +214,17 @@ export class CommunityController {
 
         const result = await this.communityService.removeMedia(name, userId, type as 'icon' | 'banner');
         ResponseHandler.sendResponse(res, StatusCodes.OK, `Community ${type} removed successfully`, result);
+    });
+
+    getExploreCommunities = asyncHandler(async (req: Request, res: Response) => {
+        const { limit, cursor, topicSlug } = req.query;
+        const userId = (req as any).user?.id;
+        const result = await this.communityService.getExploreCommunities(
+            limit ? parseInt(limit as string) : 10,
+            cursor as string | undefined,
+            topicSlug as string | undefined,
+            userId
+        );
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Explore communities fetched successfully", result);
     });
 }

@@ -55,12 +55,54 @@ export class PostRepository {
         status?: PostStatus;
         visibility?: PostVisibility;
         savedByUserId?: string;
+        sortBy?: "HOT" | "NEW" | "TOP" | "BEST";
     }): Promise<Post[]> {
-        const { cursor, limit, userId, communityId, currentUserId, status, visibility, savedByUserId } = params;
+        const { cursor, limit, userId, communityId, currentUserId, status, visibility, savedByUserId, sortBy } = params;
 
         const isOwner = userId && currentUserId && userId === currentUserId;
 
         const shouldSortByPin = (userId || communityId) && !savedByUserId;
+
+        const personalizedFilter: Prisma.PostWhereInput = {};
+        if (sortBy === "BEST" && currentUserId && !userId && !communityId) {
+            personalizedFilter.OR = [
+                {
+                    community: {
+                        members: { some: { userId: currentUserId } }
+                    }
+                },
+                {
+                    author: {
+                        followers: { some: { followerId: currentUserId } }
+                    }
+                }
+            ];
+        }
+
+        const getOrderBy = () => {
+            if (shouldSortByPin) {
+                return [
+                    { pinnedPosts: { _count: "desc" as Prisma.SortOrder } },
+                    { createdAt: "desc" } as any
+                ];
+            }
+
+            switch (sortBy) {
+                case "NEW":
+                    return { createdAt: "desc" };
+                case "TOP":
+                    return { upvotes: "desc" };
+                case "HOT":
+                    return [
+                        { upvotes: "desc" },
+                        { commentCount: "desc" },
+                        { createdAt: "desc" }
+                    ];
+                case "BEST":
+                default:
+                    return { createdAt: "desc" };
+            }
+        };
 
         return this.prisma.post.findMany({
             take: limit + 1,
@@ -77,6 +119,7 @@ export class PostRepository {
                         ]
                     }
                 }),
+                ...personalizedFilter,
 
                 ...(status
                     ? { status: status === PostStatus.DRAFT && !isOwner ? PostStatus.PUBLISHED : status }
@@ -92,14 +135,7 @@ export class PostRepository {
                     }
                 })
             },
-            orderBy: [
-                ...(shouldSortByPin ? [{
-                    pinnedPosts: {
-                        _count: "desc" as Prisma.SortOrder
-                    }
-                }] : []),
-                { createdAt: "desc" }
-            ],
+            orderBy: getOrderBy() as any,
             include: this.getPostInclude(currentUserId),
         });
     }

@@ -153,6 +153,18 @@ router.get("/", communityController.searchCommunities);
 
 /**
  * @swagger
+ * /communities/explore:
+ *   get:
+ *     summary: Get public communities grouped by topics for discovery
+ *     tags: [Community]
+ *     responses:
+ *       200:
+ *         description: Communities grouped by topics
+ */
+router.get("/explore", authMiddleware.extractUser, communityController.getExploreCommunities);
+
+/**
+ * @swagger
  * /communities/{name}:
  *   get:
  *     summary: Get community details by name (Main Info)

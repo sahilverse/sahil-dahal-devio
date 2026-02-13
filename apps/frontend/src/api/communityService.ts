@@ -16,8 +16,16 @@ export const CommunityService = {
         return response.data;
     },
 
-    joinCommunity: async (communityId: string) => {
-        const response = await api.post(`/communities/${communityId}/join`);
+    joinCommunity: async (name: string) => {
+        const response = await api.post(`/communities/${name}/join`, {});
+        return response.data;
+    },
+
+    getExploreCommunities: async (limit: number = 10, cursor?: string, topicSlug?: string) => {
+        const response = await api.get("/communities/explore", {
+            params: { limit, cursor, topicSlug }
+        });
         return response.data;
     }
 };
+

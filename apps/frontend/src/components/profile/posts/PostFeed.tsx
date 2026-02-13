@@ -16,9 +16,10 @@ interface PostFeedProps {
     onlySaved?: boolean;
     isCurrentUser?: boolean;
     username?: string;
+    sortBy?: string;
 }
 
-export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser, username }: PostFeedProps) {
+export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser, username, sortBy }: PostFeedProps) {
     const { user } = useAppSelector((state) => state.auth);
 
     const {
@@ -28,7 +29,7 @@ export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser
         isFetchingNextPage,
         isLoading,
         isError
-    } = useFetchPosts({ userId, communityId, onlySaved, limit: 10 });
+    } = useFetchPosts({ userId, communityId, onlySaved, sortBy, limit: 10 });
 
     const { ref, inView } = useInView();
 
@@ -63,9 +64,13 @@ export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser
                     <p className="text-muted-foreground">
                         {onlySaved
                             ? "You haven't saved any posts yet"
-                            : isCurrentUser
-                                ? "You haven't posted anything yet"
-                                : `u/${username} hasn't posted anything yet`}
+                            : communityId
+                                ? "No posts in this community yet"
+                                : userId
+                                    ? isCurrentUser
+                                        ? "You haven't posted anything yet"
+                                        : `u/${username || 'User'} hasn't posted anything yet`
+                                    : "No posts found in this feed"}
                     </p>
                     {isCurrentUser && (
                         <p className="text-sm text-muted-foreground/70">

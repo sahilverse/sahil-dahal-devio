@@ -32,6 +32,7 @@ import { useAppSelector } from "@/store/hooks";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 
 
 interface PostCardProps {
@@ -47,9 +48,11 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
     const pinMutation = usePinPost();
     const deleteMutation = useDeletePost();
 
+    const { openLogin } = useAuthModal();
+
     const handleVote = (type: "UP" | "DOWN") => {
         if (!user) {
-            toast.error("Please login to vote");
+            openLogin();
             return;
         }
         const newType = post.userVote === type ? null : type;
@@ -58,7 +61,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
 
     const handleSave = () => {
         if (!user) {
-            toast.error("Please login to save posts");
+            openLogin();
             return;
         }
         saveMutation.mutate(post.id);

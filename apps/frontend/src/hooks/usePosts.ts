@@ -86,7 +86,7 @@ export function usePinPost() {
     });
 }
 
-export function useFetchPosts(filters?: { userId?: string; communityId?: string; onlySaved?: boolean; limit?: number }) {
+export function useFetchPosts(filters?: { userId?: string; communityId?: string; onlySaved?: boolean; sortBy?: string; limit?: number }) {
     return useInfiniteQuery({
         queryKey: ["posts", filters],
         queryFn: async ({ pageParam = undefined }) => {

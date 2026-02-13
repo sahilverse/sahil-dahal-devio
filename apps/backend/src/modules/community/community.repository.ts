@@ -380,6 +380,100 @@ export class CommunityRepository {
         return { visitors, contributors };
     }
 
+    async getExploreCommunities(limit: number = 10, cursor?: string, topicSlug?: string, userId?: string): Promise<any[]> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const topics = await this.prisma.topic.findMany({
+            take: topicSlug ? undefined : limit + 1,
+            cursor: !topicSlug && cursor ? { id: cursor } : undefined,
+            skip: !topicSlug && cursor ? 1 : 0,
+            where: {
+                slug: topicSlug || undefined,
+                communities: {
+                    some: {
+                        community: {
+                            visibility: 'PUBLIC',
+                            ...(userId ? {
+                                members: {
+                                    none: { userId }
+                                }
+                            } : {})
+                        }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                name: true,
+                slug: true,
+                communities: {
+                    where: {
+                        community: {
+                            visibility: 'PUBLIC',
+                            ...(userId ? {
+                                members: {
+                                    none: { userId }
+                                }
+                            } : {})
+                        }
+                    },
+                    take: topicSlug ? 12 : 5,
+                    orderBy: {
+                        community: {
+                            members: {
+                                _count: 'desc'
+                            }
+                        }
+                    },
+                    select: {
+                        community: {
+                            select: {
+                                id: true,
+                                name: true,
+                                description: true,
+                                iconUrl: true,
+                                _count: {
+                                    select: { members: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: !topicSlug ? {
+                communities: {
+                    _count: 'desc'
+                }
+            } : undefined
+        });
+
+        // 2. Batch fetch weekly visitor counts
+        const communityIds = topics.flatMap(t => t.communities.map(c => c.community.id));
+
+        if (communityIds.length > 0) {
+            const visitorCounts = await this.prisma.communityView.groupBy({
+                by: ['communityId'],
+                where: {
+                    communityId: { in: communityIds },
+                    viewedAt: { gte: sevenDaysAgo }
+                },
+                _count: { _all: true }
+            });
+
+            const visitorMap = new Map(visitorCounts.map(vc => [vc.communityId, vc._count._all]));
+
+            // 3. Merge counts back
+            topics.forEach(t => {
+                t.communities.forEach((c: any) => {
+                    c.community.weeklyVisitors = visitorMap.get(c.community.id) || 0;
+                });
+            });
+        }
+
+        return topics;
+    }
+
 
     get client() {
         return this.prisma;

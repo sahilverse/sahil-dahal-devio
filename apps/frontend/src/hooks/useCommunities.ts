@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { UserService } from "@/api/userService";
 import { CommunityService } from "@/api/communityService";
 import { toast } from "sonner";
@@ -35,6 +35,39 @@ export function useCreateCommunity() {
         },
         onError: (error: any) => {
             const message = error.errorMessage || "Failed to create community.";
+            toast.error(message);
+        }
+    });
+}
+
+export function useExploreCommunities(limit: number = 10, topicSlug?: string) {
+    return useInfiniteQuery({
+        queryKey: ["communities", "explore", { limit, topicSlug }],
+        queryFn: async ({ pageParam }) => {
+            const response = await CommunityService.getExploreCommunities(
+                limit,
+                pageParam as string | undefined,
+                topicSlug
+            );
+            return response.result;
+        },
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
+    });
+}
+
+export function useJoinCommunity() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (name: string) => CommunityService.joinCommunity(name),
+        onSuccess: () => {
+            toast.success("Joined community!");
+            queryClient.invalidateQueries({ queryKey: ["joinedCommunities"] });
+            queryClient.invalidateQueries({ queryKey: ["communities", "explore"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage || "Failed to join community.";
             toast.error(message);
         }
     });

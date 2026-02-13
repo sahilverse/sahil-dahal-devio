@@ -14,7 +14,8 @@ import {
     Loader2,
     Users,
     MessageSquare,
-    TrendingUp
+    TrendingUp,
+    Plus
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,7 @@ export default function CreateCommunityModal({ isOpen, onClose }: CreateCommunit
             currenttopics.splice(index, 1);
         } else if (currenttopics.length < 5) {
             currenttopics.push(normalizedtopic);
+            setTopicSearch(""); // Clear search when adding
         }
         setValue("topics", currenttopics, { shouldValidate: true });
     };
@@ -170,30 +172,66 @@ export default function CreateCommunityModal({ isOpen, onClose }: CreateCommunit
                                     className="pl-10 !bg-transparent"
                                     value={topicSearch}
                                     onChange={(e) => setTopicSearch(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && topicSearch.trim()) {
+                                            e.preventDefault();
+                                            toggletopic(topicSearch);
+                                            setTopicSearch("");
+                                        }
+                                    }}
                                 />
                             </div>
 
                             <div className="flex flex-wrap items-start gap-2 min-h-[100px]">
-                                {(topicSearch && searchResults ? searchResults : SUGGESTED_TOPICS).map((topic: any) => {
-                                    const topicName = (typeof topic === 'string' ? topic : topic.name).toLowerCase();
-                                    const isSelected = topics.includes(topicName);
-                                    return (
+                                {/* Always show selected topics first */}
+                                {topics.map((topicName: string) => (
+                                    <Badge
+                                        key={`selected-${topicName}`}
+                                        variant="default"
+                                        className="px-3 py-1 text-sm font-medium cursor-pointer transition-all rounded-md bg-brand-primary hover:bg-brand-primary/90 text-white border-transparent"
+                                        onClick={() => toggletopic(topicName)}
+                                    >
+                                        <X className="size-3 mr-1 opacity-70" />
+                                        <span className="opacity-50 mr-0.5">t/</span>
+                                        {topicName}
+                                    </Badge>
+                                ))}
+
+                                {/* Show suggestions or search results (excluding already selected) */}
+                                {(topicSearch && searchResults ? searchResults : SUGGESTED_TOPICS)
+                                    .filter((topic: any) => {
+                                        const name = (typeof topic === 'string' ? topic : topic.name).toLowerCase();
+                                        return !topics.includes(name);
+                                    })
+                                    .map((topic: any) => {
+                                        const topicName = (typeof topic === 'string' ? topic : topic.name).toLowerCase();
+                                        return (
+                                            <Badge
+                                                key={`suggestion-${topicName}`}
+                                                variant="secondary"
+                                                className="px-3 py-1 text-sm font-medium cursor-pointer transition-all rounded-md bg-secondary hover:bg-secondary/80 text-muted-foreground border-transparent transition-colors"
+                                                onClick={() => toggletopic(topicName)}
+                                            >
+                                                <span className="opacity-50 mr-0.5">t/</span>
+                                                {topicName}
+                                            </Badge>
+                                        );
+                                    })
+                                }
+
+                                {/* Custom topic badge (only if typing and not already selected/in results) */}
+                                {topicSearch &&
+                                    !topics.includes(topicSearch.toLowerCase().trim()) &&
+                                    !searchResults?.some((t: any) => (typeof t === 'string' ? t : t.name).toLowerCase() === topicSearch.toLowerCase()) && (
                                         <Badge
-                                            key={topicName}
-                                            variant={isSelected ? "default" : "secondary"}
-                                            className={cn(
-                                                "px-3 py-1 text-sm font-medium cursor-pointer transition-all rounded-md transition-colors",
-                                                isSelected
-                                                    ? "bg-brand-primary hover:bg-brand-primary/90 text-white border-transparent"
-                                                    : "bg-secondary hover:bg-secondary/80 text-muted-foreground border-transparent"
-                                            )}
-                                            onClick={() => toggletopic(topicName)}
+                                            variant="secondary"
+                                            className="px-3 py-1 text-sm font-medium cursor-pointer transition-all rounded-md bg-secondary hover:bg-secondary/80 text-muted-foreground border-transparent transition-colors"
+                                            onClick={() => toggletopic(topicSearch)}
                                         >
                                             <span className="opacity-50 mr-0.5">t/</span>
-                                            {topicName}
+                                            {topicSearch.toLowerCase().trim()}
                                         </Badge>
-                                    );
-                                })}
+                                    )}
                             </div>
 
                             <div className="flex justify-between items-center pt-4 border-t border-border">

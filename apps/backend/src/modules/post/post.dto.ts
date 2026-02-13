@@ -211,4 +211,7 @@ export class GetPostsDto {
     @Expose()
     @Transform(({ value }) => value === "true" || value === true)
     onlySaved?: boolean;
+
+    @Expose()
+    sortBy?: "HOT" | "NEW" | "TOP" | "BEST";
 }

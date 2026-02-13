@@ -193,6 +193,7 @@ export class PostService {
             status: query.status,
             visibility: query.visibility,
             savedByUserId: query.onlySaved ? currentUserId : undefined,
+            sortBy: query.sortBy,
         });
 
         let nextCursor: string | null = null;

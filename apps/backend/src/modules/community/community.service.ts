@@ -399,4 +399,16 @@ export class CommunityService {
 
         return result;
     }
+
+    async getExploreCommunities(limit: number = 10, cursor?: string, topicSlug?: string, userId?: string): Promise<{ topics: any[], nextCursor: string | null }> {
+        const topics = await this.communityRepository.getExploreCommunities(limit, cursor, topicSlug, userId);
+
+        let nextCursor: string | null = null;
+        if (!topicSlug && topics.length > limit) {
+            const lastItem = topics.pop();
+            nextCursor = lastItem?.id || null;
+        }
+
+        return { topics, nextCursor };
+    }
 }
