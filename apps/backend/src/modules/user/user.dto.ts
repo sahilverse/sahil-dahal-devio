@@ -102,19 +102,7 @@ export class SkillDTO {
     @Expose() slug!: string;
 }
 
-@Exclude()
-export class RecentActivityDTO {
-    @Expose() id!: string;
-    @Expose() title!: string;
-    @Expose() slug!: string;
-    @Expose() difficulty!: Difficulty;
 
-    @Expose()
-    @Type(() => Date)
-    completedAt!: Date;
-
-    @Expose() type!: "PROBLEM" | "ROOM";
-}
 
 @Exclude()
 export class SocialsDTO {
@@ -209,10 +197,6 @@ export class PublicProfileDTO {
     @Expose()
     @Type(() => RoomStatsDTO)
     roomStats!: RoomStatsDTO;
-
-    @Expose()
-    @Type(() => RecentActivityDTO)
-    recentActivity!: RecentActivityDTO[];
 
     @Expose()
     @Type(() => ExperienceDTO)

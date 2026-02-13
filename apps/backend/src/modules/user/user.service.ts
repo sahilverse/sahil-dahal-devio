@@ -110,7 +110,7 @@ export class UserService {
 
         const problemStats = this.calculateProblemStats(user.submissions);
         const roomStats = this.calculateRoomStats(user.cyberRoomEnrollments);
-        const recentActivity = this.getRecentActivity(user.submissions, user.cyberRoomEnrollments);
+
 
         const experiences = user.experiences.map((exp) => ({
             ...exp,
@@ -142,7 +142,7 @@ export class UserService {
             achievements,
             problemStats,
             roomStats,
-            recentActivity,
+
             experiences,
             skills,
         };
@@ -262,29 +262,7 @@ export class UserService {
         return stats;
     }
 
-    private getRecentActivity(submissions: any[], enrollments: any[]) {
-        const problems = (submissions || []).map((s) => ({
-            id: s.problem.id,
-            title: s.problem.title,
-            slug: s.problem.slug,
-            difficulty: s.problem.difficulty,
-            completedAt: s.createdAt,
-            type: 'PROBLEM' as const
-        }));
 
-        const rooms = (enrollments || []).map((e) => ({
-            id: e.room.id,
-            title: e.room.title,
-            slug: e.room.slug,
-            difficulty: e.room.difficulty,
-            completedAt: e.completedAt,
-            type: 'ROOM' as const
-        }));
-
-        return [...problems, ...rooms]
-            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
-            .slice(0, 5);
-    }
 
     async updateAvatar(userId: string, file: Express.Multer.File): Promise<string> {
         const user = await this.userRepository.findById(userId);

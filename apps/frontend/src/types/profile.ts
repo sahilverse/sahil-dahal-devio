@@ -105,15 +105,6 @@ export interface UserProfile {
         medium: number;
         hard: number;
     };
-    recentActivity: Array<{
-        id: string;
-        title: string;
-        slug: string;
-        difficulty: "EASY" | "MEDIUM" | "HARD";
-        completedAt: string;
-        type: "PROBLEM" | "ROOM";
-    }>;
-
     experiences: Experience[];
     educations: Education[];
     certifications: Certification[];
