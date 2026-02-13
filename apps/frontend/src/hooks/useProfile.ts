@@ -5,9 +5,9 @@ import { toast } from "sonner";
 
 export const USER_QUERY_KEYS = {
     all: ["users"] as const,
-    profile: (username: string) => [...USER_QUERY_KEYS.all, "profile", username] as const,
-    about: (username: string) => [...USER_QUERY_KEYS.all, "about", username] as const,
-    communities: (username: string) => [...USER_QUERY_KEYS.all, "communities", username] as const,
+    profile: (username: string) => [...USER_QUERY_KEYS.all, "profile", username.toLowerCase()] as const,
+    about: (username: string) => [...USER_QUERY_KEYS.all, "about", username.toLowerCase()] as const,
+    communities: (username: string) => [...USER_QUERY_KEYS.all, "communities", username.toLowerCase()] as const,
 };
 
 export function useUserProfile(username: string) {
