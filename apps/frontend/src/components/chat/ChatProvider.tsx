@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { socketInstance } from "@/lib/socket";
 import { useAppSelector } from "@/store/hooks";
-import type { Conversation, Message } from "@/types/conversation";
+import type { Message } from "@/types/conversation";
 
 export default function ChatProvider({ children }: { children: React.ReactNode }) {
     const { user } = useAppSelector((s) => s.auth);
@@ -17,14 +17,13 @@ export default function ChatProvider({ children }: { children: React.ReactNode }
         if (!socket) return;
 
         // New conversation created
-        const handleNewConversation = (conversation: Conversation) => {
+        const handleNewConversation = () => {
             queryClient.invalidateQueries({ queryKey: ["conversations"] });
             queryClient.invalidateQueries({ queryKey: ["conversations", "unread"] });
         };
 
         // New message received
         const handleNewMessage = (message: Message) => {
-            // Add to messages cache
             queryClient.setQueryData(
                 ["messages", message.conversationId],
                 (old: any) => {
@@ -37,7 +36,6 @@ export default function ChatProvider({ children }: { children: React.ReactNode }
                     return { ...old, pages: updatedPages };
                 }
             );
-            // Refresh conversation list for updated order/preview
             queryClient.invalidateQueries({ queryKey: ["conversations"] });
             queryClient.invalidateQueries({ queryKey: ["conversations", "unread"] });
         };
@@ -59,12 +57,10 @@ export default function ChatProvider({ children }: { children: React.ReactNode }
         };
 
         // Message deleted
-        const handleMessageDeleted = ({ messageId, type }: { messageId: string; type: string }) => {
+        const handleMessageDeleted = ({ type }: { type: string }) => {
             if (type === "me") {
-                // Remove from the current user's messages cache
                 queryClient.invalidateQueries({ queryKey: ["messages"] });
             }
-            // For 'everyone', the message:updated event handles it
             queryClient.invalidateQueries({ queryKey: ["conversations", "unread"] });
         };
 
@@ -79,7 +75,7 @@ export default function ChatProvider({ children }: { children: React.ReactNode }
         };
 
         // Conversation seen
-        const handleConversationSeen = ({ conversationId }: { conversationId: string }) => {
+        const handleConversationSeen = () => {
             queryClient.invalidateQueries({ queryKey: ["conversations"] });
             queryClient.invalidateQueries({ queryKey: ["conversations", "unread"] });
         };

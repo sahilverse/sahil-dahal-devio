@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, CheckCheck, Pencil, Trash2, CornerUpLeft } from "lucide-react";
+import { format, isSameMinute } from "date-fns";
 import type { Message } from "@/types/conversation";
 import {
     DropdownMenu,
@@ -22,11 +23,20 @@ import NextImage from "next/image";
 interface MessageBubbleProps {
     message: Message;
     isOwn: boolean;
+    showTimestamp?: boolean;
+    showAvatar?: boolean;
     onEdit?: (messageId: string, content: string) => void;
     onDelete?: (messageId: string, mode: "me" | "everyone") => void;
 }
 
-export default function MessageBubble({ message, isOwn, onEdit, onDelete }: MessageBubbleProps) {
+export default function MessageBubble({
+    message,
+    isOwn,
+    showTimestamp = true,
+    showAvatar = true,
+    onEdit,
+    onDelete
+}: MessageBubbleProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message.content || "");
     const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
@@ -50,10 +60,7 @@ export default function MessageBubble({ message, isOwn, onEdit, onDelete }: Mess
         }
     };
 
-    const timestamp = new Date(message.createdAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+    const timestamp = format(new Date(message.createdAt), "h:mm a");
 
     const isMediaOnly = message.media && message.media.length > 0 && !message.content;
 
@@ -72,12 +79,16 @@ export default function MessageBubble({ message, isOwn, onEdit, onDelete }: Mess
             <div className={`flex items-end gap-1.5 max-w-[75%] ${isOwn ? "flex-row-reverse" : ""}`}>
                 {/* Avatar for received messages */}
                 {!isOwn && (
-                    <Avatar className="h-6 w-6 shrink-0 mb-1">
-                        <AvatarImage src={message.sender.avatarUrl ?? undefined} className="object-cover" />
-                        <AvatarFallback className="text-[10px] font-semibold bg-muted">
-                            {message.sender.username.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <div className="w-6 shrink-0 mb-1">
+                        {showAvatar && (
+                            <Avatar className="h-6 w-6">
+                                <AvatarImage src={message.sender.avatarUrl ?? undefined} className="object-cover" />
+                                <AvatarFallback className="text-[10px] font-semibold bg-muted">
+                                    {message.sender.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                        )}
+                    </div>
                 )}
 
                 <div className="flex flex-col gap-0.5">
@@ -168,23 +179,25 @@ export default function MessageBubble({ message, isOwn, onEdit, onDelete }: Mess
                     </div>
 
                     {/* Metadata row */}
-                    <div className={`flex items-center gap-1 px-1 ${isOwn ? "justify-end" : "justify-start"}`}>
-                        <span className="text-[10px] text-muted-foreground">{timestamp}</span>
-                        {message.isEdited && (
-                            <span className="text-[10px] text-muted-foreground italic">edited</span>
-                        )}
-                        {isOwn && (
-                            <div className="flex items-center ml-0.5">
-                                {message.status === "SENT" ? (
-                                    <Check className="w-3 h-3 text-muted-foreground" />
-                                ) : message.status === "DELIVERED" ? (
-                                    <CheckCheck className="w-3 h-3 text-muted-foreground" />
-                                ) : (
-                                    <CheckCheck className="w-3 h-3 text-brand-primary" />
-                                )}
-                            </div>
-                        )}
-                    </div>
+                    {showTimestamp && (
+                        <div className={`flex items-center gap-1 px-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+                            <span className="text-[10px] text-muted-foreground">{timestamp}</span>
+                            {message.isEdited && (
+                                <span className="text-[10px] text-muted-foreground italic">edited</span>
+                            )}
+                            {isOwn && (
+                                <div className="flex items-center ml-0.5">
+                                    {message.status === "SENT" ? (
+                                        <Check className="w-3 h-3 text-muted-foreground" />
+                                    ) : message.status === "DELIVERED" ? (
+                                        <CheckCheck className="w-3 h-3 text-muted-foreground" />
+                                    ) : (
+                                        <CheckCheck className="w-3 h-3 text-brand-primary" />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions dropdown — only visible on hover */}

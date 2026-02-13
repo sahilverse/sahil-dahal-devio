@@ -18,7 +18,15 @@ import {
 import { useConversations } from "@/hooks/useConversation";
 import { setActiveConversation } from "@/slices/chat/chatSlice";
 import { socketInstance } from "@/lib/socket";
-import type { Conversation } from "@/types/conversation";
+import {
+    isToday,
+    isYesterday,
+    isSameDay,
+    format,
+    differenceInDays,
+    isSameMinute
+} from "date-fns";
+import type { Conversation, Message } from "@/types/conversation";
 import Image from "next/image";
 
 export default function ChatBox() {
@@ -29,12 +37,10 @@ export default function ChatBox() {
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [isTyping, setIsTyping] = useState(false);
 
-    // Track previews to avoid URL.createObjectURL on every render
     const [previews, setPreviews] = useState<{ id: string; url: string; file: File }[]>([]);
     const previewsRef = useRef<{ id: string; url: string; file: File }[]>([]);
 
     useEffect(() => {
-        // Create new previews
         const newPreviews = mediaFiles.map(file => {
             const existing = previews.find(p => p.file === file);
             if (existing) return existing;
@@ -45,7 +51,6 @@ export default function ChatBox() {
             };
         });
 
-        // Revoke URLs for removed files
         previews.forEach(p => {
             if (!mediaFiles.includes(p.file)) {
                 URL.revokeObjectURL(p.url);
@@ -56,7 +61,6 @@ export default function ChatBox() {
         previewsRef.current = newPreviews;
     }, [mediaFiles]);
 
-    // Final cleanup on unmount
     useEffect(() => {
         return () => {
             previewsRef.current.forEach(p => URL.revokeObjectURL(p.url));
@@ -271,15 +275,55 @@ export default function ChatBox() {
                     </div>
                 )}
 
-                {messages.map((msg) => (
-                    <MessageBubble
-                        key={msg.id}
-                        message={msg}
-                        isOwn={msg.senderId === user?.id}
-                        onEdit={(id, content) => editMessage({ messageId: id, content })}
-                        onDelete={(id, mode) => deleteMessage({ messageId: id, mode, conversationId: activeConversationId! })}
-                    />
-                ))}
+                {(() => {
+                    const elements: React.ReactNode[] = [];
+                    messages.forEach((msg, i) => {
+                        const prevMsg = messages[i - 1];
+                        const nextMsg = messages[i + 1];
+
+                        // 1. Check if we need a date divider
+                        const msgDate = new Date(msg.createdAt);
+                        const prevMsgDate = prevMsg ? new Date(prevMsg.createdAt) : null;
+
+                        if (!prevMsgDate || !isSameDay(msgDate, prevMsgDate)) {
+                            let dateText = "";
+                            if (isToday(msgDate)) dateText = "Today";
+                            else if (isYesterday(msgDate)) dateText = "Yesterday";
+                            else if (differenceInDays(new Date(), msgDate) < 7) dateText = format(msgDate, "EEEE");
+                            else dateText = format(msgDate, "d MMM, yyyy");
+
+                            elements.push(
+                                <div key={`date-${msg.id}`} className="flex items-center gap-4 my-4 px-6">
+                                    <div className="h-[1px] flex-1 bg-border" />
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                                        {dateText}
+                                    </span>
+                                    <div className="h-[1px] flex-1 bg-border" />
+                                </div>
+                            );
+                        }
+                        const showAvatar = !prevMsg ||
+                            prevMsg.senderId !== msg.senderId ||
+                            !isSameDay(new Date(msg.createdAt), new Date(prevMsg.createdAt));
+                        const showTimestamp = !nextMsg ||
+                            nextMsg.senderId !== msg.senderId ||
+                            !isSameMinute(new Date(msg.createdAt), new Date(nextMsg.createdAt)) ||
+                            !isSameDay(new Date(msg.createdAt), new Date(nextMsg.createdAt));
+
+                        elements.push(
+                            <MessageBubble
+                                key={msg.id}
+                                message={msg}
+                                isOwn={msg.senderId === user?.id}
+                                showAvatar={showAvatar}
+                                showTimestamp={showTimestamp}
+                                onEdit={(id, content) => editMessage({ messageId: id, content })}
+                                onDelete={(id, mode) => deleteMessage({ messageId: id, mode, conversationId: activeConversationId! })}
+                            />
+                        );
+                    });
+                    return elements;
+                })()}
 
                 <div ref={messagesEndRef} />
             </div>
