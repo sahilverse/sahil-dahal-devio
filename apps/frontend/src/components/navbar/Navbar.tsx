@@ -10,6 +10,7 @@ import { useAuthModal } from "@/contexts/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
 import MobileSearchButton from "./MobileSearchButton";
 import UserMenu from "./UserMenu";
+import { useUnreadCount } from "@/hooks/useNotifications";
 import Image from "next/image";
 import { setTheme } from "@/slices/theme";
 import {
@@ -29,6 +30,7 @@ export default function Navbar() {
     const dispatch = useAppDispatch();
     const { openLogin } = useAuthModal();
     const [showMobileSearch, setShowMobileSearch] = useState(false);
+    const { data: unreadCount } = useUnreadCount();
 
     // Mobile Search Overlay
     if (showMobileSearch) {
@@ -87,10 +89,14 @@ export default function Navbar() {
                             <MessageSquareText className="w-5 h-5" />
                         </button>
 
-                        <button className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
+                        <Link href="/notifications" className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
                             <Bell className="w-5 h-5" />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-950"></span>
-                        </button>
+                            {!!unreadCount && unreadCount > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full leading-none">
+                                    {unreadCount > 10 ? "10+" : unreadCount}
+                                </span>
+                            )}
+                        </Link>
 
                         <Link href="/create" className="flex items-center gap-1.5 bg-brand-primary text-white px-3 lg:px-4 py-1.5 rounded-full hover:bg-brand-pressed transition-colors font-medium text-sm cursor-pointer">
                             <Plus className="w-4 h-4" />
