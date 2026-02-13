@@ -50,6 +50,8 @@ export default class SocketService {
             query,
             withCredentials: true,
             transports: ["websocket"],
+            forceNew: true,
+            multiplex: false,
         });
 
         this.setupEventHandlers();
