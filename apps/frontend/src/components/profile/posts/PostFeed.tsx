@@ -3,7 +3,7 @@
 import { useFetchPosts } from "@/hooks/usePosts";
 import PostCard from "./PostCard";
 import { useInView } from "react-intersection-observer";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -21,6 +21,7 @@ interface PostFeedProps {
 
 export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser, username, sortBy }: PostFeedProps) {
     const { user } = useAppSelector((state) => state.auth);
+    const [activePostId, setActivePostId] = useState<string | null>(null);
 
     const {
         data,
@@ -99,6 +100,8 @@ export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser
                     key={post.id}
                     post={post}
                     isOwner={user?.id === post.author.id}
+                    showComments={activePostId === post.id}
+                    onToggleComments={() => setActivePostId(activePostId === post.id ? null : post.id)}
                 />
             ))}
 

@@ -91,7 +91,14 @@ export default function PostMediaLightbox({
                     </div>
 
                     {/* Main Stage */}
-                    <div className="relative w-full h-full flex items-center justify-center select-none overflow-hidden">
+                    <div
+                        className="relative w-full h-full flex items-center justify-center select-none overflow-hidden cursor-zoom-out"
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) {
+                                onClose(false);
+                            }
+                        }}
+                    >
                         <AnimatePresence mode="wait">
                             <motion.img
                                 key={currentIndex}
@@ -100,8 +107,9 @@ export default function PostMediaLightbox({
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 1.1, y: -10 }}
                                 transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                                className="w-full h-full object-contain pointer-events-none drop-shadow-2xl"
+                                className="max-w-[calc(100%-120px)] max-h-[85vh] object-contain drop-shadow-2xl select-none pointer-events-auto cursor-default"
                                 alt={`Post media ${currentIndex + 1}`}
+                                onClick={(e) => e.stopPropagation()}
                             />
                         </AnimatePresence>
 

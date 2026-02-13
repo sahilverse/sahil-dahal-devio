@@ -33,18 +33,27 @@ import { useState, useEffect, useRef } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import CodeBlock from "./CodeBlock";
+import { CommentSection } from "@/components/posts/comments/CommentSection";
 
 
 interface PostCardProps {
     post: PostResponseDto;
     isOwner?: boolean;
+    showComments?: boolean;
+    onToggleComments?: () => void;
 }
 
-export default function PostCard({ post, isOwner }: PostCardProps) {
+export default function PostCard({ post, isOwner, showComments: externalShowComments, onToggleComments }: PostCardProps) {
     const { user } = useAppSelector((state) => state.auth);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [canExpand, setCanExpand] = useState(false);
+    const [localShowComments, setLocalShowComments] = useState(false);
+
+    // Use external state if controlled by parent, otherwise use local state
+    const isCommentsVisible = externalShowComments !== undefined ? externalShowComments : localShowComments;
+    const toggleComments = onToggleComments || (() => setLocalShowComments(!localShowComments));
+
     const containerRef = useRef<HTMLDivElement>(null);
 
     const voteMutation = useVotePost();
@@ -317,7 +326,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                         onClick={() => handleVote("UP")}
                         disabled={voteMutation.isPending}
                         className={cn(
-                            "h-full w-8 rounded-none transition-colors",
+                            "h-full w-8 rounded-none transition-colors cursor-pointer",
                             post.userVote === "UP"
                                 ? "text-orange-500 bg-orange-500/10"
                                 : "hover:text-orange-500 hover:bg-orange-500/10"
@@ -337,7 +346,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                         onClick={() => handleVote("DOWN")}
                         disabled={voteMutation.isPending}
                         className={cn(
-                            "h-full w-8 rounded-none transition-colors",
+                            "h-full w-8 rounded-none transition-colors cursor-pointer",
                             post.userVote === "DOWN"
                                 ? "text-brand-primary bg-brand-primary/10"
                                 : "hover:text-brand-primary hover:bg-brand-primary/10"
@@ -348,7 +357,15 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                 </div>
 
                 {/* Comment Pill */}
-                <Button variant="ghost" size="sm" className="bg-muted/50 rounded-full border border-border/50 h-8 gap-2 px-3 text-muted-foreground hover:bg-muted hover:text-foreground">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleComments}
+                    className={cn(
+                        "bg-muted/50 rounded-full border border-border/50 h-8 gap-2 px-3 transition-colors cursor-pointer",
+                        isCommentsVisible ? "text-primary bg-primary/10 border-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                >
                     <MessageSquare className="h-4 w-4" />
                     <span className="text-xs font-semibold">{formatCompactNumber(post.commentCount)} Comments</span>
                 </Button>
@@ -360,7 +377,7 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                     onClick={handleSave}
                     disabled={saveMutation.isPending}
                     className={cn(
-                        "bg-muted/50 rounded-full border border-border/50 h-8 gap-2 px-3 transition-colors",
+                        "bg-muted/50 rounded-full border border-border/50 h-8 gap-2 px-3 transition-colors cursor-pointer",
                         post.isSaved
                             ? "text-primary bg-primary/10 border-primary/20"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -372,6 +389,13 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
 
                 <div className="flex-1" />
             </div>
+
+            {isCommentsVisible && (
+                <CommentSection
+                    postId={post.id}
+                    commentCount={post.commentCount}
+                />
+            )}
 
             <ConfirmDeleteModal
                 isOpen={isDeleteModalOpen}
