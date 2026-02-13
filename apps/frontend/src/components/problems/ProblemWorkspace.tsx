@@ -105,13 +105,13 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
         setMounted(true);
     }, []);
 
-    // Sync code with boilerplate or draft
+    // Sync code with boilerplate or draft (only on initial load / language switch)
     useEffect(() => {
-        if (boilerplate?.code && (!isDirty || code === "")) {
+        if (boilerplate?.code) {
             setCode(boilerplate.code);
             setIsDirty(false);
         }
-    }, [boilerplate, isDirty, code]);
+    }, [boilerplate]);
 
     // Save language preference
     useEffect(() => {
@@ -119,14 +119,16 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
     }, [language, problem.slug]);
 
     // Auto-save draft
+    const saveDraftRef = useRef(saveDraftMutation);
+    saveDraftRef.current = saveDraftMutation;
+
     useEffect(() => {
         if (user &&
             isDirty &&
-            !saveDraftMutation.isPending &&
             debouncedCode &&
             debouncedCode !== boilerplate?.code
         ) {
-            saveDraftMutation.mutate({
+            saveDraftRef.current.mutate({
                 slug: problem.slug,
                 language,
                 code: debouncedCode
@@ -136,7 +138,7 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
                 }
             });
         }
-    }, [debouncedCode, user, problem.slug, language, boilerplate?.code, isDirty, saveDraftMutation.isPending, saveDraftMutation.mutate]);
+    }, [debouncedCode, user, problem.slug, language, boilerplate?.code, isDirty]);
 
     const handleRun = useCallback(async () => {
         if (!user) return openLogin();

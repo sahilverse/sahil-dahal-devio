@@ -1,5 +1,6 @@
 "use client";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Play, Upload, ChevronDown } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { PROBLEM_LANGUAGES } from "./constants";
@@ -43,25 +44,22 @@ export function ProblemEditor({
             {/* Editor Toolbar */}
             <div className="h-11 px-4 border-b border-border flex items-center justify-between shrink-0 bg-card">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-muted/50 rounded-md border border-border/50 relative">
-                        <select
-                            value={language}
-                            onChange={(e) => {
-                                const newLang = e.target.value;
-                                setLanguage(newLang);
-                                setCode("");
-                                setIsDirty(false);
-                            }}
-                            className="bg-transparent border-none outline-none text-xs font-bold text-foreground cursor-pointer appearance-none pr-6 focus:ring-0 z-10 w-full"
-                        >
+                    <Select value={language} onValueChange={(val) => {
+                        setLanguage(val);
+                        setCode("");
+                        setIsDirty(false);
+                    }}>
+                        <SelectTrigger size="sm" className="h-7 px-2 text-xs font-bold bg-muted/50 border-border/50 gap-1 min-w-[100px] cursor-pointer">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="bg-card border-border">
                             {Object.entries(PROBLEM_LANGUAGES).map(([key, value]) => (
-                                <option key={key} value={key} className="bg-card">
+                                <SelectItem key={key} value={key} className="text-xs cursor-pointer">
                                     {value.name}
-                                </option>
+                                </SelectItem>
                             ))}
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                    </div>
+                        </SelectContent>
+                    </Select>
 
                     {isSavingDraft && (
                         <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded animate-pulse">

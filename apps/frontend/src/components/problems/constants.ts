@@ -18,10 +18,6 @@ export const PROBLEM_LANGUAGES: Record<string, { name: string; monaco: string; }
         name: "Java",
         monaco: "java",
     },
-    c: {
-        name: "C",
-        monaco: "cpp",
-    },
     csharp: {
         name: "C#",
         monaco: "csharp",

@@ -23,9 +23,12 @@ export class SkeletonGenerator {
     static javascript(structure: ProblemStructure): string {
         const { functionName, inputStructure } = structure;
         const params = inputStructure.map(field => field.name).join(', ');
+        const paramDocs = inputStructure.map(f =>
+            ` * @param {${convertType(f.type, 'javascript')}} ${f.name}`
+        ).join('\n');
 
         return `/**
- * @param {${inputStructure.map(f => convertType(f.type, 'javascript')).join(', ')}}
+${paramDocs}
  * @return {${convertType(structure.outputStructure.type, 'javascript')}}
  */
 var ${functionName} = function(${params}) {
@@ -105,10 +108,13 @@ public:
     static php(structure: ProblemStructure): string {
         const { functionName, inputStructure } = structure;
         const params = inputStructure.map(field => `$${field.name}`).join(', ');
+        const paramDocs = inputStructure.map(f =>
+            `     * @param ${convertType(f.type, 'php')} $${f.name}`
+        ).join('\n');
 
         return `class Solution {
     /**
-     * @param ${inputStructure.map(f => convertType(f.type, 'php')).join(', ')}
+${paramDocs}
      * @return ${convertType(structure.outputStructure.type, 'php')}
      */
     function ${functionName}(${params}) {
