@@ -29,10 +29,10 @@ import PostMediaCarousel from "./PostMediaCarousel";
 import { formatCompactNumber, cn } from "@/lib/utils";
 import { useVotePost, useSavePost, usePinPost, useDeletePost } from "@/hooks/usePosts";
 import { useAppSelector } from "@/store/hooks";
-import { toast } from "sonner";
 import { useState } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import CodeBlock from "./CodeBlock";
 
 
 interface PostCardProps {
@@ -182,8 +182,29 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             </p>
 
             {/* Markdown Content (Preview) */}
-            {post.content && <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground line-clamp-4 mb-2">
-                <Markdown>{post.content}</Markdown>
+            {post.content && <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground line-clamp-6 mb-2 prose-pre:bg-transparent prose-pre:p-0 prose-code:bg-transparent prose-code:p-0">
+                <Markdown
+                    components={{
+                        code({ node, inline, className, children, ...props }: any) {
+                            const match = /language-(\w+)/.exec(className || "");
+                            const language = match ? match[1] : "text";
+
+                            return !inline ? (
+                                <CodeBlock
+                                    language={language}
+                                    value={String(children).replace(/\n$/, "")}
+                                    className="my-3"
+                                />
+                            ) : (
+                                <code className={cn("bg-muted/50 px-1.5 py-0.5 rounded text-[13px] font-mono", className)} {...props}>
+                                    {children}
+                                </code>
+                            );
+                        },
+                    }}
+                >
+                    {post.content}
+                </Markdown>
             </div>}
 
             {/* Link Preview */}
