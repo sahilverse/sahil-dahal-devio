@@ -10,6 +10,7 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@devio/zod-utils": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -34,6 +35,7 @@
     "nextjs-toploader": "^3.9.17",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
+    "qs": "^6.14.2",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-activity-calendar": "^3.1.1",
@@ -43,6 +45,7 @@
     "react-intersection-observer": "^10.0.2",
     "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
+    "react-resizable-panels": "^4.6.2",
     "react-spinners": "^0.17.0",
     "react-tooltip": "^5.30.0",
     "socket.io-client": "^4.8.3",
@@ -50,8 +53,7 @@
     "tailwind-merge": "^3.4.0",
     "tiptap-markdown": "^0.9.0",
     "uuid": "^13.0.0",
-    "zod": "^4.1.13",
-    "@devio/zod-utils": "workspace:*"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@devio/eslint-config": "workspace:*",
@@ -60,6 +62,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@types/lodash": "^4.17.23",
     "@types/node": "^20",
+    "@types/qs": "^6.14.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^11.0.0",

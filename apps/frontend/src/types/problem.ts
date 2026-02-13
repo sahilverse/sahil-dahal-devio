@@ -25,11 +25,12 @@ export interface Problem {
     topics: Topic[];
     testCases: TestCase[];
     inputStructure?: { name: string; type: string }[];
+    cipherReward: number;
     createdAt: string;
     updatedAt: string;
 }
 
-export type ProblemSolutionStatus = "TODO" | "ATTEMPTED" | "SOLVED";
+export type ProblemSolutionStatus = "UNSOLVED" | "ATTEMPTED" | "SOLVED";
 
 export interface ProblemListItem {
     id: string;
@@ -38,6 +39,7 @@ export interface ProblemListItem {
     difficulty: Difficulty;
     topics: { name: string; slug: string }[];
     status: ProblemSolutionStatus;
+    cipherReward: number;
     createdAt: string;
 }
 

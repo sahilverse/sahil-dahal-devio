@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import qs from "qs";
 import { API_URL } from "@/lib/constants";
 import { getAccessToken, logout } from "@/lib/auth";
 import { refreshToken } from "./refreshToken";
@@ -16,6 +17,9 @@ const api = axios.create({
     baseURL: API_URL,
     withCredentials: true,
     headers: { "x-client-type": "web" },
+    paramsSerializer: (params) => {
+        return qs.stringify(params, { arrayFormat: "repeat" });
+    },
 });
 
 // attach access token

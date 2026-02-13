@@ -24,75 +24,105 @@ export class ProblemRepository {
         difficulties?: Difficulty[];
         topicSlugs?: string[];
         status?: string[];
+        hasBounty?: boolean;
         userId?: string;
     }) {
-        const { cursor, search, difficulties, topicSlugs, status, userId } = params;
+        const { cursor, search, difficulties, topicSlugs, status, hasBounty, userId } = params;
         const limit = params.limit ? parseInt(params.limit.toString(), 10) : 10;
 
-        const where: Prisma.ProblemWhereInput = {
-            isPublished: true,
-        };
+        const conditions: Prisma.ProblemWhereInput[] = [
+            { isPublished: true }
+        ];
 
         if (search) {
-            where.OR = [
-                { title: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } }
-            ];
+            conditions.push({
+                OR: [
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { description: { contains: search, mode: 'insensitive' } }
+                ]
+            });
         }
 
-        if (difficulties && difficulties.length > 0) {
-            where.difficulty = { in: difficulties };
+        if (difficulties) {
+            const diffs = Array.isArray(difficulties) ? difficulties : [difficulties];
+            // Filter out any undefined/invalid values
+            const validDiffs = diffs.filter(d => Boolean(d)) as Difficulty[];
+            if (validDiffs.length > 0) {
+                conditions.push({
+                    difficulty: { in: validDiffs }
+                });
+            }
         }
 
         if (topicSlugs && topicSlugs.length > 0) {
-            where.topics = {
-                some: {
-                    topic: {
-                        slug: { in: topicSlugs }
+            conditions.push({
+                topics: {
+                    some: {
+                        topic: {
+                            slug: { in: topicSlugs }
+                        }
                     }
                 }
-            };
+            });
         }
 
-        if (userId && status && status.length > 0) {
-            const statusFilters: Prisma.ProblemWhereInput[] = [];
+        if (hasBounty) {
+            conditions.push({
+                cipherReward: { gt: 0 }
+            });
+        }
 
-            if (status.includes(ProblemSolutionStatus.UNSOLVED) || status.includes("TODO")) {
-                statusFilters.push({
-                    userStatuses: {
-                        none: { userId }
+        if (status) {
+            const statusArray = Array.isArray(status) ? status : [status];
+            if (statusArray.length > 0) {
+                const statusFilters: Prisma.ProblemWhereInput[] = [];
+
+                if (statusArray.includes(ProblemSolutionStatus.UNSOLVED)) {
+                    if (userId) {
+                        statusFilters.push({
+                            userStatuses: {
+                                none: { userId }
+                            }
+                        });
+                    } else {
+                        statusFilters.push({ isPublished: true });
                     }
-                });
-            }
+                }
 
-            if (status.includes(ProblemSolutionStatus.ATTEMPTED)) {
-                statusFilters.push({
-                    userStatuses: {
-                        some: { userId, status: ProblemSolutionStatus.ATTEMPTED }
+                if (statusArray.includes(ProblemSolutionStatus.ATTEMPTED)) {
+                    if (userId) {
+                        statusFilters.push({
+                            userStatuses: {
+                                some: { userId, status: ProblemSolutionStatus.ATTEMPTED }
+                            }
+                        });
                     }
-                });
-            }
+                }
 
-            if (status.includes(ProblemSolutionStatus.SOLVED)) {
-                statusFilters.push({
-                    userStatuses: {
-                        some: { userId, status: ProblemSolutionStatus.SOLVED }
+                if (statusArray.includes(ProblemSolutionStatus.SOLVED)) {
+                    if (userId) {
+                        statusFilters.push({
+                            userStatuses: {
+                                some: { userId, status: ProblemSolutionStatus.SOLVED }
+                            }
+                        });
                     }
-                });
-            }
+                }
 
-            if (statusFilters.length > 0) {
-                where.AND = [
-                    ...(where.AND as Prisma.ProblemWhereInput[] || []),
-                    { OR: statusFilters }
-                ];
+                if (statusFilters.length > 0) {
+                    conditions.push({ OR: statusFilters });
+                } else if (statusArray.length > 0) {
+                    conditions.push({ id: "none" });
+                }
             }
         }
 
         return this.prisma.problem.findMany({
             take: limit + 1,
             cursor: cursor ? { id: cursor } : undefined,
-            where,
+            where: {
+                AND: conditions
+            },
             orderBy: { createdAt: "desc" },
             include: {
                 topics: {

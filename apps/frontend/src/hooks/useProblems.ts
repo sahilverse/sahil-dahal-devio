@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { problemService } from "@/api/problemService";
 
-export const useFetchProblems = (filters: any) => {
+export const useFetchProblems = (filters: {
+    cursor?: string | null;
+    search?: string;
+    difficulty?: string[];
+    status?: string[];
+    topics?: string[];
+    hasBounty?: boolean;
+}) => {
     return useInfiniteQuery({
         queryKey: ["problems", filters],
         queryFn: ({ pageParam }) => problemService.getProblems({ ...filters, cursor: pageParam }),

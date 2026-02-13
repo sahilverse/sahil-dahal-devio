@@ -96,4 +96,25 @@ export class SubmissionRepository {
 
         return best?.score || 0;
     }
+
+    async findPaginatedUserSubmissions(userId: string, problemId: string, limit: number, cursor?: string) {
+        return this.prisma.submission.findMany({
+            where: {
+                userId,
+                problemId
+            },
+            take: limit + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                problem: {
+                    select: {
+                        title: true
+                    }
+                }
+            }
+        });
+    }
 }

@@ -14,8 +14,9 @@ export const GetProblemsSchema = z.object({
     ).optional(),
     status: z.preprocess(
         (val) => (typeof val === "string" ? [val] : Array.isArray(val) ? val : []),
-        z.array(z.enum(["TODO", "ATTEMPTED", "SOLVED"]))
+        z.array(z.enum(["UNSOLVED", "ATTEMPTED", "SOLVED"]))
     ).optional(),
+    hasBounty: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional(),
 });
 
 export const GetBoilerplateSchema = z.object({

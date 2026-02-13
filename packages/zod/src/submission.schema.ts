@@ -12,3 +12,12 @@ export const SubmitSubmissionSchema = z.object({
     code: z.string().min(1, "Code content is required"),
     eventId: z.uuid().optional().nullable(),
 });
+
+export const GetSubmissionsSchema = z.object({
+    cursor: z.string().optional(),
+    limit: z.preprocess((val) => (val ? parseInt(val as string, 10) : 10), z.number().min(1).max(100)).optional(),
+});
+
+export type RunSubmissionRequest = z.infer<typeof RunSubmissionSchema>;
+export type SubmitSubmissionRequest = z.infer<typeof SubmitSubmissionSchema>;
+export type GetSubmissionsQuery = z.infer<typeof GetSubmissionsSchema>;

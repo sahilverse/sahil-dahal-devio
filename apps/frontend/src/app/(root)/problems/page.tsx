@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useFetchProblems } from "@/hooks/useProblems";
-import { ProblemListItem, Difficulty } from "@/types/problem";
+import { Difficulty } from "@/types/problem";
 import { Input } from "@/components/ui/input";
 import {
     Search,
@@ -11,18 +11,27 @@ import {
     Circle,
     HelpCircle,
     ChevronRight,
-    Loader2
+    Loader2,
+    Coins,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRouter } from "next/navigation";
 import { ProblemSolutionStatus } from "@/types/problem";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 export default function ProblemsListPage() {
     const [search, setSearch] = useState("");
     const [difficulty, setDifficulty] = useState<Difficulty | "ALL">("ALL");
     const [status, setStatus] = useState<ProblemSolutionStatus | "ALL">("ALL");
+    const [hasBounty, setHasBounty] = useState(false);
     const debouncedSearch = useDebounce(search, 500);
 
     const {
@@ -31,72 +40,72 @@ export default function ProblemsListPage() {
         hasNextPage,
         isFetchingNextPage,
         isLoading,
-        error
     } = useFetchProblems({
         search: debouncedSearch,
         difficulty: difficulty === "ALL" ? undefined : [difficulty],
-        status: status === "ALL" ? undefined : [status]
+        status: status === "ALL" ? undefined : [status],
+        hasBounty: hasBounty || undefined
     });
 
     const router = useRouter();
     const problems = data?.pages.flatMap(page => page.items) || [];
 
     return (
-        <div className="py-8 space-y-8 animate-in fade-in duration-500">
+        <div className="py-8 space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col gap-4">
                 <h1 className="text-3xl font-black tracking-tight">Problems</h1>
                 <p className="text-muted-foreground">Pick a challenge and hone your skills. Level up your coding game.</p>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card p-4 rounded-2xl border border-border/50 shadow-sm">
-                <div className="relative w-full md:max-w-md group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-primary transition-colors" />
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-3 rounded-xl border border-border/50 shadow-sm">
+                <div className="relative flex-1 max-w-sm group w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-brand-primary transition-colors" />
                     <Input
-                        placeholder="Search problems..."
+                        placeholder="Search challenges..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-10 h-11 bg-muted/30 border-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-none focus-visible:outline-none placeholder:text-muted-foreground/60 transition-none"
+                        className="pl-9 h-9 bg-muted/40 border-none focus-visible:ring-1 focus-visible:ring-brand-primary placeholder:text-muted-foreground/60 text-xs"
                     />
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
-                    <div className="flex gap-1.5 items-center w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
-                        <Filter className="w-3.5 h-3.5 text-muted-foreground mr-1 shrink-0 hidden md:block" />
-                        {(["ALL", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const).map((d) => (
-                            <button
-                                key={d}
-                                onClick={() => setDifficulty(d)}
-                                className={cn(
-                                    "px-3 py-1.5 rounded-lg text-[10px] font-black transition-all border whitespace-nowrap uppercase tracking-wider",
-                                    difficulty === d
-                                        ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20"
-                                        : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
-                                )}
-                            >
-                                {d}
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Select value={difficulty} onValueChange={(val) => setDifficulty(val as Difficulty | "ALL")}>
+                        <SelectTrigger className="w-[110px] h-9 text-xs font-medium cursor-pointer">
+                            <SelectValue placeholder="Difficulty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL" className="cursor-pointer text-xs font-medium">Difficulty</SelectItem>
+                            <SelectItem value="EASY" className="cursor-pointer text-xs font-medium text-emerald-500">Easy</SelectItem>
+                            <SelectItem value="MEDIUM" className="cursor-pointer text-xs font-medium text-amber-500">Medium</SelectItem>
+                            <SelectItem value="HARD" className="cursor-pointer text-xs font-medium text-rose-500">Hard</SelectItem>
+                        </SelectContent>
+                    </Select>
 
-                    <div className="w-px h-6 bg-border hidden md:block" />
+                    <Select value={status} onValueChange={(val) => setStatus(val as ProblemSolutionStatus | "ALL")}>
+                        <SelectTrigger className="w-[110px] h-9 text-xs font-medium cursor-pointer">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL" className="cursor-pointer text-xs font-medium">Status</SelectItem>
+                            <SelectItem value="UNSOLVED" className="cursor-pointer text-xs font-medium">Todo</SelectItem>
+                            <SelectItem value="SOLVED" className="cursor-pointer text-xs font-medium text-emerald-500">Solved</SelectItem>
+                            <SelectItem value="ATTEMPTED" className="cursor-pointer text-xs font-medium text-amber-500">Attempted</SelectItem>
+                        </SelectContent>
+                    </Select>
 
-                    <div className="flex gap-1.5 items-center w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
-                        {(["ALL", "SOLVED", "ATTEMPTED", "TODO"] as const).map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => setStatus(s as any)}
-                                className={cn(
-                                    "px-3 py-1.5 rounded-lg text-[10px] font-black transition-all border whitespace-nowrap uppercase tracking-wider",
-                                    status === s
-                                        ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20"
-                                        : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
-                                )}
-                            >
-                                {s}
-                            </button>
-                        ))}
-                    </div>
+                    <button
+                        onClick={() => setHasBounty(!hasBounty)}
+                        className={cn(
+                            "flex items-center gap-2 h-9 px-3 rounded-md text-xs font-bold transition-all border shrink-0 cursor-pointer",
+                            hasBounty
+                                ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                                : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                    >
+                        <Coins className={cn("w-3.5 h-3.5", hasBounty ? "text-amber-500" : "text-muted-foreground")} />
+                        <span className="hidden sm:inline">Bounties</span>
+                    </button>
                 </div>
             </div>
 
@@ -125,58 +134,64 @@ export default function ProblemsListPage() {
                                     <tr
                                         key={problem.id}
                                         onClick={() => router.push(`/p/${problem.slug}`)}
-                                        className="transition-colors group cursor-pointer border-b border-border/50 last:border-0"
+                                        className="even:bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer border-b border-border/40 last:border-0"
                                     >
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-3 w-12">
                                             {problem.status === "SOLVED" ? (
-                                                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                             ) : problem.status === "ATTEMPTED" ? (
-                                                <Circle className="w-5 h-5 text-amber-500 fill-amber-500/10" />
+                                                <Circle className="w-4 h-4 text-amber-500 fill-amber-500/10" />
                                             ) : (
-                                                <Circle className="w-5 h-5 text-muted-foreground/30" />
+                                                <Circle className="w-4 h-4 text-muted-foreground/30" />
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <Link
-                                                href={`/p/${problem.slug}`}
-                                                className="font-bold text-foreground hover:text-brand-primary transition-colors block"
-                                            >
-                                                {problem.title}
-                                            </Link>
+                                        <td className="px-6 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <Link
+                                                    href={`/p/${problem.slug}`}
+                                                    className="font-medium text-sm text-foreground hover:text-brand-primary transition-colors cursor-pointer"
+                                                >
+                                                    {problem.title}
+                                                </Link>
+                                                {problem.cipherReward > 0 && (
+                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 text-amber-600 rounded text-[10px] font-bold border border-amber-500/20">
+                                                        <Coins className="w-3 h-3" />
+                                                        {problem.cipherReward}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-3 w-32">
                                             <span className={cn(
-                                                "px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase",
-                                                problem.difficulty === "EASY" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500",
-                                                problem.difficulty === "MEDIUM" && "bg-amber-500/10 text-amber-600 dark:text-amber-500",
-                                                problem.difficulty === "HARD" && "bg-rose-500/10 text-rose-600 dark:text-rose-500"
+                                                "text-xs font-medium",
+                                                problem.difficulty === "EASY" && "text-emerald-500",
+                                                problem.difficulty === "MEDIUM" && "text-amber-500",
+                                                problem.difficulty === "HARD" && "text-rose-500"
                                             )}>
                                                 {problem.difficulty}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-wrap gap-1.5 max-w-sm">
+                                        <td className="px-6 py-3">
+                                            <div className="flex flex-wrap gap-2">
                                                 {problem.topics.slice(0, 3).map(topic => (
                                                     <Link
                                                         key={topic.slug}
                                                         href={`/t/${topic.slug}`}
-                                                        className="text-[10px] font-bold text-muted-foreground hover:text-brand-primary bg-muted px-2 py-0.5 rounded-md transition-all hover:bg-muted/80"
+                                                        className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md transition-all hover:bg-muted/80 cursor-pointer"
+                                                        onClick={(e) => e.stopPropagation()}
                                                     >
-                                                        {topic.name}
+                                                        t/{topic.name}
                                                     </Link>
                                                 ))}
                                                 {problem.topics.length > 3 && (
-                                                    <span className="text-[10px] text-muted-foreground font-medium px-1">+{problem.topics.length - 3}</span>
+                                                    <span className="text-xs text-muted-foreground">+{problem.topics.length - 3}</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Link
-                                                href={`/p/${problem.slug}`}
-                                                className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all group-hover:translate-x-1"
-                                            >
-                                                <ChevronRight className="w-4 h-4" />
-                                            </Link>
+                                        <td className="px-6 py-3 w-12 text-center">
+                                            {problem.status === "SOLVED" && (
+                                                <span className="text-xs font-mono text-muted-foreground">Solved</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))

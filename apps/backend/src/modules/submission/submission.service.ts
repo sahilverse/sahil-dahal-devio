@@ -225,4 +225,26 @@ export class SubmissionService {
         logger.warn(`Polling timed out for tokens: ${tokens.join(",")}`);
         return results;
     }
+
+    async getUserSubmissions(userId: string, slug: string, query: { limit?: number; cursor?: string }) {
+        const problem = await this.problemRepository.findBySlug(slug);
+        if (!problem) throw new ApiError("Problem not found", StatusCodes.NOT_FOUND);
+
+        const limit = query.limit || 10;
+        const submissions = await this.submissionRepository.findPaginatedUserSubmissions(
+            userId,
+            problem.id,
+            limit,
+            query.cursor
+        );
+
+        const hasNextPage = submissions.length > limit;
+        const items = hasNextPage ? submissions.slice(0, limit) : submissions;
+        const nextCursor = hasNextPage ? items[items.length - 1]?.id : null;
+
+        return {
+            items,
+            nextCursor
+        };
+    }
 }

@@ -144,7 +144,7 @@ export class ProblemService {
     }
 
     async getListing(query: GetProblemsQuery, userId?: string): Promise<PaginatedProblemsResponseDTO> {
-        const { cursor, limit = 10, search, difficulty, topics, status } = query;
+        const { cursor, limit = 10, search, difficulty, topics, status, hasBounty } = query;
 
         const results = await this.problemRepository.findMany({
             cursor,
@@ -153,6 +153,7 @@ export class ProblemService {
             difficulties: difficulty as Difficulty[],
             topicSlugs: topics,
             status,
+            hasBounty,
             userId
         });
 

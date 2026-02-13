@@ -57,6 +57,11 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *           items:
  *             type: string
  *             enum: [UNSOLVED, ATTEMPTED, SOLVED]
+ *       - in: query
+ *         name: hasBounty
+ *         schema:
+ *           type: boolean
+ *         description: Filter problems with Cipher rewards
  *     responses:
  *       200:
  *         description: Problems retrieved

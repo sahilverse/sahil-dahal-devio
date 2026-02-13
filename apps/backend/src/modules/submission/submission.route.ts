@@ -2,8 +2,8 @@ import { Router } from "express";
 import { SubmissionController } from "./submission.controller";
 import { container } from "../../config/inversify";
 import { TYPES } from "../../types";
-import { AuthMiddleware, validateRequest } from "../../middlewares";
-import { RunSubmissionSchema, SubmitSubmissionSchema } from "@devio/zod-utils";
+import { AuthMiddleware, validateQuery, validateRequest } from "../../middlewares";
+import { RunSubmissionSchema, SubmitSubmissionSchema, GetSubmissionsSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const controller = container.get<SubmissionController>(TYPES.SubmissionController);
@@ -134,5 +134,33 @@ router.post("/run", authMiddleware.guard, validateRequest(RunSubmissionSchema), 
  *                       type: string
  */
 router.post("/submit", authMiddleware.guard, authMiddleware.verifiedOnly, validateRequest(SubmitSubmissionSchema), controller.submit);
+
+/**
+ * @swagger
+ * /submissions/{slug}:
+ *   get:
+ *     summary: List user submissions for a problem
+ *     tags: [Submissions]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Submissions retrieved
+ */
+router.get("/:slug", authMiddleware.guard, validateQuery(GetSubmissionsSchema), controller.list);
 
 export default router;

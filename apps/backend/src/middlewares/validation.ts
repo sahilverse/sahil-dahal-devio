@@ -21,6 +21,8 @@ export const validateQuery = (schema: ZodType) => {
             ResponseHandler.sendValidationError(res, result);
             return;
         }
+        // Clear existing properties and assign new validated data
+        Object.keys(req.query).forEach(key => delete req.query[key]);
         Object.assign(req.query, result.data);
         next();
     };

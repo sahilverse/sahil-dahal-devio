@@ -6,6 +6,7 @@ import { asyncHandler, ResponseHandler } from "../../utils";
 import { plainToInstance } from "class-transformer";
 import { SubmissionDto } from "./submission.dto";
 import { StatusCodes } from "http-status-codes";
+import { GetSubmissionsQuery } from "@devio/zod-utils";
 
 @injectable()
 export class SubmissionController {
@@ -27,5 +28,18 @@ export class SubmissionController {
         const submission = await this.submissionService.submit(slug, code, language, userId, eventId);
 
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Submission processed", plainToInstance(SubmissionDto, submission));
+    });
+
+    list = asyncHandler(async (req: any, res: Response) => {
+        const { slug } = req.params;
+        const query = req.query as GetSubmissionsQuery;
+        const userId = req.user.id;
+
+        const result = await this.submissionService.getUserSubmissions(userId, slug, query);
+
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Submissions retrieved", {
+            items: plainToInstance(SubmissionDto, result.items),
+            nextCursor: result.nextCursor
+        });
     });
 }
