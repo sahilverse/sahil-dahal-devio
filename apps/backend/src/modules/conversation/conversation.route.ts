@@ -230,7 +230,7 @@ router.patch(
  *           type: string
  *           enum: [me, everyone]
  *           default: me
- *         description: 'me' to hide from self, 'everyone' to unsend
+ *         description: "Mode 'me' hides for self, 'everyone' unsends for all"
  *     responses:
  *       200:
  *         description: Message deleted
