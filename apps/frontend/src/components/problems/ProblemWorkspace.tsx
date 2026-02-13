@@ -122,9 +122,12 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
     const saveDraftRef = useRef(saveDraftMutation);
     saveDraftRef.current = saveDraftMutation;
 
+    const isDirtyRef = useRef(isDirty);
+    isDirtyRef.current = isDirty;
+
     useEffect(() => {
         if (user &&
-            isDirty &&
+            isDirtyRef.current &&
             debouncedCode &&
             debouncedCode !== boilerplate?.code
         ) {
@@ -138,7 +141,7 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
                 }
             });
         }
-    }, [debouncedCode, user, problem.slug, language, boilerplate?.code, isDirty]);
+    }, [debouncedCode, user, problem.slug, language, boilerplate?.code]);
 
     const handleRun = useCallback(async () => {
         if (!user) return openLogin();
