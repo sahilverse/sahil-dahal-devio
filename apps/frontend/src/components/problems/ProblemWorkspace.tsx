@@ -195,7 +195,7 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
             <div className="flex-1 overflow-hidden relative">
                 <Group orientation="horizontal">
                     {/* Left: Problem Details */}
-                    <Panel defaultSize={40} minSize={20} className="bg-card">
+                    <Panel defaultSize={60} minSize={20} className="bg-card">
                         <div className="h-full flex flex-col border-r border-border">
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
                                 <div className="px-4 border-b border-border bg-card shrink-0">
