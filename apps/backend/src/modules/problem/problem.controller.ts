@@ -18,7 +18,7 @@ export class ProblemController {
     ) { }
 
     getLanguages = asyncHandler(async (_req: Request, res: Response) => {
-        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Supported languages", { languages: SUPPORTED_LANGUAGES });
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Supported languages", SUPPORTED_LANGUAGES);
     });
 
     list = asyncHandler(async (req: any, res: Response) => {
