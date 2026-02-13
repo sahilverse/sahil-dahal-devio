@@ -11,7 +11,8 @@ import Socials from "./Socials";
 import SettingsSection from "./SettingsSection";
 import { useFollowUser, useUnfollowUser } from "@/hooks/useProfile";
 import { useAuthModal } from "@/contexts/AuthModalContext";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { openChat, setPendingRecipient } from "@/slices/chat/chatSlice";
 
 interface SidebarProps {
     profile: UserProfile;
@@ -20,6 +21,7 @@ interface SidebarProps {
 
 export default function Sidebar({ profile, isCurrentUser }: SidebarProps) {
     const [hasCopied, setHasCopied] = useState(false);
+    const dispatch = useAppDispatch();
 
     const { user } = useAppSelector((state) => state.auth);
     const isAuthenticated = !!user;
@@ -53,7 +55,12 @@ export default function Sidebar({ profile, isCurrentUser }: SidebarProps) {
             openLogin();
             return;
         }
-        // TODO: Implement messaging logic
+        dispatch(setPendingRecipient({
+            id: profile.id,
+            username: profile.username,
+            avatarUrl: profile.avatarUrl ?? null,
+        }));
+        dispatch(openChat());
     };
 
     return (

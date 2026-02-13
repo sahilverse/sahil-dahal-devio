@@ -13,6 +13,9 @@ import { AuthModal } from "@/components/auth";
 import { OnboardingModalProvider, OnboardingModal, OnboardingWatcher } from "@/components/onboarding";
 import ThemedToaster from "@/components/ThemedToaster";
 import { logout } from "@/lib/auth";
+import ChatProvider from "@/components/chat/ChatProvider";
+import ChatModal from "@/components/chat/ChatModal";
+import NotificationProvider from "@/components/notifications/NotificationProvider";
 
 import { socketInstance } from "@/lib/socket";
 
@@ -69,7 +72,12 @@ export function Providers({ children, token }: ProvidersProps) {
             <QueryClientProvider client={queryClient}>
                 <AuthModalProvider>
                     <OnboardingModalProvider>
-                        {children}
+                        <NotificationProvider>
+                            <ChatProvider>
+                                {children}
+                                <ChatModal />
+                            </ChatProvider>
+                        </NotificationProvider>
                         <AuthModal />
                         <OnboardingModal />
                         <OnboardingWatcher />
@@ -80,4 +88,5 @@ export function Providers({ children, token }: ProvidersProps) {
         </Provider>
     );
 }
+
 

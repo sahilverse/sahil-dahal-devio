@@ -553,4 +553,14 @@ export class UserRepository {
             where: { id: projectId }
         });
     }
+    async searchUsers(query: string, excludeId: string): Promise<User[]> {
+        return this.prisma.user.findMany({
+            where: {
+                username: { contains: query, mode: 'insensitive' },
+                id: { not: excludeId },
+                accountStatus: 'ACTIVE'
+            },
+            take: 10
+        });
+    }
 }

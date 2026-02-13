@@ -105,5 +105,8 @@ export class ConversationDTO {
     name?: string;
 
     @Expose()
+    inviteSenderId?: string;
+
+    @Expose()
     iconUrl?: string | null;
 }

@@ -113,7 +113,12 @@ export class ConversationRepository {
     async updateConversationStatus(conversationId: string, status: ConversationStatus) {
         return this.prisma.conversation.update({
             where: { id: conversationId },
-            data: { status }
+            data: { status },
+            include: {
+                participants: {
+                    include: { user: { select: { id: true, username: true, avatarUrl: true } } }
+                }
+            }
         });
     }
 
@@ -319,5 +324,69 @@ export class ConversationRepository {
                 data: { lastReadAt: new Date() }
             })
         ]);
+    }
+
+    async countUnreadMessages(userId: string): Promise<number> {
+        const result = await this.prisma.$queryRaw<{ count: number }[]>`
+            SELECT COUNT(*)::int as count 
+            FROM "Message" m
+            JOIN "ConversationParticipant" cp ON m."conversation_id" = cp."conversation_id"
+            JOIN "Conversation" c ON m."conversation_id" = c."id"
+            WHERE cp."user_id" = ${userId}
+            AND m."sender_id" != ${userId}
+            AND m."createdAt" > COALESCE(cp."last_read_at", '1970-01-01'::timestamp)
+            AND cp."has_deleted" = false
+            AND m."deleted_at" IS NULL
+            AND c."status" = 'ACCEPTED'
+        `;
+        return result[0]?.count || 0;
+    }
+
+    async countPendingInvites(userId: string): Promise<number> {
+        return this.prisma.conversation.count({
+            where: {
+                status: ConversationStatus.INVITE_PENDING,
+                inviteSenderId: { not: userId },
+                participants: {
+                    some: { userId }
+                }
+            }
+        });
+    }
+
+    async countUnreadMessagesInConversation(conversationId: string, userId: string, lastReadAt: Date | null): Promise<number> {
+        return this.prisma.message.count({
+            where: {
+                conversationId,
+                senderId: { not: userId },
+                createdAt: { gt: lastReadAt || new Date(0) },
+                deletedAt: null,
+                NOT: {
+                    deletedByParticipantIds: { has: userId }
+                }
+            }
+        });
+    }
+    async findConversationsWithUsers(userId: string, otherUserIds: string[]) {
+        return this.prisma.conversation.findMany({
+            where: {
+                type: ConversationType.DIRECT,
+                participants: {
+                    some: { userId }
+                },
+                AND: {
+                    participants: {
+                        some: {
+                            userId: { in: otherUserIds }
+                        }
+                    }
+                }
+            },
+            include: {
+                participants: {
+                    include: { user: { select: { id: true, username: true, avatarUrl: true } } }
+                }
+            }
+        });
     }
 }

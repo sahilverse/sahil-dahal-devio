@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/slices/ui/uiSlice";
+import { toggleChat } from "@/slices/chat/chatSlice";
 import Link from "next/link";
 import ThemeToggle from "../ThemeToggle";
 import { Bell, Menu, MessageSquareText, Plus, MoreVertical, Monitor, Sun, Moon, LogIn, ArrowLeft } from "lucide-react";
@@ -11,6 +12,7 @@ import NavbarSearch from "./NavbarSearch";
 import MobileSearchButton from "./MobileSearchButton";
 import UserMenu from "./UserMenu";
 import { useUnreadCount } from "@/hooks/useNotifications";
+import { useUnreadChatCount } from "@/hooks/useConversation";
 import Image from "next/image";
 import { setTheme } from "@/slices/theme";
 import {
@@ -31,6 +33,7 @@ export default function Navbar() {
     const { openLogin } = useAuthModal();
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const { data: unreadCount } = useUnreadCount();
+    const { data: unreadChatCount } = useUnreadChatCount();
 
     // Mobile Search Overlay
     if (showMobileSearch) {
@@ -85,8 +88,13 @@ export default function Navbar() {
 
                 {user ? (
                     <>
-                        <button className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
+                        <button onClick={() => dispatch(toggleChat())} className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">
                             <MessageSquareText className="w-5 h-5" />
+                            {unreadChatCount && unreadChatCount.total > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full leading-none">
+                                    {unreadChatCount.total > 10 ? "10+" : unreadChatCount.total}
+                                </span>
+                            )}
                         </button>
 
                         <Link href="/notifications" className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer">

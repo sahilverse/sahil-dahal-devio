@@ -73,6 +73,10 @@ export class ConversationService {
         if (!conversation) throw new ApiError("Conversation not found", StatusCodes.NOT_FOUND);
 
         if (conversation.status === ConversationStatus.INVITE_PENDING) {
+            if (files.length > 0) {
+                throw new ApiError("Media attachments are not allowed during the invitation phase", StatusCodes.FORBIDDEN);
+            }
+
             if (conversation.inviteSenderId === senderId) {
                 throw new ApiError("You cannot send more messages until the invite is accepted", StatusCodes.FORBIDDEN);
             } else {
@@ -219,9 +223,57 @@ export class ConversationService {
 
     async searchConversations(userId: string, query: string) {
         if (!query || query.length < 2) return [];
-        const results = await this.conversationRepository.searchConversations(userId, query);
-        const dtos = plainToInstance(ConversationDTO, results);
-        return dtos.map(d => this.populateDetails(d, userId));
+
+        // 1. Search for users globally
+        const users = await this.userRepository.searchUsers(query, userId);
+        const userIds = users.map(u => u.id);
+
+        if (userIds.length === 0) return [];
+
+        // 2. Find existing conversations with these users
+        const existingConversations = await this.conversationRepository.findConversationsWithUsers(userId, userIds);
+
+        // 3. Map to DTOs and populate details
+        const results: ConversationDTO[] = [];
+        const processedUserIds = new Set<string>();
+
+        // Add existing conversations first
+        for (const conv of existingConversations) {
+            if (conv.status === ConversationStatus.INVITE_PENDING && conv.inviteSenderId === userId) {
+                continue;
+            }
+
+            const dto = plainToInstance(ConversationDTO, conv);
+            const populated = this.populateDetails(dto, userId);
+            results.push(populated);
+
+            const otherParticipant = conv.participants.find(p => p.userId !== userId);
+            if (otherParticipant) {
+                processedUserIds.add(otherParticipant.userId);
+            }
+        }
+
+        // Add users who don't have a conversation yet
+        for (const user of users) {
+            if (!processedUserIds.has(user.id)) {
+                const virtualConv = new ConversationDTO();
+                virtualConv.id = "";
+                virtualConv.type = ConversationType.DIRECT;
+                virtualConv.name = user.username!;
+                virtualConv.iconUrl = user.avatarUrl ?? null;
+                virtualConv.participants = [{
+                    userId: user.id,
+                    user: {
+                        id: user.id,
+                        username: user.username!,
+                        avatarUrl: user.avatarUrl ?? null
+                    }
+                }] as any;
+                results.push(virtualConv);
+            }
+        }
+
+        return results;
     }
 
     async acceptInvite(userId: string, conversationId: string) {
@@ -269,7 +321,16 @@ export class ConversationService {
     async getInteractions(userId: string, limit: number = 20, cursor?: string) {
         const conversations = await this.conversationRepository.findConversationsByUser(userId, limit, cursor);
         const dtos = plainToInstance(ConversationDTO, conversations);
-        return dtos.map(d => this.populateDetails(d, userId));
+
+        // Populate unread counts and details
+        for (const dto of dtos) {
+            const participant = conversations.find(c => c.id === dto.id)?.participants.find(p => p.userId === userId);
+            if (participant) {
+                dto.unreadCount = await this.conversationRepository.countUnreadMessagesInConversation(dto.id, userId, participant.lastReadAt);
+            }
+            this.populateDetails(dto, userId);
+        }
+        return dtos;
     }
 
     async getMessages(userId: string, conversationId: string, limit: number = 50, cursor?: string) {
@@ -296,6 +357,19 @@ export class ConversationService {
         });
 
         return result;
+    }
+
+    async getUnreadCount(userId: string) {
+        const [messages, requests] = await Promise.all([
+            this.conversationRepository.countUnreadMessages(userId),
+            this.conversationRepository.countPendingInvites(userId)
+        ]);
+
+        return {
+            messages,
+            requests,
+            total: messages + requests
+        };
     }
 
     private populateDetails(dto: ConversationDTO, currentUserId: string): ConversationDTO {

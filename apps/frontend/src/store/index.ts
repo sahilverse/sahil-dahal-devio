@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "@/slices/auth";
 import { themeReducer, themeMiddleware } from "@/slices/theme";
 import { uiReducer } from "@/slices/ui/uiSlice";
+import { chatReducer } from "@/slices/chat/chatSlice";
 
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         theme: themeReducer,
         ui: uiReducer,
+        chat: chatReducer,
     },
     middleware: (getDefaultMiddleware) => {
         return getDefaultMiddleware().concat(themeMiddleware);

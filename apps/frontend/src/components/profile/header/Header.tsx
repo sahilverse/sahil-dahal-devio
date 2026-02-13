@@ -28,6 +28,8 @@ import {
 } from "@/hooks/useProfile";
 import Nav from "./Nav";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAppDispatch } from "@/store/hooks";
+import { openChat, setPendingRecipient } from "@/slices/chat/chatSlice";
 import { useAppSelector } from "@/store/hooks";
 import { copyCurrentUrl } from "@/lib/string";
 
@@ -37,6 +39,8 @@ interface HeaderProps {
 }
 
 export default function Header({ profile, isCurrentUser }: HeaderProps) {
+    const { openLogin } = useAuthModal();
+    const dispatch = useAppDispatch();
     const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
     const location = [profile.city, profile.country].filter(Boolean).join(", ");
 
@@ -47,7 +51,6 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
 
     const { user } = useAppSelector((state) => state.auth);
     const isAuthenticated = !!user;
-    const { openLogin } = useAuthModal();
 
     const { mutate: followUser, isPending: isFollowPending } = useFollowUser(profile.username);
     const { mutate: unfollowUser, isPending: isUnfollowPending } = useUnfollowUser(profile.username);
@@ -201,7 +204,19 @@ export default function Header({ profile, isCurrentUser }: HeaderProps) {
                                 </Button>
 
                                 {isAuthenticated && (
-                                    <Button variant="secondary" size="icon-sm" className="h-8 w-8 cursor-pointer rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                                    <Button
+                                        variant="secondary"
+                                        size="icon-sm"
+                                        className="h-8 w-8 cursor-pointer rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                        onClick={() => {
+                                            dispatch(setPendingRecipient({
+                                                id: profile.id,
+                                                username: profile.username,
+                                                avatarUrl: profile.avatarUrl ?? null,
+                                            }));
+                                            dispatch(openChat());
+                                        }}
+                                    >
                                         <MessageCircle className="w-4 h-4" />
                                     </Button>
                                 )}

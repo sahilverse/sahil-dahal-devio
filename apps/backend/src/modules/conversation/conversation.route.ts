@@ -4,6 +4,7 @@ import { TYPES } from "../../types";
 import { ConversationController } from "./conversation.controller";
 import { AuthMiddleware, validateRequest } from "../../middlewares";
 import { upload } from "../../middlewares/upload.middleware";
+import { sanitizeChatRequest } from "./conversation.middleware";
 import { startConversationSchema, sendMessageSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
@@ -47,6 +48,7 @@ router.post(
     "/",
     authMiddleware.guard,
     authMiddleware.verifiedOnly,
+    sanitizeChatRequest,
     validateRequest(startConversationSchema),
     conversationController.startConversation
 );
@@ -74,6 +76,24 @@ router.get(
     "/search",
     authMiddleware.guard,
     conversationController.searchConversations
+);
+
+/**
+ * @swagger
+ * /conversations/unread-count:
+ *   get:
+ *     summary: Get global unread message count
+ *     tags: [Conversation]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unread count
+ */
+router.get(
+    "/unread-count",
+    authMiddleware.guard,
+    conversationController.getUnreadCount
 );
 
 /**
@@ -172,6 +192,7 @@ router.post(
     "/:conversationId/messages",
     authMiddleware.guard,
     upload.array("media", 10),
+    sanitizeChatRequest,
     validateRequest(sendMessageSchema),
     conversationController.sendMessage
 );

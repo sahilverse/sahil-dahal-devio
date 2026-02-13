@@ -111,4 +111,9 @@ export class ConversationController {
         const result = await this.conversationService.searchConversations(userId, query);
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Conversations found", result);
     };
+    getUnreadCount = async (req: Request, res: Response) => {
+        const userId = (req.user as any).id;
+        const count = await this.conversationService.getUnreadCount(userId);
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Unread count fetched", count);
+    };
 }
