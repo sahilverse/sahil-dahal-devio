@@ -1,9 +1,15 @@
 import api from "./axios";
-import type { UserProfile } from "@/types/profile";
+import type { UserProfile, UserAbout } from "@/types/profile";
 
 export const UserService = {
     getProfile: async (username: string): Promise<UserProfile> => {
         const { data } = await api.get(`/users/${username}`);
+        return data.result;
+        return data.result;
+    },
+
+    getAboutData: async (username: string): Promise<UserAbout> => {
+        const { data } = await api.get(`/users/${username}/about`);
         return data.result;
     },
 

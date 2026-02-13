@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserService } from "@/api/userService";
-import type { UserProfile } from "@/types/profile";
+import type { UserProfile, UserAbout } from "@/types/profile";
 import { toast } from "sonner";
 
 export const USER_QUERY_KEYS = {
     all: ["users"] as const,
     profile: (username: string) => [...USER_QUERY_KEYS.all, "profile", username] as const,
+    about: (username: string) => [...USER_QUERY_KEYS.all, "about", username] as const,
     communities: (username: string) => [...USER_QUERY_KEYS.all, "communities", username] as const,
 };
 
@@ -15,6 +16,16 @@ export function useUserProfile(username: string) {
         queryFn: () => UserService.getProfile(username),
         enabled: !!username,
         retry: 1,
+    });
+}
+
+export function useUserAbout(username: string) {
+    return useQuery({
+        queryKey: USER_QUERY_KEYS.about(username),
+        queryFn: () => UserService.getAboutData(username),
+        enabled: !!username,
+        retry: 1,
+        staleTime: 1000 * 60 * 5,
     });
 }
 

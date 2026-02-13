@@ -19,7 +19,7 @@ import type {
 } from "./user.types";
 import { StatusCodes } from "http-status-codes";
 import { TYPES } from "../../types";
-import { PrivateProfileDTO, PublicProfileDTO } from "./user.dto";
+import { PrivateProfileDTO, PublicProfileDTO, AboutProfileDTO } from "./user.dto";
 import { StorageService } from "../storage";
 import { SkillService } from "../skill";
 import { v4 as uuidv4 } from "uuid";
@@ -91,18 +91,6 @@ export class UserService {
         const devioAge = this.formatDevioAge(diffDays);
         const weeklyContributions = await this.userRepository.getWeeklyContributions(user.id);
 
-        const logsMap = new Map<string, number>();
-        user.activityLogs.forEach((log: any) => {
-            const dateStr = new Date(log.date).toISOString().split('T')[0]!;
-            const currentCount = logsMap.get(dateStr) || 0;
-            logsMap.set(dateStr, currentCount + log.count);
-        });
-
-        const activityMap = Array.from(logsMap.entries()).map(([date, count]) => ({
-            date: date as string,
-            count: count as number,
-        })).sort((a, b) => a.date.localeCompare(b.date));
-
         const achievements = {
             latest: user.userAchievements.map((ua: any) => ua.achievement),
             total: user._count.userAchievements,
@@ -110,18 +98,6 @@ export class UserService {
 
         const problemStats = this.calculateProblemStats(user.submissions);
         const roomStats = this.calculateRoomStats(user.cyberRoomEnrollments);
-
-
-        const experiences = user.experiences.map((exp) => ({
-            ...exp,
-            companyLogoUrl: exp.company?.logoUrl || null,
-        }));
-
-        const skills = user.skills.map((us) => ({
-            id: us.skill.id,
-            name: us.skill.name,
-            slug: us.skill.slug,
-        }));
 
         const plainProfile = {
             ...user,
@@ -138,13 +114,12 @@ export class UserService {
             isOwner,
             currentStreak: user.userStreak?.currentStreak || 0,
             longestStreak: user.userStreak?.longestStreak || 0,
-            activityMap,
+
             achievements,
             problemStats,
             roomStats,
 
-            experiences,
-            skills,
+
         };
 
         if (isOwner) {
@@ -152,6 +127,34 @@ export class UserService {
         }
 
         return plainToInstance(PublicProfileDTO, plainProfile, { excludeExtraneousValues: true });
+    }
+
+    async getAboutData(username: string): Promise<AboutProfileDTO> {
+        const user = await this.userRepository.findAboutProfileByUsername(username) as any;
+        if (!user) {
+            throw new ApiError("User not found", StatusCodes.NOT_FOUND);
+        }
+
+        const experiences = (user.experiences || []).map((exp: any) => ({
+            ...exp,
+            companyLogoUrl: exp.company?.logoUrl || null,
+        }));
+
+        const skills = (user.skills || []).map((us: any) => ({
+            id: us.skill.id,
+            name: us.skill.name,
+            slug: us.skill.slug,
+        }));
+
+        const aboutData = {
+            experiences,
+            educations: user.educations || [],
+            certifications: user.certifications || [],
+            projects: user.projects || [],
+            skills
+        };
+
+        return plainToInstance(AboutProfileDTO, aboutData, { excludeExtraneousValues: true });
     }
 
     async getJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<GetJoinedCommunitiesResponseDto> {

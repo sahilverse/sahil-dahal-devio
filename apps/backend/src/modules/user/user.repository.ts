@@ -260,15 +260,6 @@ export class UserRepository {
                 profile: true,
                 role: true,
                 userStreak: true,
-                experiences: { orderBy: { startDate: 'desc' }, include: { company: true } },
-                educations: { orderBy: { startDate: 'desc' } },
-                certifications: { orderBy: { issueDate: 'desc' } },
-                projects: { orderBy: { startDate: 'desc' } },
-                skills: {
-                    include: {
-                        skill: true
-                    }
-                },
                 userAchievements: {
                     include: { achievement: true },
                     orderBy: { unlockedAt: 'desc' },
@@ -311,6 +302,29 @@ export class UserRepository {
                 }
             }
         });
+    }
+
+    async findAboutProfileByUsername(username: string): Promise<User | null> {
+        return await this.prisma.user.findFirst({
+            where: {
+                username: {
+                    equals: username,
+                    mode: "insensitive"
+                }
+            },
+            select: {
+                id: true,
+                experiences: { orderBy: { startDate: 'desc' }, include: { company: true } },
+                educations: { orderBy: { startDate: 'desc' } },
+                certifications: { orderBy: { issueDate: 'desc' } },
+                projects: { orderBy: { startDate: 'desc' } },
+                skills: {
+                    include: {
+                        skill: true
+                    }
+                }
+            }
+        }) as any;
     }
 
     async followUser(followerId: string, followingId: string): Promise<void> {

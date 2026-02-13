@@ -14,9 +14,11 @@ import { useManageExperience } from "@/hooks/useExperience";
 import { useManageEducation } from "@/hooks/useEducation";
 import { useManageSkills } from "@/hooks/useSkills";
 import { useManageProjects } from "@/hooks/useProjects";
+import { useUserAbout } from "@/hooks/useProfile";
 import { logger } from "@/lib/logger";
+import { Loader2 } from "lucide-react";
 
-import type { UserProfile, Experience, Education, Certification, Project } from "@/types/profile";
+import type { UserProfile, Experience, Education, Certification, Project, UserAbout } from "@/types/profile";
 
 interface AboutProps {
     profile: UserProfile;
@@ -24,6 +26,8 @@ interface AboutProps {
 }
 
 export default function About({ profile, isCurrentUser }: AboutProps) {
+    const { data: aboutData, isLoading: isAboutLoading } = useUserAbout(profile.username);
+
     const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
     const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
 
@@ -42,6 +46,18 @@ export default function About({ profile, isCurrentUser }: AboutProps) {
     const { addEducation, updateEducation, deleteEducation } = useManageEducation(profile.username);
     const { addSkill, removeSkill } = useManageSkills(profile.username);
     const { addProject, updateProject, deleteProject } = useManageProjects(profile.username);
+
+    if (isAboutLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+                <p className="text-sm animate-pulse">Loading resume details...</p>
+            </div>
+        );
+    }
+
+    const { experiences = [], educations = [], certifications = [], projects = [], skills = [] } = aboutData || {};
+
 
     const handleSaveExperience = async (data: any) => {
         try {
@@ -179,35 +195,35 @@ export default function About({ profile, isCurrentUser }: AboutProps) {
             className="space-y-4"
         >
             <ExperienceSection
-                experiences={profile.experiences}
+                experiences={experiences}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAddExperience}
                 onEditExperience={handleEditExperience}
             />
 
             <EducationSection
-                educations={profile.educations}
+                educations={educations}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAddEducation}
                 onEditEducation={handleEditEducation}
             />
 
             <CertificationSection
-                certifications={profile.certifications}
+                certifications={certifications}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAddCertification}
                 onEdit={handleEditCertification}
             />
 
             <ProjectSection
-                projects={profile.projects}
+                projects={projects}
                 isCurrentUser={isCurrentUser}
                 onAdd={handleAddProject}
                 onEdit={handleEditProject}
             />
 
             <SkillsSection
-                skills={profile.skills}
+                skills={skills}
                 isCurrentUser={isCurrentUser}
                 onAdd={() => setIsSkillsModalOpen(true)}
             />
@@ -250,7 +266,7 @@ export default function About({ profile, isCurrentUser }: AboutProps) {
             <SkillsModal
                 isOpen={isSkillsModalOpen}
                 onClose={() => setIsSkillsModalOpen(false)}
-                skills={profile.skills}
+                skills={skills}
                 onAdd={handleAddSkill}
                 onRemove={handleRemoveSkill}
                 isAdding={addSkill.isPending}

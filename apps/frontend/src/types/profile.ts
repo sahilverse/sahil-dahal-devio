@@ -74,7 +74,7 @@ export interface UserProfile {
 
     currentStreak: number;
     longestStreak: number;
-    activityMap: Array<{ date: string; count: number }>;
+
 
     contributions: {
         total: number,
@@ -105,6 +105,10 @@ export interface UserProfile {
         medium: number;
         hard: number;
     };
+
+}
+
+export interface UserAbout {
     experiences: Experience[];
     educations: Education[];
     certifications: Certification[];

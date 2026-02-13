@@ -33,6 +33,18 @@ export class UserController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Profile fetched successfully", profile);
     });
 
+
+    getAboutData = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { username } = req.params as { username: string };
+
+        if (!username) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Username is required");
+        }
+
+        const aboutData = await this.userService.getAboutData(username);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "About data fetched successfully", aboutData);
+    });
+
     getJoinedCommunities = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { userId } = req.params as { userId: string };
         const { limit, cursor, query } = req.query as { limit?: string; cursor?: string; query?: string };

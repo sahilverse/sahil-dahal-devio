@@ -2,16 +2,6 @@ import { AccountStatus, Difficulty } from "../../generated/prisma/client";
 import { Exclude, Expose, Type } from "class-transformer";
 
 @Exclude()
-export class ActivityLogDTO {
-    @Expose()
-    @Type(() => Date)
-    date!: Date;
-
-    @Expose()
-    count!: number;
-}
-
-@Exclude()
 export class AchievementDTO {
     @Expose() id!: string;
     @Expose() name!: string;
@@ -182,9 +172,7 @@ export class PublicProfileDTO {
     @Expose() currentStreak!: number;
     @Expose() longestStreak!: number;
 
-    @Expose()
-    @Type(() => ActivityLogDTO)
-    activityMap!: ActivityLogDTO[];
+
 
     @Expose()
     @Type(() => AchievementsMetaDTO)
@@ -198,6 +186,11 @@ export class PublicProfileDTO {
     @Type(() => RoomStatsDTO)
     roomStats!: RoomStatsDTO;
 
+
+}
+
+@Exclude()
+export class AboutProfileDTO {
     @Expose()
     @Type(() => ExperienceDTO)
     experiences!: ExperienceDTO[];

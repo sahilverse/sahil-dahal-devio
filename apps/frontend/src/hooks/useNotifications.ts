@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 import { notificationService } from "@/api/notificationService";
 import { Notification } from "@/types/notification";
 import { toast } from "sonner";
+import { useAppSelector } from "@/store/hooks";
 
 export function useFetchNotifications(limit: number = 20) {
     return useInfiniteQuery({
@@ -19,6 +20,8 @@ export function useFetchNotifications(limit: number = 20) {
 }
 
 export function useUnreadCount() {
+    const { user } = useAppSelector((state) => state.auth);
+
     return useQuery({
         queryKey: ["notifications", "unread-count"],
         queryFn: async () => {
@@ -26,6 +29,7 @@ export function useUnreadCount() {
             return response.count;
         },
         refetchInterval: 60000,
+        enabled: !!user,
     });
 }
 

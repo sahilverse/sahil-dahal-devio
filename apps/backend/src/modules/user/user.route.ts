@@ -851,4 +851,33 @@ router.delete(
     userController.removeProject
 );
 
+/**
+ * @swagger
+ * /users/{username}/about:
+ *   get:
+ *     summary: Get user about details (resume data)
+ *     description: Returns experiences, educations, certifications, projects, and skills.
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: About data fetched successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/:username/about",
+    authMiddleware.extractUser,
+    userController.getAboutData
+);
+
 export { router };
