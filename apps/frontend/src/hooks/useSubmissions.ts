@@ -1,5 +1,6 @@
 import { useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { submissionService } from "@/api/submissionService";
+import { toast } from "sonner";
 
 export const useRunSubmission = () => {
     return useMutation({
@@ -16,7 +17,12 @@ export const useSubmitSubmission = () => {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["submissions", variables.slug] });
             queryClient.invalidateQueries({ queryKey: ["problem", variables.slug] });
-            queryClient.invalidateQueries({ queryKey: ["problems"] }); 
+            queryClient.invalidateQueries({ queryKey: ["problems"] });
+        },
+        onError: (error: any) => {
+            const message = error.errorMessage
+
+            toast.error(message)
         }
     });
 };

@@ -34,13 +34,9 @@ export const useFetchBoilerplate = (slug: string, language: string) => {
 };
 
 export const useSaveDraft = () => {
-    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ slug, language, code }: { slug: string; language: string; code: string }) =>
             problemService.saveDraft(slug, language, code),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["boilerplate", variables.slug, variables.language] });
-        }
     });
 };
 
