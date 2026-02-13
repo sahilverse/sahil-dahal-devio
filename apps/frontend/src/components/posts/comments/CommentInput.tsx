@@ -8,6 +8,7 @@ import UserAvatar from "@/components/navbar/UserAvatar";
 import { useAppSelector } from "@/store/hooks";
 import { cn } from "@/lib/utils";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import TiptapEditor from "@/components/create/inputs/TiptapEditor";
 
 interface CommentInputProps {
     postId: string;
@@ -67,7 +68,7 @@ export function CommentInput({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files);
-            setMedia((prev) => [...prev, ...newFiles].slice(0, 3)); // Max 3 images as per backend
+            setMedia((prev) => [...prev, ...newFiles].slice(0, 3)); 
         }
     };
 
@@ -101,14 +102,15 @@ export function CommentInput({
                 )}
                 <div className="flex-1 space-y-3">
                     <div className="relative group">
-                        <textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
+                        <TiptapEditor
+                            content={content}
+                            onChange={(val) => setContent(val)}
                             placeholder={parentId ? "Write a reply..." : "What are your thoughts?"}
-                            className="w-full min-h-[100px] bg-transparent border border-border/50 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all resize-none placeholder:text-muted-foreground/50"
+                            hideToolbar
+                            className="min-h-[100px]"
                         />
 
-                        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                        <div className="absolute bottom-3 right-3 flex items-center gap-2 z-10">
                             <input
                                 type="file"
                                 ref={fileInputRef}

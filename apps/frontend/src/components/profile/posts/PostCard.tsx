@@ -22,7 +22,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import Markdown from "react-markdown";
+import { MarkdownContent } from "@/components/ui/MarkdownContent";
 import Link from "next/link";
 import UserAvatar from "@/components/navbar/UserAvatar";
 import PostMediaCarousel from "./PostMediaCarousel";
@@ -237,28 +237,7 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                             !isExpanded && "line-clamp-6 overflow-hidden"
                         )}
                     >
-                        <Markdown
-                            components={{
-                                code({ node, inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || "");
-                                    const language = match ? match[1] : "text";
-
-                                    return !inline ? (
-                                        <CodeBlock
-                                            language={language}
-                                            value={String(children).replace(/\n$/, "")}
-                                            className="my-3"
-                                        />
-                                    ) : (
-                                        <code className={cn("bg-muted/50 px-1.5 py-0.5 rounded text-[13px] font-mono", className)} {...props}>
-                                            {children}
-                                        </code>
-                                    );
-                                },
-                            }}
-                        >
-                            {post.content}
-                        </Markdown>
+                        <MarkdownContent content={post.content} />
                     </div>
                     {canExpand && (
                         <button

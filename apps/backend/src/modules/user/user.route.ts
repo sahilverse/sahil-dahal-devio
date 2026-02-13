@@ -138,6 +138,35 @@ router.patch(
 
 /**
  * @swagger
+ * /users/search:
+ *   get:
+ *     summary: Search users by username
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *     responses:
+ *       200:
+ *         description: Users fetched successfully
+ */
+router.get(
+    "/search",
+    authMiddleware.extractUser,
+    userController.searchUsers
+);
+
+/**
+ * @swagger
  * /users/{username}:
  *   get:
  *     summary: Get user profile by username

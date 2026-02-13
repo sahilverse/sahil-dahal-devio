@@ -8,6 +8,8 @@ export const SlashCommand = Extension.create({
         return {
             suggestion: {
                 char: '/',
+                allowSpaces: false,
+                startOfLine: true,
                 command: ({ editor, range, props }: any) => {
                     props.command({ editor, range });
                 },

@@ -5,7 +5,6 @@ export const UserService = {
     getProfile: async (username: string): Promise<UserProfile> => {
         const { data } = await api.get(`/users/${username}`);
         return data.result;
-        return data.result;
     },
 
     getAboutData: async (username: string): Promise<UserAbout> => {
@@ -126,5 +125,12 @@ export const UserService = {
 
     deleteProject: async (id: string): Promise<void> => {
         await api.delete(`/users/projects/${id}`);
+    },
+
+    searchUsers: async (query: string, limit: number = 5): Promise<any[]> => {
+        const { data } = await api.get("/users/search", {
+            params: { q: query, limit },
+        });
+        return data.result;
     },
 };

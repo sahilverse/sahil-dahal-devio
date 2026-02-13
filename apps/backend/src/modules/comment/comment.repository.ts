@@ -118,7 +118,7 @@ export class CommentRepository {
             include: {
                 ...this.getCommentInclude(currentUserId),
                 replies: {
-                    where: { deletedAt: null }, 
+                    where: { deletedAt: null },
                     take: replyPreviewLimit,
                     orderBy: [{ upvotes: "desc" }, { createdAt: "asc" }],
                     include: this.getCommentInclude(currentUserId),
@@ -161,13 +161,23 @@ export class CommentRepository {
     }
 
     async softDelete(id: string): Promise<Comment> {
-        return this.prisma.comment.update({
-            where: { id },
-            data: {
-                content: "[deleted]",
-                deletedAt: new Date(),
-            },
-            include: this.getCommentInclude(),
+        return this.prisma.$transaction(async (tx) => {
+            const comment = await tx.comment.update({
+                where: { id },
+                data: {
+                    content: "[deleted]",
+                    deletedAt: new Date(),
+                },
+                include: this.getCommentInclude(),
+            });
+
+            // Decrement post commentCount
+            await tx.post.update({
+                where: { id: comment.postId },
+                data: { commentCount: { decrement: 1 } },
+            });
+
+            return comment;
         });
     }
 

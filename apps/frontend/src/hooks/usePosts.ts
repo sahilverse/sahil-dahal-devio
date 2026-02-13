@@ -13,13 +13,13 @@ export function useCreatePost() {
 
     return useMutation({
         mutationFn: (data: CreatePostFormData) => PostService.createPost(data),
-        onSuccess: (response) => {
+        onSuccess: (data) => {
             toast.success("Post created successfully!");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
 
-            if (response.result.communityId) {
-                router.push(`/d/${response.result.community.name}?view=posts`);
+            if (data.communityId) {
+                router.push(`/d/${data.community.name}?view=posts`);
             } else {
                 router.push(`/user/${user?.username}?view=posts`);
             }
@@ -54,8 +54,8 @@ export function useSavePost() {
 
     return useMutation({
         mutationFn: (postId: string) => PostService.toggleSavePost(postId),
-        onSuccess: (response) => {
-            const message = response.result.isSaved ? "Post saved!" : "Post unsaved!";
+        onSuccess: (data) => {
+            const message = data.isSaved ? "Post saved!" : "Post unsaved!";
             toast.success(message);
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -73,8 +73,8 @@ export function usePinPost() {
     return useMutation({
         mutationFn: ({ postId, isPinned }: { postId: string; isPinned: boolean }) =>
             PostService.togglePinPost(postId, isPinned),
-        onSuccess: (response) => {
-            const message = response.result.isPinned ? "Post pinned to profile!" : "Post unpinned!";
+        onSuccess: (data) => {
+            const message = data.isPinned ? "Post pinned to profile!" : "Post unpinned!";
             toast.success(message);
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -90,12 +90,11 @@ export function useFetchPosts(filters?: { userId?: string; communityId?: string;
     return useInfiniteQuery({
         queryKey: ["posts", filters],
         queryFn: async ({ pageParam = undefined }) => {
-            const response = await PostService.getPosts({
+            return PostService.getPosts({
                 ...filters,
                 cursor: pageParam as string | undefined,
                 limit: filters?.limit || 10,
             });
-            return response.result;
         },
         getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
         initialPageParam: undefined,

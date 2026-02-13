@@ -461,6 +461,12 @@ export class UserService {
     }
 
 
+    async searchUsers(query: string, limit: number = 5, excludeId?: string): Promise<any[]> {
+        const users = await this.userRepository.searchUsers(query, excludeId, limit);
+        return plainToInstance(AuthUserDto, users, { excludeExtraneousValues: true });
+    }
+
+
     private filterSocials(socials: Record<string, any>): Record<string, string> {
         return Object.fromEntries(
             Object.entries(socials).filter(([_, value]) => value !== null && value !== "")

@@ -349,6 +349,9 @@ importers:
       pino-pretty:
         specifier: ^13.1.2
         version: 13.1.2
+      prosemirror-state:
+        specifier: ^1.4.4
+        version: 1.4.4
       qs:
         specifier: ^6.14.2
         version: 6.14.2

@@ -99,6 +99,25 @@ export class UserRepository {
         });
     }
 
+    async searchUsers(query: string, excludeId?: string, limit: number = 10): Promise<Partial<User>[]> {
+        return this.prisma.user.findMany({
+            where: {
+                AND: [
+                    { username: { contains: query, mode: 'insensitive' } },
+                    { username: { not: null } },
+                    { accountStatus: 'ACTIVE' },
+                    ...(excludeId ? [{ id: { not: excludeId } }] : [])
+                ]
+            },
+            take: limit,
+            select: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+            } as any
+        });
+    }
+
     async findById(id: string): Promise<User | null> {
         return await this.prisma.user.findUnique({
             where: { id },
@@ -553,14 +572,5 @@ export class UserRepository {
             where: { id: projectId }
         });
     }
-    async searchUsers(query: string, excludeId: string): Promise<User[]> {
-        return this.prisma.user.findMany({
-            where: {
-                username: { contains: query, mode: 'insensitive' },
-                id: { not: excludeId },
-                accountStatus: 'ACTIVE'
-            },
-            take: 10
-        });
-    }
+
 }

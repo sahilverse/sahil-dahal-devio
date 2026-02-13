@@ -15,9 +15,15 @@ import { EditorBubbleMenu } from "./editor/EditorBubbleMenu";
 import { MarkdownEditor } from "./editor/MarkdownEditor";
 import { SlashCommand } from "./extensions/SlashCommand";
 import { suggestion } from "./extensions/suggestion";
+import Mention from "@tiptap/extension-mention";
+import { createUnifiedSuggestion } from "./extensions/mentionSuggestion";
 import "tippy.js/dist/tippy.css";
+import { PluginKey } from "prosemirror-state";
 
 const lowlight = createLowlight(common);
+
+const unifiedMentionKey = new PluginKey("unifiedMention");
+const slashCommandKey = new PluginKey("slashCommand");
 
 interface TiptapEditorProps {
     content: string;
@@ -37,12 +43,67 @@ export default function TiptapEditor({ content, onChange, placeholder, className
             StarterKit.configure({
                 codeBlock: false,
             }),
+            Mention.extend({
+                name: "communityMention",
+                addStorage() {
+                    return {
+                        markdown: {
+                            serialize: (state: any, node: any) => {
+                                state.write(`d/${node.attrs.label ?? node.attrs.id}`);
+                            }
+                        }
+                    }
+                }
+            }).configure({
+                HTMLAttributes: {
+                    class: "text-brand-secondary font-bold hover:underline cursor-pointer",
+                },
+                renderLabel: ({ node }) => `d/${node.attrs.label ?? node.attrs.id}`,
+                renderHTML({ options, node }) {
+                    return [
+                        'span',
+                        options.HTMLAttributes,
+                        `d/${node.attrs.label ?? node.attrs.id}`,
+                    ]
+                },
+            }),
+            Mention.extend({
+                name: "userMention",
+                addStorage() {
+                    return {
+                        markdown: {
+                            serialize: (state: any, node: any) => {
+                                state.write(`u/${node.attrs.label ?? node.attrs.id}`);
+                            }
+                        }
+                    }
+                }
+            }).configure({
+                HTMLAttributes: {
+                    class: "text-brand-primary font-bold hover:underline cursor-pointer",
+                },
+                suggestion: {
+                    ...createUnifiedSuggestion(unifiedMentionKey),
+                    allowSpaces: false,
+                },
+                renderLabel: ({ node }) => `u/${node.attrs.label ?? node.attrs.id}`,
+                renderHTML({ options, node }) {
+                    return [
+                        'span',
+                        options.HTMLAttributes,
+                        `u/${node.attrs.label ?? node.attrs.id}`,
+                    ]
+                },
+            }),
+            SlashCommand.configure({
+                suggestion: {
+                    ...suggestion,
+                    pluginKey: slashCommandKey,
+                },
+            }),
             Markdown,
             CodeBlockLowlight.configure({
                 lowlight,
-            }),
-            SlashCommand.configure({
-                suggestion,
             }),
             Placeholder.configure({
                 placeholder: placeholder || "Body text (optional)",

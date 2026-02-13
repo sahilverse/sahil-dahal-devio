@@ -103,16 +103,77 @@ export function useDeleteComment() {
     return useMutation({
         mutationFn: ({ commentId, postId, parentId }: { commentId: string; postId: string; parentId: string | null }) =>
             CommentService.deleteComment(commentId),
-        onSuccess: (_, variables) => {
-            toast.success("Comment deleted.");
+
+        onMutate: async (variables) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ["comments", variables.postId] });
+            if (variables.parentId) {
+                await queryClient.cancelQueries({ queryKey: ["replies", variables.parentId] });
+            }
+
+            // Snapshot the previous value
+            const previousComments = queryClient.getQueryData(["comments", variables.postId]);
+            const previousReplies = variables.parentId ? queryClient.getQueryData(["replies", variables.parentId]) : null;
+
+            // Optimistically update: for comments, we set isDeleted to true
+            if (previousComments) {
+                queryClient.setQueryData(["comments", variables.postId], (old: any) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        pages: old.pages.map((page: any) => ({
+                            ...page,
+                            comments: page.comments.map((c: any) =>
+                                c.id === variables.commentId ? { ...c, isDeleted: true, content: "[deleted]" } : c
+                            )
+                        }))
+                    };
+                });
+            }
+
+            if (variables.parentId && previousReplies) {
+                queryClient.setQueryData(["replies", variables.parentId], (old: any) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        pages: old.pages.map((page: any) => ({
+                            ...page,
+                            replies: page.replies.map((r: any) =>
+                                r.id === variables.commentId ? { ...r, isDeleted: true, content: "[deleted]" } : r
+                            )
+                        }))
+                    };
+                });
+            }
+
+            return { previousComments, previousReplies };
+        },
+
+        onError: (error: any, variables, context) => {
+            // Roll back to the previous value
+            if (context?.previousComments) {
+                queryClient.setQueryData(["comments", variables.postId], context.previousComments);
+            }
+            if (variables.parentId && context?.previousReplies) {
+                queryClient.setQueryData(["replies", variables.parentId], context.previousReplies);
+            }
+
+            const message = error.errorMessage || "Failed to delete comment.";
+            toast.error(message);
+        },
+
+        onSettled: (data, error, variables) => {
+            // Always refetch after error or success to ensure we are in sync with the server
             queryClient.invalidateQueries({ queryKey: ["comments", variables.postId] });
             if (variables.parentId) {
                 queryClient.invalidateQueries({ queryKey: ["replies", variables.parentId] });
             }
+            // Also invalidate posts to get updated commentCount
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
         },
-        onError: (error: any) => {
-            const message = error.errorMessage || "Failed to delete comment.";
-            toast.error(message);
+
+        onSuccess: () => {
+            toast.success("Comment deleted.");
         },
     });
 }

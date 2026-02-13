@@ -31,6 +31,7 @@ import {
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import PostMediaCarousel from "@/components/profile/posts/PostMediaCarousel";
+import { MarkdownContent } from "@/components/ui/MarkdownContent";
 
 interface CommentItemProps {
     comment: CommentResponseDto;
@@ -174,7 +175,7 @@ export function CommentItem({
                                 commentId={comment.id}
                             />
                         ) : (
-                            <Markdown>{comment.content}</Markdown>
+                            <MarkdownContent content={comment.content} />
                         )}
                     </div>
 

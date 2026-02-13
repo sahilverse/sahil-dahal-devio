@@ -250,4 +250,18 @@ export class UserController {
         await this.userService.deleteProject(userId, id);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Project removed successfully");
     });
+
+    searchUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { q, limit } = req.query as { q?: string; limit?: string };
+        const userId = req.user?.id;
+
+        if (!q) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Search query is required");
+        }
+
+        const parsedLimit = limit ? parseInt(limit, 10) : 5;
+        const users = await this.userService.searchUsers(q, parsedLimit, userId);
+
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Users fetched successfully", users);
+    });
 }

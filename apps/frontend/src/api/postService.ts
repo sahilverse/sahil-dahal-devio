@@ -2,73 +2,73 @@ import api from "./axios";
 import { CreatePostFormData } from "@/components/create/CreatePostForm";
 
 export const PostService = {
-    createPost: async (data: CreatePostFormData) => {
+    createPost: async (payload: CreatePostFormData) => {
         const formData = new FormData();
-        formData.append("type", data.type);
-        formData.append("title", data.title);
+        formData.append("type", payload.type);
+        formData.append("title", payload.title);
 
-        if (data.status) {
-            formData.append("status", data.status);
+        if (payload.status) {
+            formData.append("status", payload.status);
         }
 
-        if (data.communityId) {
-            formData.append("communityId", data.communityId);
+        if (payload.communityId) {
+            formData.append("communityId", payload.communityId);
         }
 
-        if (data.type === "TEXT" || data.type === "QUESTION") {
-            if (data.content) {
-                formData.append("content", data.content);
+        if (payload.type === "TEXT" || payload.type === "QUESTION") {
+            if (payload.content) {
+                formData.append("content", payload.content);
             }
 
-            if (data.media && data.media.length > 0) {
-                data.media.forEach((file) => {
+            if (payload.media && payload.media.length > 0) {
+                payload.media.forEach((file) => {
                     formData.append("media", file);
                 });
             }
 
-            if (data.type === "QUESTION" && data.bountyAmount !== undefined) {
-                formData.append("bountyAmount", String(data.bountyAmount));
+            if (payload.type === "QUESTION" && payload.bountyAmount !== undefined) {
+                formData.append("bountyAmount", String(payload.bountyAmount));
             }
-        } else if (data.type === "LINK") {
-            formData.append("linkUrl", data.linkUrl);
+        } else if (payload.type === "LINK") {
+            formData.append("linkUrl", payload.linkUrl);
         }
 
-        if (data.topics && data.topics.length > 0) {
-            data.topics.forEach((topic) => {
+        if (payload.topics && payload.topics.length > 0) {
+            payload.topics.forEach((topic) => {
                 formData.append("topics[]", topic);
             });
         }
 
-        const response = await api.post("/posts", formData, {
+        const { data } = await api.post("/posts", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
         });
 
-        return response.data;
+        return data.result;
     },
 
     getPosts: async (params: { cursor?: string; limit?: number; userId?: string; communityId?: string; onlySaved?: boolean; sortBy?: string }) => {
-        const response = await api.get("/posts", { params });
-        return response.data;
+        const { data } = await api.get("/posts", { params });
+        return data.result;
     },
 
     votePost: async (postId: string, type: "UP" | "DOWN" | null) => {
-        const response = await api.post(`/posts/${postId}/vote`, { type });
-        return response.data;
+        const { data } = await api.post(`/posts/${postId}/vote`, { type });
+        return data.result;
     },
 
     toggleSavePost: async (postId: string) => {
-        const response = await api.post(`/posts/${postId}/save`);
-        return response.data;
+        const { data } = await api.post(`/posts/${postId}/save`);
+        return data.result;
     },
 
     togglePinPost: async (postId: string, isPinned: boolean) => {
-        const response = await api.patch(`/posts/${postId}/pin`, { isPinned });
-        return response.data;
+        const { data } = await api.patch(`/posts/${postId}/pin`, { isPinned });
+        return data.result;
     },
     deletePost: async (postId: string) => {
-        const response = await api.delete(`/posts/${postId}`);
-        return response.data;
+        const { data } = await api.delete(`/posts/${postId}`);
+        return data.result;
     }
 };

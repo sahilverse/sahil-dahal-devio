@@ -100,28 +100,28 @@ export const suggestion = {
             },
 
             onUpdate(props: any) {
-                component.updateProps(props);
+                component?.updateProps(props);
 
-                if (!props.clientRect) {
-                    return;
+                if (props.clientRect && popup?.[0]) {
+                    popup[0].setProps({
+                        getReferenceClientRect: props.clientRect,
+                    });
                 }
-
-                popup[0].setProps({
-                    getReferenceClientRect: props.clientRect,
-                });
             },
 
             onKeyDown(props: any) {
                 if (props.event.key === 'Escape') {
-                    popup[0].hide();
+                    popup?.[0]?.hide();
                     return true;
                 }
-                return component.ref?.onKeyDown(props);
+                return component?.ref?.onKeyDown(props) || false;
             },
 
             onExit() {
-                popup[0].destroy();
-                component.destroy();
+                popup?.[0]?.destroy();
+                component?.destroy();
+                component = null;
+                popup = null;
             },
         };
     },
