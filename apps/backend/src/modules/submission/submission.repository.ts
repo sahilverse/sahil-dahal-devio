@@ -34,6 +34,18 @@ export class SubmissionRepository {
         });
     }
 
+    async getUserProblemStatus(userId: string, problemId: string) {
+        return (this.prisma.userProblemStatus as any).findUnique({
+            where: {
+                userId_problemId: { userId, problemId }
+            },
+            select: {
+                status: true,
+                bestScore: true
+            }
+        });
+    }
+
     async upsertUserProblemStatus(userId: string, problemId: string, score: number) {
         const isSolved = score === 100;
         const status = isSolved ? ProblemSolutionStatus.SOLVED : ProblemSolutionStatus.ATTEMPTED;
@@ -44,7 +56,7 @@ export class SubmissionRepository {
                 userId_problemId: { userId, problemId }
             },
             update: {
-                status: isSolved ? ProblemSolutionStatus.SOLVED : undefined, // Never downgrade from SOLVED
+                status: isSolved ? ProblemSolutionStatus.SOLVED : undefined,
                 attempts: { increment: 1 }
             },
             create: {
@@ -55,7 +67,6 @@ export class SubmissionRepository {
                 attempts: 1
             }
         }).then(async (record: any) => {
-            // Manual high-score check because Prisma upsert set is limited for conditional max
             if (score > record.bestScore) {
                 return (this.prisma.userProblemStatus as any).update({
                     where: { userId_problemId: { userId, problemId } },
@@ -78,7 +89,7 @@ export class SubmissionRepository {
     }
 
     async getBestSubmissionScore(userId: string, problemId: string, eventId?: string): Promise<number> {
-        if (!eventId) return 0; // Only relevant for events
+        if (!eventId) return 0;
 
         const best = await this.prisma.submission.findFirst({
             where: {

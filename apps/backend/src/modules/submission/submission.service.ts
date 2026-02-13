@@ -6,7 +6,7 @@ import { JUDGE0_LANGUAGE_IDS, JUDGE0_STATUS, SUBMISSION_POLL_INTERVAL, SUBMISSIO
 import { StatusCodes } from "http-status-codes";
 import { SubmissionRepository } from "./submission.repository";
 import { ProblemRepository } from "../problem/problem.repository";
-import { SubmissionStatus, Problem as PrismaProblem, TestCase, ActivityType, CipherReason, User } from "../../generated/prisma/client";
+import { SubmissionStatus, ProblemSolutionStatus, Problem as PrismaProblem, TestCase, ActivityType, CipherReason, User } from "../../generated/prisma/client";
 import { StorageService } from "../storage/storage.service";
 import { ActivityService } from "../activity/activity.service";
 import { CipherService } from "../cipher";
@@ -103,7 +103,11 @@ export class SubmissionService {
             eventId
         });
 
-        // 8. Update User Status / Event Score
+        // 8. Check if this is a first-time solve
+        const previousStatus = await this.submissionRepository.getUserProblemStatus(userId, problem.id);
+        const isFirstSolve = finalScore === 100 && previousStatus?.status !== ProblemSolutionStatus.SOLVED;
+
+        // 9. Update User Status / Event Score
         await this.submissionRepository.upsertUserProblemStatus(userId, problem.id, finalScore);
 
         if (eventId) {
@@ -116,12 +120,12 @@ export class SubmissionService {
             }
         }
 
-        // 9. Log Activity
-        const activityType = finalScore === 100 ? ActivityType.PROBLEM_SOLVED : ActivityType.PROBLEM_ATTEMPT;
+        // 10. Log Activity (only count as PROBLEM_SOLVED on first solve)
+        const activityType = isFirstSolve ? ActivityType.PROBLEM_SOLVED : ActivityType.PROBLEM_ATTEMPT;
         await this.activityService.logActivity(userId, activityType);
 
-        // 10. Award Cipher (Bounty) if applicable
-        if (finalScore === 100 && problem.cipherReward > 0) {
+        // 11. Award Cipher (Bounty) only on first solve
+        if (isFirstSolve && problem.cipherReward > 0) {
             await this.cipherService.awardCipher(
                 userId,
                 problem.cipherReward,
