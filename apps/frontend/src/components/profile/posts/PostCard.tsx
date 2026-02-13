@@ -29,7 +29,7 @@ import PostMediaCarousel from "./PostMediaCarousel";
 import { formatCompactNumber, cn } from "@/lib/utils";
 import { useVotePost, useSavePost, usePinPost, useDeletePost } from "@/hooks/usePosts";
 import { useAppSelector } from "@/store/hooks";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import CodeBlock from "./CodeBlock";
@@ -43,12 +43,34 @@ interface PostCardProps {
 export default function PostCard({ post, isOwner }: PostCardProps) {
     const { user } = useAppSelector((state) => state.auth);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [canExpand, setCanExpand] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
     const voteMutation = useVotePost();
     const saveMutation = useSavePost();
     const pinMutation = usePinPost();
     const deleteMutation = useDeletePost();
 
     const { openLogin } = useAuthModal();
+
+    useEffect(() => {
+        const checkOverflow = () => {
+            if (containerRef.current && !isExpanded) {
+                const isTruncated = containerRef.current.scrollHeight > containerRef.current.clientHeight;
+                setCanExpand(isTruncated);
+            }
+        };
+
+        checkOverflow();
+        const timeoutId = setTimeout(checkOverflow, 50);
+
+        window.addEventListener("resize", checkOverflow);
+        return () => {
+            window.removeEventListener("resize", checkOverflow);
+            clearTimeout(timeoutId);
+        };
+    }, [post.content, isExpanded]);
 
     const handleVote = (type: "UP" | "DOWN") => {
         if (!user) {
@@ -85,10 +107,10 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             post.isPinned && "border-primary/30 ring-1 ring-primary/10"
         )}>
             {/* Header */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                 {post.community ? (
-                    <>
-                        <Link href={`/d/${post.community.name}`} className="text-[14px] text-foreground hover:underline flex items-center gap-1">
+                    <div className="flex items-center gap-2">
+                        <Link href={`/d/${post.community.name}`} className="shrink-0">
                             <UserAvatar
                                 user={{
                                     username: post.community.name,
@@ -96,28 +118,43 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
                                 }}
                                 size="sm"
                             />
-                            d/{post.community.name}
                         </Link>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                            <Link href={`/user/${post.author.username}`} className="hover:underline text-foreground">
-                                u/{post.author.username}
-                            </Link>
+                        <div className="flex flex-col space-y-1">
+                            <div className="flex items-center gap-1.5">
+                                <Link href={`/d/${post.community.name}`} className="text-[14px] font-bold text-foreground hover:underline leading-none">
+                                    d/{post.community.name}
+                                </Link>
+                                <span className="text-[10px] text-muted-foreground/40">•</span>
+                                <span className="text-[12px] font-medium text-muted-foreground/60 leading-none">
+                                    {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                                </span>
+                            </div>
+                            <div className="text-[12px] font-medium text-muted-foreground/60">
+                                <Link href={`/user/${post.author.username}`} className="hover:text-foreground/40 transition-colors">
+                                    u/{post.author.username}
+                                </Link>
+                            </div>
                         </div>
-                    </>
+                    </div>
                 ) : (
                     <div className="flex items-center gap-2">
-                        <UserAvatar
-                            user={post.author}
-                            size="sm"
-                        />
-                        <Link href={`/user/${post.author.username}`} className="text-[14px] text-foreground hover:underline">
-                            u/{post.author.username}
+                        <Link href={`/user/${post.author.username}`} className="shrink-0">
+                            <UserAvatar
+                                user={post.author}
+                                size="sm"
+                            />
                         </Link>
+                        <div className="flex items-center gap-1.5">
+                            <Link href={`/user/${post.author.username}`} className="text-[14px] font-bold text-foreground hover:underline leading-none">
+                                u/{post.author.username}
+                            </Link>
+                            <span className="text-[10px] text-muted-foreground/40">•</span>
+                            <span className="text-[12px] font-medium text-muted-foreground/60">
+                                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                            </span>
+                        </div>
                     </div>
                 )}
-                <span>•</span>
-                <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
 
                 <div className="flex-1" />
 
@@ -182,30 +219,51 @@ export default function PostCard({ post, isOwner }: PostCardProps) {
             </p>
 
             {/* Markdown Content (Preview) */}
-            {post.content && <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground line-clamp-6 mb-2 prose-pre:bg-transparent prose-pre:p-0 prose-code:bg-transparent prose-code:p-0">
-                <Markdown
-                    components={{
-                        code({ node, inline, className, children, ...props }: any) {
-                            const match = /language-(\w+)/.exec(className || "");
-                            const language = match ? match[1] : "text";
+            {post.content && (
+                <div className="relative mb-2">
+                    <div
+                        ref={containerRef}
+                        className={cn(
+                            "prose prose-sm dark:prose-invert max-w-none text-muted-foreground transition-all duration-300 prose-pre:bg-transparent prose-pre:p-0 prose-code:bg-transparent prose-code:p-0",
+                            !isExpanded && "line-clamp-6 overflow-hidden"
+                        )}
+                    >
+                        <Markdown
+                            components={{
+                                code({ node, inline, className, children, ...props }: any) {
+                                    const match = /language-(\w+)/.exec(className || "");
+                                    const language = match ? match[1] : "text";
 
-                            return !inline ? (
-                                <CodeBlock
-                                    language={language}
-                                    value={String(children).replace(/\n$/, "")}
-                                    className="my-3"
-                                />
-                            ) : (
-                                <code className={cn("bg-muted/50 px-1.5 py-0.5 rounded text-[13px] font-mono", className)} {...props}>
-                                    {children}
-                                </code>
-                            );
-                        },
-                    }}
-                >
-                    {post.content}
-                </Markdown>
-            </div>}
+                                    return !inline ? (
+                                        <CodeBlock
+                                            language={language}
+                                            value={String(children).replace(/\n$/, "")}
+                                            className="my-3"
+                                        />
+                                    ) : (
+                                        <code className={cn("bg-muted/50 px-1.5 py-0.5 rounded text-[13px] font-mono", className)} {...props}>
+                                            {children}
+                                        </code>
+                                    );
+                                },
+                            }}
+                        >
+                            {post.content}
+                        </Markdown>
+                    </div>
+                    {canExpand && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsExpanded(!isExpanded);
+                            }}
+                            className="text-[12px] font-bold text-brand-primary hover:text-brand-primary/80 transition-colors mt-2 cursor-pointer flex items-center gap-1"
+                        >
+                            {isExpanded ? "Show less" : "Read more"}
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Link Preview */}
             {post.linkUrl && (

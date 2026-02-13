@@ -57,6 +57,8 @@ export default function CreatePostForm({ children, onSubmit, isPending }: Create
             type: PostType.TEXT,
             title: "",
             content: "",
+            linkUrl: "",
+            bountyAmount: 0,
             topics: [],
             status: PostStatus.PUBLISHED,
             media: [],
@@ -69,17 +71,17 @@ export default function CreatePostForm({ children, onSubmit, isPending }: Create
 
             if (typeParam === PostType.LINK) {
                 form.setValue("media" as any, []);
-                form.setValue("bountyAmount" as any, undefined);
+                form.setValue("bountyAmount" as any, 0);
             } else if (typeParam === PostType.TEXT) {
-                form.setValue("linkUrl" as any, undefined);
-                form.setValue("bountyAmount" as any, undefined);
+                form.setValue("linkUrl" as any, "");
+                form.setValue("bountyAmount" as any, 0);
             } else if (typeParam === PostType.QUESTION) {
-                form.setValue("linkUrl" as any, undefined);
+                form.setValue("linkUrl" as any, "");
             }
         } else {
             form.setValue("type", PostType.TEXT);
-            form.setValue("linkUrl" as any, undefined);
-            form.setValue("bountyAmount" as any, undefined);
+            form.setValue("linkUrl" as any, "");
+            form.setValue("bountyAmount" as any, 0);
         }
     }, [typeParam, form]);
 
