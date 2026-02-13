@@ -4,9 +4,7 @@
     "description": "boilerplate generator for devio problems",
     "main": "dist/index.js",
     "scripts": {
-        "dev": "tsx src/index.ts",
-        "build": "tsup src/* --dts",
-        "start": "node dist/index.js"
+        "build": "tsup src/* --dts"
     },
     "keywords": [],
     "author": "",
