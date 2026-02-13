@@ -10,7 +10,6 @@ import {
     CheckCircle2,
     Circle,
     HelpCircle,
-    ChevronRight,
     Loader2,
     Coins,
 } from "lucide-react";
@@ -26,6 +25,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Tooltip } from "react-tooltip";
 
 export default function ProblemsListPage() {
     const [search, setSearch] = useState("");
@@ -83,7 +83,7 @@ export default function ProblemsListPage() {
                     </Select>
 
                     <Select value={status} onValueChange={(val) => setStatus(val as ProblemSolutionStatus | "ALL")}>
-                        <SelectTrigger className="w-[110px] h-9 text-xs font-medium cursor-pointer">
+                        <SelectTrigger className="cursor-pointer w-[110px] h-9 text-xs font-medium">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -110,16 +110,16 @@ export default function ProblemsListPage() {
             </div>
 
             {/* Problems List */}
-            <div className="bg-card rounded-2xl border border-border relative overflow-hidden shadow-sm">
+            <div className="bg-card rounded-xl border border-border relative overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
                                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-12">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Title</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-[20%]">Title</th>
                                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-32">Difficulty</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Topics</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-12 text-center">Action</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-32">Rewards</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-[40%]">Topics</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -137,13 +137,25 @@ export default function ProblemsListPage() {
                                         className="even:bg-muted/30 hover:bg-muted/50 transition-colors group cursor-pointer border-b border-border/40 last:border-0"
                                     >
                                         <td className="px-6 py-3 w-12">
-                                            {problem.status === "SOLVED" ? (
-                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                            ) : problem.status === "ATTEMPTED" ? (
-                                                <Circle className="w-4 h-4 text-amber-500 fill-amber-500/10" />
-                                            ) : (
-                                                <Circle className="w-4 h-4 text-muted-foreground/30" />
-                                            )}
+                                            <div
+                                                className="w-fit cursor-help"
+                                                data-tooltip-id="status-tooltip"
+                                                data-tooltip-content={
+                                                    problem.status === "SOLVED"
+                                                        ? "Solved"
+                                                        : problem.status === "ATTEMPTED"
+                                                            ? "Attempted"
+                                                            : "Unsolved"
+                                                }
+                                            >
+                                                {problem.status === "SOLVED" ? (
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                ) : problem.status === "ATTEMPTED" ? (
+                                                    <Circle className="w-4 h-4 text-amber-500 fill-amber-500/10" />
+                                                ) : (
+                                                    <Circle className="w-4 h-4 text-muted-foreground/30" />
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-3">
@@ -153,12 +165,6 @@ export default function ProblemsListPage() {
                                                 >
                                                     {problem.title}
                                                 </Link>
-                                                {problem.cipherReward > 0 && (
-                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 text-amber-600 rounded text-[10px] font-bold border border-amber-500/20">
-                                                        <Coins className="w-3 h-3" />
-                                                        {problem.cipherReward}
-                                                    </div>
-                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-3 w-32">
@@ -170,6 +176,16 @@ export default function ProblemsListPage() {
                                             )}>
                                                 {problem.difficulty}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-3 w-32">
+                                            {problem.cipherReward > 0 ? (
+                                                <div className="flex items-center gap-1.5 w-fit px-2 py-1 bg-amber-500/10 text-amber-600 rounded-md text-[11px] font-bold border border-amber-500/20 shadow-sm">
+                                                    <Coins className="w-3.5 h-3.5 fill-amber-500/20" />
+                                                    {problem.cipherReward}
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted-foreground/30 text-[10px] font-medium ml-2">-</span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-3">
                                             <div className="flex flex-wrap gap-2">
@@ -188,9 +204,7 @@ export default function ProblemsListPage() {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-3 w-12 text-center">
-                                            <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-brand-primary transition-colors mx-auto" />
-                                        </td>
+
                                     </tr>
                                 ))
                             ) : (
@@ -219,6 +233,9 @@ export default function ProblemsListPage() {
                     </div>
                 )}
             </div>
+
+            <Tooltip id="status-tooltip" className="z-50 !opacity-100 !text-xs !font-medium" />
+
         </div>
     );
 }
