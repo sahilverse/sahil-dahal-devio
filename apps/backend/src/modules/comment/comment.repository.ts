@@ -113,10 +113,10 @@ export class CommentRepository {
         const comments = await this.prisma.comment.findMany({
             where: {
                 postId,
-                parentId: null, // Top-level comments only
-                deletedAt: null, // Hide deleted comments
+                parentId: null, 
+                deletedAt: null, 
             },
-            take: limit + 1, // +1 for cursor pagination
+            take: limit + 1, 
             ...(cursor && {
                 skip: 1,
                 cursor: { id: cursor },

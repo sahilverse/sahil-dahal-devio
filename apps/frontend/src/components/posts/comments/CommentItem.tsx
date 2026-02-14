@@ -11,10 +11,8 @@ import {
     ChevronUp,
     MessageSquare,
     MoreHorizontal,
-    Pencil,
-    Trash2,
     CheckCircle2,
-    XCircle
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -109,6 +107,9 @@ export function CommentItem({
 
     const isAuthor = user?.id === comment.author.id;
     const isPostAuthor = user?.id === postAuthorId;
+    // Post author can remove any comment except the accepted answer
+    const canRemove = isPostAuthor && !isAuthor && !isAccepted;
+
     const canAccept = isQuestionPost && isPostAuthor && !comment.parentId && !isAccepted;
     const canUnaccept = isQuestionPost && isPostAuthor && isAccepted;
 
@@ -160,21 +161,26 @@ export function CommentItem({
                                 {isAuthor && (
                                     <>
                                         <DropdownMenuItem onClick={() => setIsEditing(true)} className="cursor-pointer">
-                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                            Edit
                                         </DropdownMenuItem>
                                         <DropdownMenuItem className="text-destructive cursor-pointer" onClick={() => setIsDeleteModalOpen(true)}>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            Delete
                                         </DropdownMenuItem>
                                     </>
                                 )}
                                 {canAccept && (
                                     <DropdownMenuItem onClick={handleAccept} className="cursor-pointer">
-                                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Mark as Solution
+                                        Mark as Solution
                                     </DropdownMenuItem>
                                 )}
                                 {canUnaccept && (
                                     <DropdownMenuItem onClick={handleUnaccept} className="cursor-pointer">
-                                        <XCircle className="mr-2 h-4 w-4 text-amber-500" /> Unmark Solution
+                                        Unmark Solution
+                                    </DropdownMenuItem>
+                                )}
+                                {canRemove && (
+                                    <DropdownMenuItem className="text-destructive cursor-pointer" onClick={() => setIsDeleteModalOpen(true)}>
+                                        Remove
                                     </DropdownMenuItem>
                                 )}
                                 {!isAuthor && (
@@ -325,8 +331,11 @@ export function CommentItem({
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDelete}
-                title="Delete Comment"
-                description="Are you sure you want to delete this comment? This action cannot be undone."
+                title={canRemove ? "Remove Comment" : "Delete Comment"}
+                description={canRemove
+                    ? "Are you sure you want to remove this comment from your post? This action cannot be undone."
+                    : "Are you sure you want to delete this comment? This action cannot be undone."
+                }
                 isPending={deleteMutation.isPending}
             />
         </div>

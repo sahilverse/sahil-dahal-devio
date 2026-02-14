@@ -140,7 +140,7 @@ export function useDeleteComment() {
             const previousComments = queryClient.getQueryData(["comments", variables.postId]);
             const previousReplies = variables.parentId ? queryClient.getQueryData(["replies", variables.parentId]) : null;
 
-            // Optimistically update: for comments, we set isDeleted to true
+            // Optimistically update: remove the comment from the list
             if (previousComments) {
                 queryClient.setQueryData(["comments", variables.postId], (old: any) => {
                     if (!old) return old;
@@ -148,9 +148,7 @@ export function useDeleteComment() {
                         ...old,
                         pages: old.pages.map((page: any) => ({
                             ...page,
-                            comments: page.comments.map((c: any) =>
-                                c.id === variables.commentId ? { ...c, isDeleted: true, content: "[deleted]" } : c
-                            )
+                            comments: page.comments.filter((c: any) => c.id !== variables.commentId)
                         }))
                     };
                 });
@@ -163,9 +161,7 @@ export function useDeleteComment() {
                         ...old,
                         pages: old.pages.map((page: any) => ({
                             ...page,
-                            replies: page.replies.map((r: any) =>
-                                r.id === variables.commentId ? { ...r, isDeleted: true, content: "[deleted]" } : r
-                            )
+                            replies: page.replies.filter((r: any) => r.id !== variables.commentId)
                         }))
                     };
                 });
