@@ -7,6 +7,7 @@ import { CommentItem } from "./CommentItem";
 import { CommentInput } from "./CommentInput";
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageSquare } from "lucide-react";
+import { formatCompactNumber } from "@/lib/utils";
 
 interface CommentSectionProps {
     postId: string;
@@ -51,7 +52,7 @@ export function CommentSection({ postId, commentCount, postAuthorId, isQuestionP
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-primary" />
-                    {commentCount} Comments
+                    {formatCompactNumber(commentCount)} Comments
                 </h3>
 
                 <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border/50">

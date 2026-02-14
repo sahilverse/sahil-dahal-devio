@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatCompactNumber } from "@/lib/utils";
 import { useVoteComment, useFetchReplies, useDeleteComment, useAcceptAnswer, useUnacceptAnswer } from "@/hooks/useComments";
 import { useAppSelector } from "@/store/hooks";
 import { CommentInput } from "./CommentInput";
@@ -283,7 +283,7 @@ export function CommentItem({
                             className="mt-3 h-8 gap-2 text-xs font-bold text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg cursor-pointer"
                         >
                             <ChevronDown className="h-4 w-4" />
-                            Show {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
+                            {formatCompactNumber(comment.replyCount)} Replies
                         </Button>
                     )}
 

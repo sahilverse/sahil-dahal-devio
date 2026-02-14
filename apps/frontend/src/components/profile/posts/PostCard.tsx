@@ -29,13 +29,12 @@ import { MarkdownContent } from "@/components/ui/MarkdownContent";
 import Link from "next/link";
 import UserAvatar from "@/components/navbar/UserAvatar";
 import PostMediaCarousel from "./PostMediaCarousel";
-import { formatCompactNumber, cn } from "@/lib/utils";
+import { cn, formatCompactNumber } from "@/lib/utils";
 import { useVotePost, useSavePost, usePinPost, useDeletePost } from "@/hooks/usePosts";
 import { useAppSelector } from "@/store/hooks";
 import { useState, useEffect, useRef } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 import { useAuthModal } from "@/contexts/AuthModalContext";
-import CodeBlock from "./CodeBlock";
 import { CommentSection } from "@/components/posts/comments/CommentSection";
 
 
@@ -368,7 +367,7 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                     )}
                 >
                     <MessageSquare className="h-4 w-4" />
-                    <span className="text-xs font-semibold">{formatCompactNumber(post.commentCount)} Comments</span>
+                    <span className="text-xs font-medium">{formatCompactNumber(post.commentCount)}</span>
                 </Button>
 
                 {/* Save Pill */}
