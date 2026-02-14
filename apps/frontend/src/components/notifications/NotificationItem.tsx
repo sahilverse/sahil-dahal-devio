@@ -108,7 +108,7 @@ export default function NotificationItem({
                     )}
                 >
                     {notification.actor && (
-                        <span className="font-semibold">{notification.actor.username} </span>
+                        <span className="font-semibold">u/{notification.actor.username} </span>
                     )}
                     {notification.message}
                 </p>
