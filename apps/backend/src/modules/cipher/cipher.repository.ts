@@ -15,7 +15,6 @@ export class CipherRepository {
         const { userId, amount, reason, sourceId } = data;
 
         return this.prisma.$transaction(async (tx) => {
-            // 1. Create Ledger Entry
             const transaction = await tx.cipherTransaction.create({
                 data: {
                     userId,
@@ -25,7 +24,6 @@ export class CipherRepository {
                 }
             });
 
-            // 2. Update User Balance (Atomic Increment)
             const updatedUser = await tx.user.update({
                 where: { id: userId },
                 data: {
@@ -57,7 +55,6 @@ export class CipherRepository {
         });
     }
 
-    // Check if a transaction exists (Anti-Abuse)
     async hasTransaction(userId: string, reason: CipherReason, sourceId: string): Promise<boolean> {
         const count = await this.prisma.cipherTransaction.count({
             where: {

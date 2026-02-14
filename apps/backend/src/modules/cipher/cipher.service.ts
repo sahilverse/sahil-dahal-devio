@@ -28,13 +28,11 @@ export class CipherService {
     }
 
     async spendCipher(userId: string, amount: number, reason: CipherReason, sourceId?: string) {
-        // 1. Pre-check Balance
         const currentBalance = await this.cipherRepository.getBalance(userId);
         if (currentBalance < amount) {
             throw new ApiError("Insufficient Cipher Balance", StatusCodes.BAD_REQUEST);
         }
 
-        // 2. Spending is a negative transaction. 
         return this.cipherRepository.createTransaction({
             userId,
             amount: -amount,

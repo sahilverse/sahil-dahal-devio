@@ -26,7 +26,7 @@ export class PostRepository {
                 votes: { where: { userId: currentUserId } },
                 savePosts: { where: { userId: currentUserId } },
             }),
-        };
+        }
     }
 
     async create(data: Prisma.PostCreateInput): Promise<Post> {

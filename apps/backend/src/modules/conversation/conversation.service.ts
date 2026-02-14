@@ -170,7 +170,6 @@ export class ConversationService {
         const updatedMessage = await this.conversationRepository.editMessage(messageId, content);
         const messageDTO = plainToInstance(MessageDTO, updatedMessage);
 
-        // Notify participants
         const conversation = await this.conversationRepository.getConversationById(message.conversationId, userId);
         if (conversation) {
             conversation.participants.forEach(p => {
@@ -192,7 +191,6 @@ export class ConversationService {
             const updated = await this.conversationRepository.softDeleteMessageForEveryone(messageId);
             const messageDTO = plainToInstance(MessageDTO, updated);
 
-            // Notify everyone
             const conversation = await this.conversationRepository.getConversationById(message.conversationId, userId);
             if (conversation) {
                 conversation.participants.forEach(p => {
@@ -201,7 +199,6 @@ export class ConversationService {
                 });
             }
         } else {
-            // Delete for me
             await this.conversationRepository.hideMessageForUser(messageId, userId);
             this.socketService.io.to(`user:${userId}`).emit("message:deleted", { messageId, type: 'me' });
         }
@@ -215,7 +212,6 @@ export class ConversationService {
 
         await this.conversationRepository.clearConversationHistory(conversationId, userId);
 
-        // Notify myself to clear UI
         this.socketService.io.to(`user:${userId}`).emit("conversation:cleared", { conversationId });
 
         return { success: true };
@@ -224,20 +220,16 @@ export class ConversationService {
     async searchConversations(userId: string, query: string) {
         if (!query || query.length < 2) return [];
 
-        // 1. Search for users globally
         const users = await this.userRepository.searchUsers(query, userId);
-        const userIds = users.map(u => u.id);
+        const userIds = users.map(u => u.id).filter((id): id is string => !!id);
 
         if (userIds.length === 0) return [];
 
-        // 2. Find existing conversations with these users
         const existingConversations = await this.conversationRepository.findConversationsWithUsers(userId, userIds);
 
-        // 3. Map to DTOs and populate details
         const results: ConversationDTO[] = [];
         const processedUserIds = new Set<string>();
 
-        // Add existing conversations first
         for (const conv of existingConversations) {
             if (conv.status === ConversationStatus.INVITE_PENDING && conv.inviteSenderId === userId) {
                 continue;
@@ -253,9 +245,8 @@ export class ConversationService {
             }
         }
 
-        // Add users who don't have a conversation yet
         for (const user of users) {
-            if (!processedUserIds.has(user.id)) {
+            if (!processedUserIds.has(user.id!)) {
                 const virtualConv = new ConversationDTO();
                 virtualConv.id = "";
                 virtualConv.type = ConversationType.DIRECT;
@@ -322,7 +313,6 @@ export class ConversationService {
         const conversations = await this.conversationRepository.findConversationsByUser(userId, limit, cursor);
         const dtos = plainToInstance(ConversationDTO, conversations);
 
-        // Populate unread counts and details
         for (const dto of dtos) {
             const participant = conversations.find(c => c.id === dto.id)?.participants.find(p => p.userId === userId);
             if (participant) {
