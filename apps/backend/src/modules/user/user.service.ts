@@ -213,7 +213,7 @@ export class UserService {
     }
 
     private formatDevioAge(days: number): string {
-        if (days === 0) return "Just joined";
+        if (days < 1) return "Just joined";
 
         if (days < 30) return `${days}d`;
 
