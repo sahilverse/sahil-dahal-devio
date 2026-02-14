@@ -21,8 +21,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { toggleSidebar } from "@/slices/ui/uiSlice";
+import { toggleSidebar, setSidebarOpen } from "@/slices/ui/uiSlice";
 import CreateCommunityModal from "../community/CreateCommunityModal";
+import { useEffect } from "react";
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -34,6 +35,12 @@ export default function Sidebar() {
 
     const isActive = (path: string) => pathname === path;
     const isAuthenticated = !!user;
+
+    useEffect(() => {
+        if (window.innerWidth < 1024) {
+            dispatch(setSidebarOpen(false));
+        }
+    }, [pathname, dispatch]);
 
     const navItems = [
         { name: "Home", href: "/", icon: Home },

@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import Markdown from "react-markdown";
 import { useVoteComment, useFetchReplies, useDeleteComment, useAcceptAnswer, useUnacceptAnswer } from "@/hooks/useComments";
 import { useAppSelector } from "@/store/hooks";
 import { CommentInput } from "./CommentInput";
@@ -107,7 +106,6 @@ export function CommentItem({
 
     const isAuthor = user?.id === comment.author.id;
     const isPostAuthor = user?.id === postAuthorId;
-    // Post author can remove any comment except the accepted answer
     const canRemove = isPostAuthor && !isAuthor && !isAccepted;
 
     const canAccept = isQuestionPost && isPostAuthor && !comment.parentId && !isAccepted;
@@ -183,7 +181,7 @@ export function CommentItem({
                                         Remove
                                     </DropdownMenuItem>
                                 )}
-                                {!isAuthor && (
+                                {!isAuthor && !canRemove && (
                                     <DropdownMenuItem className="text-destructive cursor-pointer">
                                         Report
                                     </DropdownMenuItem>
