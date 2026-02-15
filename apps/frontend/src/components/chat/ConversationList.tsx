@@ -154,7 +154,7 @@ export default function ConversationList({ filter = "all" }: { filter?: "all" | 
                                     )}
                                 </p>
                                 {hasUnread && (
-                                    <span className="w-2.5 h-2.5 bg-orange-500 rounded-full shrink-0" />
+                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full shrink-0 mb-2" />
                                 )}
                             </div>
                         </div>
