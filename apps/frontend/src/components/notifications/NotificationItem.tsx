@@ -104,7 +104,7 @@ export default function NotificationItem({
                         notification.isRead ? "text-muted-foreground" : "text-foreground"
                     )}
                 >
-                    {notification.actor && (
+                    {notification.actor && notification.type !== "SYSTEM" && (
                         <span className="font-semibold">u/{notification.actor.username} </span>
                     )}
                     {notification.message}
