@@ -1,8 +1,12 @@
 export const JUDGE0_LANGUAGE_IDS: Record<string, number> = {
-    "cpp": 54,        // C++ (GCC 9.2.0)
-    "java": 62,       // Java (OpenJDK 13.0.1)
-    "python": 71,     // Python (3.8.1)
-    "javascript": 63, // Node.js (12.14.0)
+    "cpp": 54,
+    "java": 62,
+    "python": 71,
+    "javascript": 63,
+    "rust": 73,
+    "csharp": 51,
+    "go": 60,
+    "php": 68
 };
 
 export const JUDGE0_STATUS = {
