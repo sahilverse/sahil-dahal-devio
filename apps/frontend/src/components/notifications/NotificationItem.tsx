@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Notification, NotificationType } from "@/types/notification";
 import { cn } from "@/lib/utils";
+import UserAvatar from "@/components/navbar/UserAvatar";
 import {
     Bell,
     UserPlus,
@@ -66,13 +67,9 @@ export default function NotificationItem({
         >
             {/* Icon or Avatar */}
             <div className="shrink-0 mt-0.5">
-                {notification.actor?.avatarUrl ? (
+                {notification.actor ? (
                     <div className="relative">
-                        <img
-                            src={notification.actor.avatarUrl}
-                            alt={notification.actor.username}
-                            className="w-10 h-10 rounded-full object-cover ring-2 ring-border"
-                        />
+                        <UserAvatar user={notification.actor} size="md" />
                         <div
                             className={cn(
                                 "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card",
