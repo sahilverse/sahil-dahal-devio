@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setView } from "@/slices/chat/chatSlice";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "../navbar/UserAvatar";
 import { ArrowLeft, Send, Paperclip, X, Loader2, File, Video, FileText } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import InviteBanner from "./InviteBanner";
@@ -228,12 +228,15 @@ export default function ChatBox() {
                 >
                     <ArrowLeft className="w-4 h-4 text-muted-foreground" />
                 </button>
-                <Avatar className="h-7 w-7">
-                    <AvatarImage src={otherUser?.avatarUrl ?? undefined} className="object-cover" />
-                    <AvatarFallback className="text-[10px] font-semibold bg-muted">
-                        {otherUser?.username?.charAt(0).toUpperCase() ?? "?"}
-                    </AvatarFallback>
-                </Avatar>
+                <div className="h-7 w-7">
+                    <UserAvatar
+                        user={{
+                            avatarUrl: otherUser?.avatarUrl,
+                            username: otherUser?.username ?? "Chat"
+                        }}
+                        size="sm"
+                    />
+                </div>
                 <div className="flex flex-col select-none">
                     <span className="text-sm font-semibold truncate leading-none">{otherUser?.username ?? "Chat"}</span>
                     {isTyping && (
@@ -262,12 +265,15 @@ export default function ChatBox() {
 
                 {messages.length === 0 && pendingRecipient && (
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground px-6 ">
-                        <Avatar className="h-16 w-16 mb-3">
-                            <AvatarImage src={pendingRecipient.avatarUrl ?? undefined} className="object-cover" />
-                            <AvatarFallback className="text-xl font-bold bg-muted">
-                                {pendingRecipient.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
+                        <div className="mb-3">
+                            <UserAvatar
+                                user={{
+                                    avatarUrl: pendingRecipient.avatarUrl,
+                                    username: pendingRecipient.username
+                                }}
+                                size="lg"
+                            />
+                        </div>
                         <p className="text-sm font-medium text-foreground">{pendingRecipient.username}</p>
                         <p className="text-xs text-center mt-1.5">
                             Send a message to start chatting! 👋

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "../navbar/UserAvatar";
 import { Check, CheckCheck, Pencil, Trash2, CornerUpLeft } from "lucide-react";
 import { format, isSameMinute } from "date-fns";
 import type { Message } from "@/types/conversation";
@@ -76,12 +76,15 @@ export default function MessageBubble({
                 {!isOwn && (
                     <div className="w-6 shrink-0 mb-1">
                         {showAvatar && (
-                            <Avatar className="h-6 w-6">
-                                <AvatarImage src={message.sender.avatarUrl ?? undefined} className="object-cover" />
-                                <AvatarFallback className="text-[10px] font-semibold bg-muted">
-                                    {message.sender.username.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                            <div className="h-6 w-6">
+                                <UserAvatar
+                                    user={{
+                                        avatarUrl: message.sender.avatarUrl,
+                                        username: message.sender.username
+                                    }}
+                                    size="sm"
+                                />
+                            </div>
                         )}
                     </div>
                 )}

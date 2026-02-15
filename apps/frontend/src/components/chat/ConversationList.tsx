@@ -2,7 +2,7 @@
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setActiveConversation } from "@/slices/chat/chatSlice";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "../navbar/UserAvatar";
 import { useConversations, useDeleteConversation } from "@/hooks/useConversation";
 import { Trash2, MoreHorizontal } from "lucide-react";
 import {
@@ -117,12 +117,13 @@ export default function ConversationList({ filter = "all" }: { filter?: "all" | 
                     >
                         {/* Avatar */}
                         <div className="relative shrink-0">
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={conv.iconUrl ?? undefined} className="object-cover" />
-                                <AvatarFallback className="text-xs font-semibold bg-muted">
-                                    {conv.name?.charAt(0).toUpperCase() ?? "?"}
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                                user={{
+                                    avatarUrl: conv.iconUrl,
+                                    username: conv.name || "Chat"
+                                }}
+                                size="md"
+                            />
                         </div>
 
                         {/* Content */}
