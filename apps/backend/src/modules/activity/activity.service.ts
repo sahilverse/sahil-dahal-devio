@@ -52,8 +52,13 @@ export class ActivityService {
         return years;
     }
 
-    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<void> {
-        const { isFirstActivityOfDay, currentStreak } = await this.activityRepository.logActivity(userId, type);
+    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED, timezoneOffset?: number): Promise<void> {
+        let clientDate: Date | undefined;
+        if (timezoneOffset !== undefined && !isNaN(timezoneOffset)) {
+            clientDate = new Date(Date.now() - (timezoneOffset * 60 * 1000));
+        }
+
+        const { isFirstActivityOfDay, currentStreak } = await this.activityRepository.logActivity(userId, type, clientDate);
 
         if (isFirstActivityOfDay) {
             // Award Daily Activity Bonus

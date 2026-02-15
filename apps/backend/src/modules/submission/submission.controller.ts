@@ -25,7 +25,10 @@ export class SubmissionController {
         const { slug, code, language, eventId } = req.body;
         const userId = req.user.id;
 
-        const submission = await this.submissionService.submit(slug, code, language, userId, eventId);
+        const timezoneOffsetHeader = req.headers['x-timezone-offset'];
+        const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
+
+        const submission = await this.submissionService.submit(slug, code, language, userId, eventId, timezoneOffset);
 
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Submission processed", plainToInstance(SubmissionDto, submission));
     });

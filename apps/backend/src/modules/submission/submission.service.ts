@@ -28,7 +28,7 @@ export class SubmissionService {
         @inject(TYPES.CipherService) private cipherService: CipherService
     ) { }
 
-    async submit(slug: string, code: string, language: string, userId: string, eventId?: string) {
+    async submit(slug: string, code: string, language: string, userId: string, eventId?: string, timezoneOffset?: number) {
         // 1. Fetch Full Problem (to get ALL test cases)
         const problem = await this.problemRepository.findBySlug(slug) as unknown as ProblemWithRelations;
         if (!problem) throw new ApiError("Problem not found", StatusCodes.NOT_FOUND);
@@ -122,7 +122,8 @@ export class SubmissionService {
 
         // 10. Log Activity (only count as PROBLEM_SOLVED on first solve)
         const activityType = isFirstSolve ? ActivityType.PROBLEM_SOLVED : ActivityType.PROBLEM_ATTEMPT;
-        await this.activityService.logActivity(userId, activityType);
+
+        await this.activityService.logActivity(userId, activityType, timezoneOffset);
 
         // 11. Award Cipher (Bounty) only on first solve
         if (isFirstSolve && problem.cipherReward > 0) {

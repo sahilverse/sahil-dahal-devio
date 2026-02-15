@@ -26,7 +26,7 @@ export class CommunityService {
         @inject(TYPES.AuraService) private auraService: AuraService
     ) { }
 
-    async createCommunity(userId: string, data: CreateCommunityInput): Promise<CommunityResponseDto> {
+    async createCommunity(userId: string, data: CreateCommunityInput, timezoneOffset?: number): Promise<CommunityResponseDto> {
         // 1. Check Name Uniqueness
         const existing = await this.communityRepository.findByName(data.name);
         if (existing) {
@@ -87,7 +87,7 @@ export class CommunityService {
 
         const response = plainToInstance(CommunityResponseDto, community, { excludeExtraneousValues: true });
 
-        await this.activityService.logActivity(userId, ActivityType.COMMUNITY_CREATE);
+        await this.activityService.logActivity(userId, ActivityType.COMMUNITY_CREATE, timezoneOffset);
 
         return response;
     }

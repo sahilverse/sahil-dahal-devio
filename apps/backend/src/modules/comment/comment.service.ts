@@ -32,7 +32,8 @@ export class CommentService {
         userId: string,
         postId: string,
         data: { content: string; parentId?: string },
-        files: Express.Multer.File[] = []
+        files: Express.Multer.File[] = [],
+        timezoneOffset?: number
     ): Promise<CommentResponseDto> {
         // 1. Validate post exists
         const post = await this.postRepository.findById(postId);
@@ -95,7 +96,7 @@ export class CommentService {
         );
 
         // 5. Log activity (for heatmap & streaks)
-        await this.activityService.logActivity(userId, ActivityType.COMMENT_CREATE);
+        await this.activityService.logActivity(userId, ActivityType.COMMENT_CREATE, timezoneOffset);
 
         // 6. Process Mentions (Non-blocking)
         const mentionResultsPromise = this.mentionService.processMentions({

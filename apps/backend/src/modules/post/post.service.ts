@@ -31,7 +31,8 @@ export class PostService {
     async createPost(
         userId: string,
         data: CreatePostInput,
-        files: Express.Multer.File[]
+        files: Express.Multer.File[],
+        timezoneOffset?: number
     ): Promise<PostResponseDto> {
         // 1. Bounty Check
         if (data.type === "QUESTION" && data.bountyAmount && data.bountyAmount > 0) {
@@ -165,9 +166,9 @@ export class PostService {
 
             const postResponse = plainToInstance(PostResponseDto, post, { excludeExtraneousValues: true });
 
-            await this.activityService.logActivity(userId, ActivityType.POST_CREATE);
+            await this.activityService.logActivity(userId, ActivityType.POST_CREATE, timezoneOffset);
 
-            // 8. Process Mentions (Non-blocking)
+            // 8. Process Mentions
             this.mentionService.processMentions({
                 content: `${data.title} ${data.content || ""}`,
                 authorId: userId,

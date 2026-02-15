@@ -15,7 +15,10 @@ export class CommunityController {
         const userId = req.user!.id;
         const data = req.body as CreateCommunityInput;
 
-        const community = await this.communityService.createCommunity(userId, data);
+        const timezoneOffsetHeader = req.headers['x-timezone-offset'];
+        const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
+
+        const community = await this.communityService.createCommunity(userId, data, timezoneOffset);
 
         ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Community created successfully", community);
     });

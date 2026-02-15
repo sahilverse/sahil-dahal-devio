@@ -11,15 +11,7 @@ import { StatusCodes } from "http-status-codes";
 export class CommentController {
     constructor(@inject(TYPES.CommentService) private commentService: CommentService) { }
 
-    createComment = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const userId = req.user!.id;
-        const { postId } = req.params as { postId: string };
-        const files = req.files as Express.Multer.File[] || [];
-        const { content, parentId } = req.body as { content: string; parentId?: string };
 
-        const comment = await this.commentService.createComment(userId, postId, { content, parentId }, files);
-        return ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Comment created successfully", comment);
-    });
 
     getComments = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { postId } = req.params as { postId: string };
@@ -38,6 +30,19 @@ export class CommentController {
 
         const result = await this.commentService.getReplies(commentId, { cursor, limit }, currentUserId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Replies fetched successfully", result);
+    });
+
+    createComment = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { postId } = req.params as { postId: string };
+        const files = req.files as Express.Multer.File[] || [];
+        const { content, parentId } = req.body as { content: string; parentId?: string };
+
+        const timezoneOffsetHeader = req.headers['x-timezone-offset'];
+        const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
+
+        const comment = await this.commentService.createComment(userId, postId, { content, parentId }, files, timezoneOffset);
+        return ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Comment created successfully", comment);
     });
 
     updateComment = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

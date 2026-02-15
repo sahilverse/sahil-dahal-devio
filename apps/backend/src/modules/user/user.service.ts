@@ -99,6 +99,24 @@ export class UserService {
         const problemStats = this.calculateProblemStats(user.submissions);
         const roomStats = this.calculateRoomStats(user.cyberRoomEnrollments);
 
+        let currentStreak = user.userStreak?.currentStreak || 0;
+        if (user.userStreak?.lastActiveDate) {
+            const lastActive = new Date(user.userStreak.lastActiveDate);
+            const now = new Date();
+
+            const lastActiveStr = lastActive.toISOString().split("T")[0];
+
+            const todayStr = now.toISOString().split("T")[0];
+
+            const yesterday = new Date(now);
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+            if (lastActiveStr !== todayStr && lastActiveStr !== yesterdayStr) {
+                currentStreak = 0;
+            }
+        }
+
         const plainProfile = {
             ...user,
             title: user.profile?.title || null,
@@ -112,7 +130,7 @@ export class UserService {
             devioAge,
             isFollowing,
             isOwner,
-            currentStreak: user.userStreak?.currentStreak || 0,
+            currentStreak,
             longestStreak: user.userStreak?.longestStreak || 0,
 
             achievements,

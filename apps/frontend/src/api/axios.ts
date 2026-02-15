@@ -25,7 +25,10 @@ const api = axios.create({
 // attach access token
 api.interceptors.request.use((config) => {
     const token = getAccessToken();
-    if (token && config.headers) config.headers["Authorization"] = `Bearer ${token}`;
+    if (token && config.headers) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+        config.headers["x-timezone-offset"] = new Date().getTimezoneOffset().toString();
+    }
     return config;
 });
 

@@ -8,8 +8,8 @@ export class ActivityRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
     async findByUsernameAndYear(username: string, year: number): Promise<{ userId: string; logs: ActivityLogEntry[] } | null> {
-        const startDate = new Date(year, 0, 1);
-        const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+        const startDate = new Date(Date.UTC(year, 0, 1));
+        const endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
 
         const user = await this.prisma.user.findFirst({
             where: {
@@ -85,9 +85,10 @@ export class ActivityRepository {
         return years;
     }
 
-    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED): Promise<{ isFirstActivityOfDay: boolean, currentStreak: number }> {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    async logActivity(userId: string, type: ActivityType = ActivityType.PROBLEM_SOLVED, date?: Date): Promise<{ isFirstActivityOfDay: boolean, currentStreak: number }> {
+        // Use UTC midnight for consistent storage and comparison
+        const today = date ? new Date(date) : new Date();
+        today.setUTCHours(0, 0, 0, 0);
 
         // 1. Log the Activity
         await this.prisma.activityLog.upsert({
@@ -138,10 +139,8 @@ export class ActivityRepository {
             return { isFirstActivityOfDay: true, currentStreak: 1 };
         }
 
-        const lastActiveDate = new Date(lastActive);
-
         const todayStr = today.toISOString().split("T")[0]!;
-        const lastActiveStr = lastActiveDate.toISOString().split("T")[0]!;
+        const lastActiveStr = lastActive.toISOString().split("T")[0]!;
 
         let currentStreak = streak.currentStreak;
         let isFirstActivityOfDay = false;
@@ -149,7 +148,7 @@ export class ActivityRepository {
         if (todayStr === lastActiveStr) {
             isFirstActivityOfDay = false;
         } else {
-            // Calculate "Yesterday" in UTC
+            // Calculate "Yesterday" in UTC logic
             const yesterday = new Date(today);
             yesterday.setUTCDate(yesterday.getUTCDate() - 1);
             const yesterdayStr = yesterday.toISOString().split("T")[0]!;

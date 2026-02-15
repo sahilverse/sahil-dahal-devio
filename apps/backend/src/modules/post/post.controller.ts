@@ -12,15 +12,7 @@ import { PostStatus, PostVisibility } from "../../generated/prisma/client";
 export class PostController {
     constructor(@inject(TYPES.PostService) private postService: PostService) { }
 
-    createPost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const userId = req.user!.id;
-        const files = req.files as Express.Multer.File[] || [];
-        const body = req.body;
 
-        const post = await this.postService.createPost(userId, body, files);
-        return ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Post created successfully", post);
-
-    });
 
     getPosts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const query = plainToInstance(GetPostsDto, req.query, { excludeExtraneousValues: true });
@@ -36,7 +28,20 @@ export class PostController {
         const result = await this.postService.getPost(postId, currentUserId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Post fetched successfully", result);
     });
-    
+
+    createPost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const files = req.files as Express.Multer.File[] || [];
+        const body = req.body;
+
+        const timezoneOffsetHeader = req.headers['x-timezone-offset'];
+        const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
+
+        const post = await this.postService.createPost(userId, body, files, timezoneOffset);
+        return ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Post created successfully", post);
+
+    });
+
     updatePost = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user!.id;
         const { postId } = req.params as { postId: string };
