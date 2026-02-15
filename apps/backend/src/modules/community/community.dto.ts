@@ -19,6 +19,7 @@ export class CommunityResponseDto {
     @Expose() visibility!: CommunityVisibility;
     @Expose() memberCount!: number;
     @Expose() isMember?: boolean;
+    @Expose() isMod?: boolean;
     @Expose() activeMembers?: number;
     @Expose() weeklyVisitors?: number;
     @Expose() weeklyContributors?: number;
@@ -32,11 +33,6 @@ export class CommunitySettingsDto {
     @Expose() requirePostApproval!: boolean;
     @Expose() minAuraToPost!: number;
     @Expose() minAuraToComment!: number;
-}
-
-@Exclude()
-export class CommunityRulesDto {
-    @Expose() rules!: any;
 }
 
 @Exclude()

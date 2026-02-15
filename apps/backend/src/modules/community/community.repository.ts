@@ -147,7 +147,7 @@ export class CommunityRepository {
                 });
             }
 
-            return { success: true };
+            return null;
         });
     }
 
@@ -158,17 +158,19 @@ export class CommunityRepository {
     }
 
     async updateRules(communityId: string, rules: any) {
-        return this.prisma.community.update({
+        await this.prisma.community.update({
             where: { id: communityId },
             data: { rules }
         });
+        return null;
     }
 
     async updateMedia(communityId: string, data: { iconUrl?: string | null, bannerUrl?: string | null }) {
-        return this.prisma.community.update({
+        await this.prisma.community.update({
             where: { id: communityId },
             data
         });
+        return null;
     }
 
     async getMembers(communityId: string, limit: number = 10, cursor?: string, query?: string) {
@@ -217,12 +219,13 @@ export class CommunityRepository {
     }
 
     async removeMember(communityId: string, userId: string) {
-        return this.prisma.communityMember.delete({
+        await this.prisma.communityMember.delete({
             where: { communityId_userId: { communityId, userId } }
         });
+        return null;
     }
 
-    async findByName(name: string, userId?: string): Promise<(Community & { _count: { members: number; posts: number }; members?: { userId: string }[]; settings: CommunitySettings | null }) | null> {
+    async findByName(name: string, userId?: string): Promise<(Community & { _count: { members: number; posts: number }; members?: { userId: string, isMod: boolean }[]; settings: CommunitySettings | null }) | null> {
         return this.prisma.community.findFirst({
             where: {
                 name: {
@@ -240,11 +243,25 @@ export class CommunityRepository {
                 ...(userId && {
                     members: {
                         where: { userId },
-                        select: { userId: true },
+                        select: { userId: true, isMod: true },
                         take: 1
                     }
                 }),
                 settings: true
+            }
+        });
+    }
+
+    async findRulesByName(name: string): Promise<{ rules: any } | null> {
+        return this.prisma.community.findFirst({
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            },
+            select: {
+                rules: true
             }
         });
     }
@@ -279,10 +296,11 @@ export class CommunityRepository {
     }
 
     async updateMemberPermissions(communityId: string, userId: string, isMod: boolean, permissions: any) {
-        return this.prisma.communityMember.update({
+        await this.prisma.communityMember.update({
             where: { communityId_userId: { communityId, userId } },
             data: { isMod, permissions }
         });
+        return null;
     }
 
     async isModeratorOrCreator(communityId: string, userId: string): Promise<boolean> {

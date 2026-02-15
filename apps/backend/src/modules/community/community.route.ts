@@ -169,6 +169,7 @@ router.get("/explore", authMiddleware.extractUser, communityController.getExplor
  *   get:
  *     summary: Get community details by name (Main Info)
  *     tags: [Community]
+ *     security: [{ BearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: name

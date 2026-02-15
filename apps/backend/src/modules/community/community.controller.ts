@@ -111,8 +111,8 @@ export class CommunityController {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Request ID and status are required");
         }
 
-        const result = await this.communityService.reviewJoinRequest(requestId, reviewerId, status);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, `Request ${status.toLowerCase()} successfully`, result);
+        await this.communityService.reviewJoinRequest(requestId, reviewerId, status);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, `Request ${status.toLowerCase()} successfully`);
     });
 
     updateSettings = asyncHandler(async (req: Request, res: Response) => {
@@ -124,8 +124,8 @@ export class CommunityController {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community name is required");
         }
 
-        const result = await this.communityService.updateSettings(name, userId, data);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Settings updated successfully", result);
+        await this.communityService.updateSettings(name, userId, data);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Settings updated successfully");
     });
 
     getSettings = asyncHandler(async (req: Request, res: Response) => {
@@ -173,8 +173,8 @@ export class CommunityController {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community name is required");
         }
 
-        const result = await this.communityService.updateRules(name, userId, rules);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Rules updated successfully", result);
+        await this.communityService.updateRules(name, userId, rules);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Rules updated successfully");
     });
 
     updateMedia = asyncHandler(async (req: Request, res: Response) => {
@@ -186,12 +186,16 @@ export class CommunityController {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community name is required");
         }
 
-        const result = await this.communityService.updateMedia(name, userId, {
+        if (!files?.['icon']?.[0] && !files?.['banner']?.[0]) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community media is required");
+        }
+
+        await this.communityService.updateMedia(name, userId, {
             icon: files?.['icon']?.[0],
             banner: files?.['banner']?.[0]
         });
 
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Community media updated successfully", result);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Community media updated successfully");
     });
 
     updateModeratorPermissions = asyncHandler(async (req: Request, res: Response) => {
@@ -203,8 +207,8 @@ export class CommunityController {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community name and user ID are required");
         }
 
-        const result = await this.communityService.updateModeratorPermissions(name, adminId, userId, isMod, permissions);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Moderator permissions updated successfully", result);
+        await this.communityService.updateModeratorPermissions(name, adminId, userId, isMod, permissions);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Moderator permissions updated successfully");
     });
 
     removeMedia = asyncHandler(async (req: Request, res: Response) => {
@@ -215,8 +219,8 @@ export class CommunityController {
             return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "Community name and media type are required");
         }
 
-        const result = await this.communityService.removeMedia(name, userId, type as 'icon' | 'banner');
-        ResponseHandler.sendResponse(res, StatusCodes.OK, `Community ${type} removed successfully`, result);
+        await this.communityService.removeMedia(name, userId, type as 'icon' | 'banner');
+        ResponseHandler.sendResponse(res, StatusCodes.OK, `Community ${type} removed successfully`);
     });
 
     getExploreCommunities = asyncHandler(async (req: Request, res: Response) => {

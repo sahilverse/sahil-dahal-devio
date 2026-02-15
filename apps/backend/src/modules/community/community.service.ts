@@ -6,7 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import { CommunityRepository } from "./community.repository";
 import { CreateCommunityInput } from "@devio/zod-utils";
 import { plainToInstance } from "class-transformer";
-import { CommunityResponseDto, CommunitySettingsDto, CommunityRulesDto, GetMembersResponseDto, CommunityMemberDto, GetModeratorsDto } from "./community.dto";
+import { CommunityResponseDto, CommunitySettingsDto, GetMembersResponseDto, CommunityMemberDto, GetModeratorsDto } from "./community.dto";
 import { TopicService } from "../topic/topic.service";
 import { ActivityService } from "../activity/activity.service";
 import { ActivityType, JoinRequestStatus, NotificationType, CommunityVisibility } from "../../generated/prisma/client";
@@ -108,8 +108,10 @@ export class CommunityService {
         const response = plainToInstance(CommunityResponseDto, community, { excludeExtraneousValues: true });
         response.memberCount = community._count?.members || 0;
         response.isMember = !!isMember;
+        if (response.isMember) {
+            response.isMod = community.createdById === userId || (community.members?.[0]?.isMod ?? false);
+        }
 
-        // Map Active Members Count
         response.activeMembers = await this.communityRepository.countActiveMembers(community.id);
 
         // Fetch Weekly Stats
@@ -136,12 +138,13 @@ export class CommunityService {
         return plainToInstance(CommunitySettingsDto, settings, { excludeExtraneousValues: true });
     }
 
-    async getRules(name: string): Promise<CommunityRulesDto> {
-        const community = await this.communityRepository.findByName(name);
-        if (!community) throw new ApiError("Community not found", StatusCodes.NOT_FOUND);
+    async getRules(name: string): Promise<any> {
+        const result = await this.communityRepository.findRulesByName(name);
+        if (!result) throw new ApiError("Community not found", StatusCodes.NOT_FOUND);
 
-        return plainToInstance(CommunityRulesDto, community, { excludeExtraneousValues: true });
+        return result.rules;
     }
+
     async getMembers(name: string, limit: number, cursor?: string, query?: string, userId?: string): Promise<GetMembersResponseDto> {
         const community = await this.communityRepository.findByName(name, userId);
         if (!community) throw new ApiError("Community not found", StatusCodes.NOT_FOUND);
@@ -216,8 +219,8 @@ export class CommunityService {
         await this.notificationService.notify({
             userId: request.userId,
             type: NotificationType.COMMUNITY_JOIN_REQUEST,
-            message: `Your request to join ${request.community?.name || 'the community'} was ${status.toLowerCase()}`,
-            actionUrl: `/d/${request.community?.name || ''}`
+            message: `Your request to join d/${request.community?.name} was ${status.toLowerCase()}`,
+            actionUrl: `/d/${request.community?.name}`
         });
 
         // Sync Moderator Notifications
@@ -225,7 +228,7 @@ export class CommunityService {
             await this.notificationService.updateNotificationsByData(
                 { requestId: request.id },
                 {
-                    message: `[${status}] ${request.community?.name}: User join request processed`,
+                    message: `[${status}] d/${request.community?.name}: User join request processed`,
                     read_at: new Date()
                 }
             );
@@ -233,7 +236,7 @@ export class CommunityService {
             logger.error(`Failed to sync mod notifications: ${error}`);
         }
 
-        return { status };
+        return null;
     }
 
     async updateSettings(name: string, userId: string, data: any) {
@@ -243,7 +246,8 @@ export class CommunityService {
         const isMod = await this.communityRepository.isModeratorOrCreator(community.id, userId);
         if (!isMod) throw new ApiError("Not authorized", StatusCodes.FORBIDDEN);
 
-        return this.communityRepository.updateSettings(community.id, data);
+        await this.communityRepository.updateSettings(community.id, data);
+        return null;
     }
 
     async updateRules(name: string, userId: string, rules: any) {
@@ -253,7 +257,8 @@ export class CommunityService {
         const isMod = await this.communityRepository.isModeratorOrCreator(community.id, userId);
         if (!isMod) throw new ApiError("Not authorized", StatusCodes.FORBIDDEN);
 
-        return this.communityRepository.updateRules(community.id, rules);
+        await this.communityRepository.updateRules(community.id, rules);
+        return null;
     }
 
     async updateMedia(name: string, userId: string, files: { icon?: Express.Multer.File, banner?: Express.Multer.File }) {
@@ -275,7 +280,9 @@ export class CommunityService {
             updateData.bannerUrl = await this.storageService.uploadFile(files.banner, path);
         }
 
-        return this.communityRepository.updateMedia(community.id, updateData);
+        await this.communityRepository.updateMedia(community.id, updateData);
+
+        return null;
     }
 
     async joinCommunity(name: string, userId: string, message?: string): Promise<{ status: "JOINED" | "REQUEST_SENT" }> {
@@ -307,7 +314,7 @@ export class CommunityService {
                     await this.notificationService.notify({
                         userId: mod.user.id,
                         type: NotificationType.COMMUNITY_JOIN_REQUEST,
-                        message: `A new user wants to join ${community.name}`,
+                        message: `A new user wants to join d/${community.name}`,
                         actionUrl: `/d/${community.name}/moderation/requests`,
                         data: { requestId: request.id }
                     });
@@ -329,7 +336,8 @@ export class CommunityService {
             throw new ApiError("Creators cannot leave their own community. Transfer ownership first.", StatusCodes.FORBIDDEN);
         }
 
-        return this.communityRepository.removeMember(community.id, userId);
+        await this.communityRepository.removeMember(community.id, userId);
+        return null;
     }
 
     async getCommunityModerators(name: string, limit: number, cursor?: string): Promise<GetModeratorsDto> {
@@ -365,6 +373,10 @@ export class CommunityService {
             throw new ApiError("Only community creators or full admins can manage moderators", StatusCodes.FORBIDDEN);
         }
 
+        if (isMod && targetUserId === adminId) {
+            throw new ApiError("You cannot remove yourself as a moderator", StatusCodes.FORBIDDEN);
+        }
+
         const result = await this.communityRepository.updateMemberPermissions(community.id, targetUserId, isMod, permissions);
 
         // Notify user about moderator status change
@@ -372,8 +384,8 @@ export class CommunityService {
             userId: targetUserId,
             type: isMod ? NotificationType.COMMUNITY_MODERATOR_ASSIGNED : NotificationType.COMMUNITY_MODERATOR_REMOVED,
             message: isMod
-                ? `You have been assigned as a moderator for ${community.name}`
-                : `You are no longer a moderator for ${community.name}`,
+                ? `You have been assigned as a moderator for d/${community.name}`
+                : `You are no longer a moderator for d/${community.name}`,
             actionUrl: `/d/${community.name}`,
             data: { communityId: community.id, isMod }
         }).catch(err => logger.error(`Failed to notify user of moderator change: ${err}`));
@@ -381,7 +393,7 @@ export class CommunityService {
         return result;
     }
 
-    async removeMedia(name: string, userId: string, type: 'icon' | 'banner') {
+    async removeMedia(name: string, userId: string, type: 'icon' | 'banner'): Promise<void> {
         const community = await this.communityRepository.findByName(name);
         if (!community) throw new ApiError("Community not found", StatusCodes.NOT_FOUND);
 
@@ -391,13 +403,13 @@ export class CommunityService {
         const oldUrl = type === 'icon' ? community.iconUrl : community.bannerUrl;
 
         const updateData = type === 'icon' ? { iconUrl: null } : { bannerUrl: null };
-        const result = await this.communityRepository.updateMedia(community.id, updateData);
+        await this.communityRepository.updateMedia(community.id, updateData);
 
         if (oldUrl) {
             this.storageService.deleteFile(oldUrl).catch(err => logger.warn(`Failed to delete community ${type}: ${err}`));
         }
 
-        return result;
+
     }
 
     async getExploreCommunities(limit: number = 10, cursor?: string, topicSlug?: string, userId?: string): Promise<{ topics: any[], nextCursor: string | null }> {

@@ -1,0 +1,34 @@
+{
+    "title": "Data Processor Reward",
+    "difficulty": "MEDIUM",
+    "publish": true,
+    "cipherReward": 100,
+    "topics": [
+        "Algorithms",
+        "Data Structures"
+    ],
+    "functionName": "solve",
+    "inputStructure": [
+        {
+            "name": "dataPoints",
+            "type": "array<int>",
+            "description": "Fixed array of input data points"
+        },
+        {
+            "name": "configList",
+            "type": "list<string>",
+            "description": "Dynamic list of configuration strings"
+        }
+    ],
+    "outputStructure": {
+        "type": "bool"
+    },
+    "testCases": {
+        "public": [
+            {
+                "input": "tests/inputs/public/1.txt",
+                "output": "tests/outputs/public/1.txt"
+            }
+        ]
+    }
+}
