@@ -26,7 +26,7 @@ export function useCreatePost() {
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
 
-            if (data.communityId) {
+            if (data.community) {
                 router.push(`/d/${data.community.name}?view=posts`);
             } else {
                 router.push(`/u/${user?.username}?view=posts`);
@@ -131,6 +131,24 @@ export function usePinPost() {
         onError: (error: any) => {
             const message = error.errorMessage || "Failed to update pin status.";
             toast.error(message);
+        },
+    });
+}
+
+export function useUpdatePost() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ postId, data }: { postId: string; data: { visibility?: string; status?: string; title?: string; content?: string } }) =>
+            PostService.updatePost(postId, data),
+        onSuccess: (updatedPost) => {
+            toast.success("Post updated successfully!");
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+            queryClient.invalidateQueries({ queryKey: ["post", updatedPost.id] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
+        },
+        onError: (error: any) => {
+            toast.error(error?.errorMessage || "Failed to update post.");
         },
     });
 }

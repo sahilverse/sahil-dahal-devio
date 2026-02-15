@@ -15,6 +15,8 @@ export interface Community {
 }
 
 export interface CommunitySettings {
+    description?: string;
+    visibility: "PUBLIC" | "PRIVATE" | "RESTRICTED";
     allowPostImages: boolean;
     allowPostLinks: boolean;
     requirePostApproval: boolean;

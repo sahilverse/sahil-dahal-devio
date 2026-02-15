@@ -230,7 +230,14 @@ export class PostService {
         if (!post) throw new ApiError("Post not found", StatusCodes.NOT_FOUND);
 
         if (post.authorId !== userId) {
-            throw new ApiError("You are not authorized to update this post", StatusCodes.FORBIDDEN);
+            let isAuthorized = false;
+            if (post.communityId) {
+                isAuthorized = await this.communityRepository.checkMemberPermission(post.communityId, userId, 'managePostsAndComments');
+            }
+
+            if (!isAuthorized) {
+                throw new ApiError("You are not authorized to update this post", StatusCodes.FORBIDDEN);
+            }
         }
 
         const updatedPost = await this.postRepository.update(postId, data, userId);

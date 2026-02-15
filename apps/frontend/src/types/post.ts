@@ -46,4 +46,5 @@ export interface PostResponseDto {
     isPinned: boolean;
     visibility: "PUBLIC" | "PRIVATE";
     acceptedAnswerId?: string;
+    canManage: boolean;
 }

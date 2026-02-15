@@ -8,28 +8,17 @@ import Link from "next/link";
 import {
     ImagePlus,
     Plus,
-    LogOut,
-    MoreHorizontal,
-    Share2,
-    Check,
     Loader2,
-    Clock
+    Clock,
+    Users
 } from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useJoinCommunityPage, useLeaveCommunity, useUpdateCommunityMedia, useRemoveCommunityMedia } from "@/hooks/useCommunity";
+import { useJoinCommunityPage, useUpdateCommunityMedia, useRemoveCommunityMedia } from "@/hooks/useCommunity";
 import { useAppSelector } from "@/store/hooks";
 import { useAuthModal } from "@/contexts/AuthModalContext";
-import { copyCurrentUrl } from "@/lib/string";
 import ImageUploadModal from "@/components/profile/header/ImageUploadModal";
 import CommunityNav from "@/components/community/CommunityNav";
-import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
+import { formatCompactNumber } from "@/lib/utils";
 
 interface CommunityHeaderProps {
     community: Community;
@@ -41,10 +30,8 @@ export default function CommunityHeader({ community }: CommunityHeaderProps) {
     const [hasCopied, setHasCopied] = useState(false);
     const [isIconModalOpen, setIsIconModalOpen] = useState(false);
     const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
-    const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
 
     const joinMutation = useJoinCommunityPage(community.name);
-    const leaveMutation = useLeaveCommunity(community.name);
     const updateMediaMutation = useUpdateCommunityMedia(community.name);
     const removeMediaMutation = useRemoveCommunityMedia(community.name);
 
@@ -56,21 +43,8 @@ export default function CommunityHeader({ community }: CommunityHeaderProps) {
         joinMutation.mutate(undefined);
     };
 
-    const handleLeave = () => {
-        setIsLeaveDialogOpen(true);
-    };
-
-    const confirmLeave = () => {
-        leaveMutation.mutate(undefined, {
-            onSuccess: () => setIsLeaveDialogOpen(false)
-        });
-    };
-
     const handleShare = async () => {
-        await copyCurrentUrl();
-        toast.success("Link copied to clipboard");
-        setHasCopied(true);
-        setTimeout(() => setHasCopied(false), 2000);
+        // Shared via sidebar now
     };
 
     const handleIconSave = (file: File) => {
@@ -148,8 +122,12 @@ export default function CommunityHeader({ community }: CommunityHeaderProps) {
                             )}
                         </div>
 
-                        <div className="pb-1.5">
-                            <h1 className="text-3xl font-bold tracking-tight text-foreground">d/{community.name}</h1>
+                        <div className="pb-1.5 flex flex-col">
+                            <h1 className="text-3xl font-bold tracking-tight text-foreground leading-tight">d/{community.name}</h1>
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground/80 font-medium">
+                                <Users className="w-3.5 h-3.5" />
+                                <span>{formatCompactNumber(community.memberCount || 0)} members</span>
+                            </div>
                         </div>
                     </div>
 
@@ -179,30 +157,6 @@ export default function CommunityHeader({ community }: CommunityHeaderProps) {
                                 )}
                             </Button>
                         ) : null}
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground">
-                                    <MoreHorizontal className="w-5 h-5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-card w-30">
-                                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={handleShare}>
-                                    {hasCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                                    {hasCopied ? "Copied!" : "Share"}
-                                </DropdownMenuItem>
-
-                                {isMember && (
-                                    <DropdownMenuItem
-                                        className="gap-2 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
-                                        onClick={handleLeave}
-                                        disabled={leaveMutation.isPending}
-                                    >
-                                        <LogOut className="h-4 w-4" /> Leave
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </div>
             </div>
@@ -229,15 +183,6 @@ export default function CommunityHeader({ community }: CommunityHeaderProps) {
                 currentUrl={community.bannerUrl}
                 variant="banner"
                 title="Community banner"
-            />
-
-            <ConfirmDeleteModal
-                isOpen={isLeaveDialogOpen}
-                onClose={() => setIsLeaveDialogOpen(false)}
-                onConfirm={confirmLeave}
-                title="Leave Community?"
-                description={`Are you sure you want to leave d/${community.name}? You will lose access to member-only features.`}
-                isPending={leaveMutation.isPending}
             />
         </div>
     );

@@ -27,10 +27,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import UserAvatar from "@/components/navbar/UserAvatar";
 import PostMediaCarousel from "./PostMediaCarousel";
 import { cn, formatCompactNumber } from "@/lib/utils";
-import { useVotePost, useSavePost, usePinPost, useDeletePost } from "@/hooks/usePosts";
+import { useVotePost, useSavePost, usePinPost, useDeletePost, useUpdatePost } from "@/hooks/usePosts";
 import { useAppSelector } from "@/store/hooks";
 import { useState, useEffect, useRef } from "react";
 import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
@@ -47,12 +48,12 @@ interface PostCardProps {
 
 export default function PostCard({ post, isOwner, showComments: externalShowComments, onToggleComments }: PostCardProps) {
     const { user } = useAppSelector((state) => state.auth);
+    const pathname = usePathname();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [canExpand, setCanExpand] = useState(false);
     const [localShowComments, setLocalShowComments] = useState(false);
-
-    // Use external state if controlled by parent, otherwise use local state
+    
     const isCommentsVisible = externalShowComments !== undefined ? externalShowComments : localShowComments;
     const toggleComments = onToggleComments || (() => setLocalShowComments(!localShowComments));
 
@@ -62,6 +63,7 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
     const saveMutation = useSavePost();
     const pinMutation = usePinPost();
     const deleteMutation = useDeletePost();
+    const updateMutation = useUpdatePost();
 
     const { openLogin } = useAuthModal();
 
@@ -102,6 +104,14 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
 
     const handlePin = () => {
         pinMutation.mutate({ postId: post.id, isPinned: !post.isPinned });
+    };
+
+    const handleToggleVisibility = () => {
+        const newVisibility = post.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC";
+        updateMutation.mutate({
+            postId: post.id,
+            data: { visibility: newVisibility }
+        });
     };
 
     const handleDelete = () => {
@@ -183,20 +193,26 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-card">
-                        {isOwner ? (
+                        {post.canManage ? (
                             <>
                                 <DropdownMenuItem className="gap-2 cursor-pointer">
                                     <Pencil className="h-4 w-4" /> Edit
                                 </DropdownMenuItem>
+                                {user && pathname?.startsWith(`/user/${user.username}`) && isOwner && (
+                                    <DropdownMenuItem
+                                        className="gap-2 cursor-pointer"
+                                        onClick={handlePin}
+                                        disabled={pinMutation.isPending}
+                                    >
+                                        <Pin className={cn("h-4 w-4", post.isPinned && "fill-current")} />
+                                        {post.isPinned ? "Unpin from Profile" : "Pin to Profile"}
+                                    </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                     className="gap-2 cursor-pointer"
-                                    onClick={handlePin}
-                                    disabled={pinMutation.isPending}
+                                    onClick={handleToggleVisibility}
+                                    disabled={updateMutation.isPending}
                                 >
-                                    <Pin className={cn("h-4 w-4", post.isPinned && "fill-current")} />
-                                    {post.isPinned ? "Unpin from Profile" : "Pin to Profile"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 cursor-pointer">
                                     {post.visibility === "PUBLIC" ? (
                                         <>
                                             <EyeOff className="h-4 w-4" /> Make Private

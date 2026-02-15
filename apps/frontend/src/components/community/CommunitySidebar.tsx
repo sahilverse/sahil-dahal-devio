@@ -2,8 +2,14 @@
 
 import { Community } from "@/types/community";
 import { format } from "date-fns";
-import { Calendar, Globe, Lock, ShieldCheck, Settings, FileText, MessageCircle } from "lucide-react";
+import { Calendar, Globe, Lock, ShieldCheck, Settings, FileText, MessageCircle, MoreHorizontal, Check, Share2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import CommunityRules from "./CommunityRules";
 import ModeratorList from "./ModeratorList";
 import CommunitySettingsModal from "./CommunitySettingsModal";
@@ -13,7 +19,10 @@ import { useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { openChat, setPendingRecipient } from "@/slices/chat/chatSlice";
 import { useAuthModal } from "@/contexts/AuthModalContext";
-import { useCommunityModerators } from "@/hooks/useCommunity";
+import { useCommunityModerators, useLeaveCommunity } from "@/hooks/useCommunity";
+import { copyCurrentUrl } from "@/lib/string";
+import { toast } from "sonner";
+import { ConfirmDeleteModal } from "@/components/ui/modals/ConfirmDeleteModal";
 
 const formatCount = (count: number) => {
     if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
@@ -42,6 +51,10 @@ export default function CommunitySidebar({ community }: CommunitySidebarProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isRulesEditorOpen, setIsRulesEditorOpen] = useState(false);
     const [isRequestsOpen, setIsRequestsOpen] = useState(false);
+    const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+    const [hasCopied, setHasCopied] = useState(false);
+
+    const leaveMutation = useLeaveCommunity(community.name);
 
     const isMod = !!community.isMod;
     const isMember = !!community.isMember;
@@ -61,10 +74,64 @@ export default function CommunitySidebar({ community }: CommunitySidebarProps) {
         }
     };
 
+    const handleShare = async () => {
+        await copyCurrentUrl();
+        toast.success("Link copied to clipboard");
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 2000);
+    };
+
+    const handleLeave = () => {
+        setIsLeaveDialogOpen(true);
+    };
+
+    const confirmLeave = () => {
+        leaveMutation.mutate(undefined, {
+            onSuccess: () => setIsLeaveDialogOpen(false)
+        });
+    };
+
     return (
         <div className="flex flex-col gap-0 w-full border border-card rounded-lg dark:border-secondary border-gray-700/20 overflow-hidden">
-            {/* Community Info Section */}
-            <div className="p-4 space-y-3">
+            {/* Community Identity & Info Section */}
+            <div className="p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold tracking-tighter cursor-default">d/{community.name}</h2>
+                    {!isMember ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+                            onClick={handleShare}
+                        >
+                            {hasCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+                        </Button>
+                    ) : (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground">
+                                    <MoreHorizontal className="w-5 h-5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-card w-40">
+                                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={handleShare}>
+                                    {hasCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                                    {hasCopied ? "Copied!" : "Share"}
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    className="gap-2 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
+                                    onClick={handleLeave}
+                                    disabled={leaveMutation.isPending}
+                                >
+                                    <LogOut className="h-4 w-4" /> Leave
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+
+                {/* Description */}
                 {/* Description */}
                 {community.description && (
                     <p className="text-sm text-foreground/80 leading-relaxed">
@@ -167,6 +234,15 @@ export default function CommunitySidebar({ community }: CommunitySidebarProps) {
                     communityName={community.name}
                 />
             )}
+
+            <ConfirmDeleteModal
+                isOpen={isLeaveDialogOpen}
+                onClose={() => setIsLeaveDialogOpen(false)}
+                onConfirm={confirmLeave}
+                title="Leave Community?"
+                description={`Are you sure you want to leave d/${community.name}? You will lose access to member-only features.`}
+                isPending={leaveMutation.isPending}
+            />
         </div>
     );
 }

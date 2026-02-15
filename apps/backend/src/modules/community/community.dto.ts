@@ -34,6 +34,8 @@ export class CommunitySettingsDto {
     @Expose() minAuraToPost!: number;
     @Expose() minAuraToComment!: number;
     @Expose() minAuraToJoin!: number;
+    @Expose() description?: string;
+    @Expose() visibility!: CommunityVisibility;
 }
 
 @Exclude()

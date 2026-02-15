@@ -122,7 +122,7 @@ export class CommunityRepository {
 
     async updateSettings(communityId: string, data: any) {
         const communityFields = ['description', 'visibility'];
-        const settingsFields = ['allowPostImages', 'allowPostLinks', 'requirePostApproval', 'minAuraToPost', 'minAuraToComment'];
+        const settingsFields = ['allowPostImages', 'allowPostLinks', 'requirePostApproval', 'minAuraToPost', 'minAuraToComment', 'minAuraToJoin'];
 
         const communityUpdate: any = {};
         const settingsUpdate: any = {};

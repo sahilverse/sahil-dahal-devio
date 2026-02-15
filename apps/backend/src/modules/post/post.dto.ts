@@ -32,6 +32,7 @@ export class PollOptionDto {
 export class CommunityDto {
     @Expose() id!: string;
     @Expose() name!: string;
+    @Expose() displayName?: string;
     @Expose() iconUrl!: string;
 }
 
@@ -50,6 +51,26 @@ export class PostResponseDto {
     @Expose() type!: PostType;
     @Expose() status!: PostStatus;
     @Expose() visibility!: PostVisibility;
+
+    @Expose()
+    @Transform(({ obj, options }) => {
+        const currentUserId = (options as any)?.currentUserId;
+        if (!currentUserId) return false;
+
+        // 1. Author can always manage
+        if (obj.authorId === currentUserId) return true;
+
+        // 2. Check moderator permissions
+        const community = obj.community;
+        if (!community || !community.members || community.members.length === 0) return false;
+
+        const member = community.members[0];
+        if (!member.isMod) return false;
+
+        const perms = member.permissions as any;
+        return !!perms?.everything || !!perms?.managePostsAndComments;
+    })
+    canManage!: boolean;
 
     @Expose()
     @Transform(({ obj }) => (obj.upvotes || 0) - (obj.downvotes || 0))
@@ -126,6 +147,7 @@ export class PostResponseDto {
     @Transform(({ obj }) => obj.communityId && obj.community ? {
         id: obj.community.id,
         name: obj.community.name,
+        displayName: obj.community.name, // Will use name as display name for now
         iconUrl: obj.community.iconUrl
     } : undefined)
     @Type(() => CommunityDto)

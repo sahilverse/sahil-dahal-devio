@@ -135,7 +135,13 @@ export class CommunityService {
         const settings = await this.communityRepository.findSettings(community.id);
         if (!settings) throw new ApiError("Settings not found", StatusCodes.NOT_FOUND);
 
-        return plainToInstance(CommunitySettingsDto, settings, { excludeExtraneousValues: true });
+        const merged = {
+            ...settings,
+            description: community.description,
+            visibility: community.visibility
+        };
+
+        return plainToInstance(CommunitySettingsDto, merged, { excludeExtraneousValues: true });
     }
 
     async getRules(name: string): Promise<any> {

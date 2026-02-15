@@ -75,5 +75,9 @@ export const PostService = {
     deletePost: async (postId: string) => {
         const { data } = await api.delete(`/posts/${postId}`);
         return data.result;
+    },
+    updatePost: async (postId: string, payload: { visibility?: string; status?: string; title?: string; content?: string }) => {
+        const { data } = await api.patch(`/posts/${postId}`, payload);
+        return data.result;
     }
 };

@@ -17,7 +17,16 @@ export class PostRepository {
                     avatarUrl: true,
                 },
             },
-            community: true,
+            community: {
+                include: {
+                    ...(currentUserId && {
+                        members: {
+                            where: { userId: currentUserId },
+                            select: { isMod: true, permissions: true }
+                        }
+                    })
+                }
+            },
             media: true,
             topics: { include: { topic: true } },
             pollOptions: true,
