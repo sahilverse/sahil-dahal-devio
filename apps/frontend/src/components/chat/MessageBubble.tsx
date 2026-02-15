@@ -11,14 +11,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    DialogClose,
-} from "@/components/ui/dialog";
-import { X, MoreHorizontal, Maximize2 } from "lucide-react";
-import NextImage from "next/image";
+import { MoreHorizontal, Maximize2 } from "lucide-react";
+import PostMediaLightbox from "@/components/profile/posts/PostMediaLightbox";
 
 interface MessageBubbleProps {
     message: Message;
@@ -39,7 +33,8 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message.content || "");
-    const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const handleEditSubmit = () => {
@@ -141,7 +136,12 @@ export default function MessageBubble({
                                                 {m.type === "IMAGE" ? (
                                                     <div
                                                         className="relative cursor-pointer overflow-hidden rounded-lg hover:ring-2 hover:ring-brand-primary transition-all"
-                                                        onClick={() => setSelectedMedia(m.url)}
+                                                        onClick={() => {
+                                                            // Find the index of this media item in the full media list
+                                                            const idx = message.media.findIndex(x => x.id === m.id);
+                                                            setLightboxIndex(idx >= 0 ? idx : 0);
+                                                            setIsLightboxOpen(true);
+                                                        }}
                                                     >
                                                         <img
                                                             src={m.url}
@@ -243,29 +243,19 @@ export default function MessageBubble({
             </div>
 
             {/* Full-screen Media Viewer */}
-            <Dialog open={!!selectedMedia} onOpenChange={(open) => !open && setSelectedMedia(null)}>
-                <DialogContent showCloseButton={false} className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex flex-col items-center justify-center outline-none">
-                    <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-
-                    <DialogClose className="absolute -top-0 -right-12 z-50 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors cursor-pointer group">
-                        <X className="w-5 h-5" />
-                        <span className="sr-only">Close</span>
-                    </DialogClose>
-
-                    {selectedMedia && (
-                        <div className="relative w-full h-screen max-h-[85vh]">
-                            <NextImage
-                                src={selectedMedia}
-                                alt="Shared media"
-                                fill
-                                className="object-contain"
-                                priority
-                                unoptimized={true}
-                            />
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            {message.media && message.media.length > 0 && (
+                <PostMediaLightbox
+                    media={message.media.map(m => ({
+                        id: m.id,
+                        url: m.url,
+                        type: m.type as "IMAGE" | "VIDEO" | "FILE"
+                    }))}
+                    currentIndex={lightboxIndex}
+                    onIndexChange={setLightboxIndex}
+                    isOpen={isLightboxOpen}
+                    onClose={setIsLightboxOpen}
+                />
+            )}
         </div>
     );
 }
