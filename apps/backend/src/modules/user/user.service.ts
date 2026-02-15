@@ -112,24 +112,7 @@ export class UserService {
             devioAge,
             isFollowing,
             isOwner,
-            // Calculate effective 
-            currentStreak: (() => {
-                const streak = user.userStreak?.currentStreak || 0;
-                const lastActive = user.userStreak?.lastActiveDate;
-
-                if (!lastActive) return streak;
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const lastActiveDate = new Date(lastActive);
-                lastActiveDate.setHours(0, 0, 0, 0);
-
-                const diffTime = Math.abs(today.getTime() - lastActiveDate.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays > 1) return 0;
-
-                return streak;
-            })(),
+            currentStreak: user.userStreak?.currentStreak || 0,
             longestStreak: user.userStreak?.longestStreak || 0,
 
             achievements,
