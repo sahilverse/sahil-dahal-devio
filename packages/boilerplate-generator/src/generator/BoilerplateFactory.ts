@@ -7,12 +7,14 @@ import { WrapperGenerator } from "./CodeWrapper";
 export class BoilerplateFactory {
 
     static generateUI(struct: ProblemStructure, lang: Language): string {
-        if (SkeletonGenerator[lang]) return (SkeletonGenerator as any)[lang](struct);
+        const generators = SkeletonGenerator as unknown as Record<Language, (s: ProblemStructure) => string>;
+        if (generators[lang]) return generators[lang](struct);
         throw new Error(`UI generator not implemented for ${lang}`);
     }
 
     static generateFull(struct: ProblemStructure, lang: Language): string {
-        if (WrapperGenerator[lang]) return (WrapperGenerator as any)[lang](struct);
+        const generators = WrapperGenerator as unknown as Record<Language, (s: ProblemStructure) => string>;
+        if (generators[lang]) return generators[lang](struct);
         throw new Error(`Full generator not implemented for ${lang}`);
     }
 
