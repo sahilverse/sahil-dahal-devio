@@ -33,6 +33,7 @@ export class CommunitySettingsDto {
     @Expose() requirePostApproval!: boolean;
     @Expose() minAuraToPost!: number;
     @Expose() minAuraToComment!: number;
+    @Expose() minAuraToJoin!: number;
 }
 
 @Exclude()
@@ -51,10 +52,9 @@ export class CommunityMemberDto {
     @Expose() joinedAt!: Date;
     @Expose() isMod!: boolean;
     @Expose() permissions?: any;
-
-    @Expose()
-    @Type(() => Object)
-    user!: { id: string; username: string; avatarUrl?: string };
+    @Expose() userId!: string;
+    @Expose() username!: string;
+    @Expose() avatarUrl?: string;
 }
 
 @Exclude()

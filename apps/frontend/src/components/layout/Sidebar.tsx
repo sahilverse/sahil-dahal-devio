@@ -24,6 +24,8 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar, setSidebarOpen } from "@/slices/ui/uiSlice";
 import CreateCommunityModal from "../community/CreateCommunityModal";
 import { useEffect } from "react";
+import { useJoinedCommunities } from "@/hooks/useCommunities";
+import UserAvatar from "@/components/navbar/UserAvatar";
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -32,6 +34,9 @@ export default function Sidebar() {
     const { user } = useAppSelector((state) => state.auth);
     const [isResourcesOpen, setIsResourcesOpen] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    const { data: communitiesData } = useJoinedCommunities(user?.id, 10);
+    const joinedCommunities = communitiesData?.pages.flatMap((page) => page.communities) || [];
 
     const isActive = (path: string) => pathname === path;
     const isAuthenticated = !!user;
@@ -180,12 +185,15 @@ export default function Sidebar() {
 
                             <div className="mb-6">
                                 {isSidebarOpen ? (
-                                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                                        Communities
+                                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex justify-between items-center group">
+                                        <span>Communities</span>
+                                        <Link href="/communities" className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-brand-primary">
+                                            See All
+                                        </Link>
                                     </div>
                                 ) : null}
 
-                                <div className="space-y-1">
+                                <div className="space-y-1 mb-2">
                                     <button
                                         onClick={() => setIsCreateModalOpen(true)}
                                         className={cn(
@@ -208,7 +216,29 @@ export default function Sidebar() {
                                         {isSidebarOpen && "Manage Communities"}
                                     </button>
                                 </div>
+
+                                <div className="space-y-1">
+                                    {joinedCommunities?.map((community: any) => (
+                                        <Link
+                                            key={community.id}
+                                            href={`/d/${community.name}`}
+                                            className={cn(
+                                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                                                isActive(`/d/${community.name}`) && "bg-brand-primary/10 text-brand-primary",
+                                                !isSidebarOpen && "justify-center px-0"
+                                            )}
+                                            title={!isSidebarOpen ? `d/${community.name}` : undefined}
+                                        >
+                                            <UserAvatar
+                                                user={{ username: community.name, avatarUrl: community.iconUrl }}
+                                                size="xs"
+                                            />
+                                            {isSidebarOpen && <span className="truncate">d/{community.name}</span>}
+                                        </Link>
+                                    ))}
+                                </div>
                             </div>
+
                         </>
                     )}
                 </nav>

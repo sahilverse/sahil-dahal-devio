@@ -14,6 +14,8 @@ import { ChevronDown, Plus, Users, User as UserIcon, Search } from "lucide-react
 
 import { useFormContext } from "react-hook-form";
 import { useJoinedCommunities } from "@/hooks/useCommunities";
+import { useCommunity } from "@/hooks/useCommunity";
+import { useSearchParams } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -26,10 +28,19 @@ export default function PostContextSelector() {
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 300);
 
+    const searchParams = useSearchParams();
+    const communityParam = searchParams.get("community");
+    const { data: urlCommunity } = useCommunity(communityParam || "");
+
     const { data } = useJoinedCommunities(user?.id, 5, debouncedSearch);
+
     const communities = data?.pages.flatMap((page) => page.communities) || [];
 
-    const selectedCommunity = communities.find((c: any) => c.id === communityId);
+    // Prioritize URL community if it matches the selected ID (to ensure we have data even if not in joined list)
+    let selectedCommunity = communities.find((c: any) => c.id === communityId);
+    if (!selectedCommunity && urlCommunity && urlCommunity.id === communityId) {
+        selectedCommunity = urlCommunity;
+    }
     const isProfileSelected = !communityId;
 
     if (!user) return null;
@@ -112,13 +123,6 @@ export default function PostContextSelector() {
                         </DropdownMenuItem>
                     ))}
                 </div>
-
-                <DropdownMenuItem className="gap-3 p-2.5 cursor-pointer rounded-lg hover:bg-muted focus:bg-muted group mt-0.5 opacity-60 hover:opacity-100 transition-all">
-                    <div className="h-9 w-9 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center transition-colors">
-                        <Plus className="h-5 w-5 text-muted-foreground/50 transition-colors" />
-                    </div>
-                    <span className="font-bold text-sm transition-colors">Create / Join Community</span>
-                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

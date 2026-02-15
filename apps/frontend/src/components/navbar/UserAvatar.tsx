@@ -8,18 +8,20 @@ interface UserAvatarProps {
         avatarUrl?: string | null;
         username: string | null;
     }
-    size?: "sm" | "md" | "lg";
+    size?: "xs" | "sm" | "md" | "lg";
+    className?: string;
 }
 
 const SIZE_CLASSES = {
+    xs: "w-5 h-5 text-[10px]",
     sm: "w-8 h-8",
     md: "w-10 h-10",
     lg: "w-18 h-18",
 };
 
-export default function UserAvatar({ user, size = "sm" }: UserAvatarProps) {
+export default function UserAvatar({ user, size = "sm", className }: UserAvatarProps) {
     return (
-        <Avatar className={`${SIZE_CLASSES[size]} border border-gray-200 dark:border-gray-700`}>
+        <Avatar className={`${SIZE_CLASSES[size]} border border-gray-200 dark:border-gray-700 ${className || ""}`}>
             <AvatarImage
                 src={user.avatarUrl || undefined}
                 alt={user.username || "User"}

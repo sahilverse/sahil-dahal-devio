@@ -162,8 +162,15 @@ export class CommunityService {
             nextCursor = lastItem!.id;
         }
 
+        const flatMembers = members.map(({ user, ...rest }) => ({
+            ...rest,
+            userId: user.id,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+        }));
+
         return plainToInstance(GetMembersResponseDto, {
-            members: plainToInstance(CommunityMemberDto, members, { excludeExtraneousValues: true }),
+            members: plainToInstance(CommunityMemberDto, flatMembers, { excludeExtraneousValues: true }),
             nextCursor
         }, { excludeExtraneousValues: true });
     }
@@ -351,8 +358,15 @@ export class CommunityService {
             nextCursor = nextItem?.id;
         }
 
+        const flatMods = mods.map(({ user, ...rest }) => ({
+            ...rest,
+            userId: user.id,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+        }));
+
         return plainToInstance(GetModeratorsDto, {
-            moderators: plainToInstance(CommunityMemberDto, mods, { excludeExtraneousValues: true }),
+            moderators: plainToInstance(CommunityMemberDto, flatMods, { excludeExtraneousValues: true }),
             nextCursor
         }, { excludeExtraneousValues: true });
     }

@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, ReactNode } from "react";
 import { Form } from "@/components/ui/form";
 import { PostType, PostStatus } from "@devio/zod-utils";
+import { useCommunity } from "@/hooks/useCommunity";
 
 const frontendPostSchema = z.discriminatedUnion("type", [
     z.object({
@@ -65,6 +66,9 @@ export default function CreatePostForm({ children, onSubmit, isPending }: Create
         } as any,
     });
 
+    const communityParam = searchParams.get("community");
+    const { data: communityData } = useCommunity(communityParam || "");
+
     useEffect(() => {
         if (typeParam && [PostType.TEXT, PostType.LINK, PostType.QUESTION].includes(typeParam)) {
             form.setValue("type", typeParam as any);
@@ -83,7 +87,11 @@ export default function CreatePostForm({ children, onSubmit, isPending }: Create
             form.setValue("linkUrl" as any, "");
             form.setValue("bountyAmount" as any, 0);
         }
-    }, [typeParam, form]);
+
+        if (communityParam && communityData) {
+            form.setValue("communityId", communityData.id);
+        }
+    }, [typeParam, form, communityParam, communityData]);
 
     const handleSubmit = (data: CreatePostFormData) => {
         onSubmit(data);
