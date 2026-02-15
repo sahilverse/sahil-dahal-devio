@@ -92,6 +92,9 @@ export const TYPES = {
     ConversationRepository: Symbol.for("ConversationRepository"),
     ConversationService: Symbol.for("ConversationService"),
     ConversationController: Symbol.for("ConversationController"),
+    EventRepository: Symbol.for("EventRepository"),
+    EventService: Symbol.for("EventService"),
+    EventController: Symbol.for("EventController"),
 };
 
 export * from "./jwt";

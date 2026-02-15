@@ -32,6 +32,7 @@ import { NotificationRepository, NotificationService, NotificationController } f
 import { MentionService } from "../modules/mention/mention.service";
 import { ConversationRepository, ConversationService, ConversationController } from "../modules/conversation";
 import { ConversationSocketHandler } from "../modules/conversation/conversation.socket";
+import { EventRepository, EventService, EventController } from "../modules/event";
 
 
 const container = new Container();
@@ -134,5 +135,9 @@ container.bind<ConversationRepository>(TYPES.ConversationRepository).to(Conversa
 container.bind<ConversationService>(TYPES.ConversationService).to(ConversationService).inSingletonScope();
 container.bind<ConversationController>(TYPES.ConversationController).to(ConversationController).inSingletonScope();
 container.bind<ISocketHandler>(TYPES.SocketHandler).to(ConversationSocketHandler).inSingletonScope();
+
+container.bind<EventRepository>(TYPES.EventRepository).to(EventRepository).inSingletonScope();
+container.bind<EventService>(TYPES.EventService).to(EventService).inSingletonScope();
+container.bind<EventController>(TYPES.EventController).to(EventController).inSingletonScope();
 
 export { container };
