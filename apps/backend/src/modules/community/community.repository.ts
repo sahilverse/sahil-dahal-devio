@@ -266,8 +266,12 @@ export class CommunityRepository {
         });
     }
 
-    async findJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<any[]> {
+    async findJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string, moderatedOnly?: boolean): Promise<any[]> {
         const where: any = { userId };
+
+        if (moderatedOnly) {
+            where.isMod = true;
+        }
 
         if (query) {
             where.community = {
@@ -316,6 +320,12 @@ export class CommunityRepository {
         ]);
 
         return !!membership?.isMod || community?.createdById === userId;
+    }
+
+    async findMember(communityId: string, userId: string) {
+        return this.prisma.communityMember.findUnique({
+            where: { communityId_userId: { communityId, userId } }
+        });
     }
 
     async checkMemberPermission(communityId: string, userId: string, permission: string): Promise<boolean> {

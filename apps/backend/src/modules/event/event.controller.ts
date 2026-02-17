@@ -68,4 +68,42 @@ export class EventController {
         const result = plainToInstance(EventParticipantDto, leaderboard, { excludeExtraneousValues: true });
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Leaderboard fetched successfully", result);
     });
+
+    uploadImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const file = req.file;
+
+        if (!file) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "No file uploaded");
+        }
+
+        const imageUrl = await this.eventService.uploadEventImage(id, userId, file);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Event image uploaded successfully", { imageUrl });
+    });
+
+    removeImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.eventService.removeEventImage(id, userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Event image removed successfully");
+    });
+
+    addEventProblem = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const { problemId, points, order } = req.body;
+
+        await this.eventService.addEventProblem(id, userId, problemId, points, order);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem added to event successfully");
+    });
+
+    removeEventProblem = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id, problemId } = req.params as { id: string; problemId: string };
+
+        await this.eventService.removeEventProblem(id, userId, problemId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem removed from event successfully");
+    });
 }

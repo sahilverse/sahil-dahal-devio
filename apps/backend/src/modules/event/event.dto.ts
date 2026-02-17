@@ -1,5 +1,5 @@
 import { Exclude, Expose, Transform, Type } from "class-transformer";
-import { EventStatus, EventType, ParticipantStatus } from "../../generated/prisma/client";
+import { EventStatus, EventType, ParticipantStatus, EventVisibility } from "../../generated/prisma/client";
 
 @Exclude()
 export class EventCreatorDto {
@@ -20,10 +20,12 @@ export class EventCommunityDto {
 @Exclude()
 export class EventPrizeDto {
     @Expose() id!: string;
-    @Expose() title!: string;
-    @Expose() description!: string;
-    @Expose() position!: number;
-    @Expose() prizeValue?: number;
+    @Expose() rankFrom!: number;
+    @Expose() rankTo!: number;
+    @Expose() prize?: string;
+    @Expose() description?: string;
+    @Expose() auraReward!: number;
+    @Expose() cipherReward!: number;
 }
 
 @Exclude()
@@ -63,6 +65,7 @@ export class EventResponseDto {
     @Expose() status!: EventStatus;
     @Expose() startsAt!: Date;
     @Expose() endsAt!: Date;
+    @Expose() registrationDeadline?: Date;
     @Expose() minAuraPoints!: number;
     @Expose() entryCipherCost!: number;
     @Expose() maxParticipants?: number;
@@ -71,10 +74,9 @@ export class EventResponseDto {
     @Expose() teamSize?: number;
     @Expose() externalUrl?: string;
     @Expose() isApproved!: boolean;
-    @Expose() createdById!: string;
-    @Expose() communityId?: string;
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
+    @Expose() rules!: string[];
 
     @Expose()
     @Transform(({ obj }) => obj._count?.participants || 0)
@@ -88,6 +90,9 @@ export class EventResponseDto {
     })
     @Type(() => EventParticipantDto)
     userParticipation?: EventParticipantDto;
+
+    @Expose()
+    canEdit?: boolean;
 
     @Expose()
     @Type(() => EventCreatorDto)
@@ -117,4 +122,12 @@ export class GetEventsDto {
     @Expose() status?: EventStatus;
     @Expose() type?: EventType;
     @Expose() communityId?: string;
+    @Expose() visibility?: EventVisibility;
+}
+
+@Exclude()
+export class AddEventProblemDto {
+    @Expose() problemId!: string;
+    @Expose() points!: number;
+    @Expose() order!: number;
 }

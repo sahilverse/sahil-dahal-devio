@@ -175,8 +175,8 @@ export class UserService {
         return plainToInstance(AboutProfileDTO, aboutData, { excludeExtraneousValues: true });
     }
 
-    async getJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string): Promise<GetJoinedCommunitiesResponseDto> {
-        const members = await this.communityRepository.findJoinedCommunities(userId, limit, cursor, query);
+    async getJoinedCommunities(userId: string, limit: number, cursor?: string, query?: string, moderatedOnly?: boolean): Promise<GetJoinedCommunitiesResponseDto> {
+        const members = await this.communityRepository.findJoinedCommunities(userId, limit, cursor, query, moderatedOnly);
 
         let nextCursor: string | null = null;
         if (members.length > limit) {

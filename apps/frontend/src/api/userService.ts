@@ -20,11 +20,12 @@ export const UserService = {
         await api.delete(`/users/${username}/follow`);
     },
 
-    getJoinedCommunities: async (userId: string, limit = 10, cursor?: string, query?: string): Promise<{ communities: any[]; nextCursor: string | null }> => {
+    getJoinedCommunities: async (userId: string, limit = 10, cursor?: string, query?: string, moderated?: boolean): Promise<{ communities: any[]; nextCursor: string | null }> => {
         const params = new URLSearchParams();
         params.append("limit", limit.toString());
         if (cursor) params.append("cursor", cursor);
         if (query) params.append("query", query);
+        if (moderated) params.append("moderated", "true");
 
         const { data } = await api.get(`/users/${userId}/communities?${params.toString()}`);
         return data.result;

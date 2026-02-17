@@ -4,12 +4,12 @@ import { CommunityService } from "@/api/communityService";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-export function useJoinedCommunities(userId: string | undefined, limit = 10, query?: string) {
+export function useJoinedCommunities(userId: string | undefined, limit = 10, query?: string, moderated?: boolean) {
     return useInfiniteQuery({
-        queryKey: ["joinedCommunities", userId, limit, query],
+        queryKey: ["joinedCommunities", userId, limit, query, moderated],
         queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
             if (!userId) return { communities: [], nextCursor: null };
-            return UserService.getJoinedCommunities(userId, limit, pageParam, query);
+            return UserService.getJoinedCommunities(userId, limit, pageParam, query, moderated);
         },
         initialPageParam: undefined as string | undefined,
         getNextPageParam: (lastPage) => lastPage.nextCursor,

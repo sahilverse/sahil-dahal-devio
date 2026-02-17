@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Event, Prisma, EventStatus, EventType, EventParticipant, ParticipantStatus } from "../../generated/prisma/client";
+import { PrismaClient, Event, Prisma, EventStatus, EventType, EventParticipant, ParticipantStatus, EventVisibility } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -82,8 +82,9 @@ export class EventRepository {
         communityId?: string;
         currentUserId?: string;
         isApproved?: boolean;
+        visibility?: EventVisibility;
     }): Promise<Event[]> {
-        const { cursor, limit, status, type, communityId, currentUserId, isApproved } = params;
+        const { cursor, limit, status, type, communityId, currentUserId, isApproved, visibility } = params;
 
         return this.prisma.event.findMany({
             take: limit + 1,
@@ -94,6 +95,7 @@ export class EventRepository {
                 ...(type && { type }),
                 ...(communityId && { communityId }),
                 ...(isApproved !== undefined && { isApproved }),
+                ...(visibility && { visibility }),
             },
             orderBy: { startsAt: "asc" },
             include: this.getEventInclude(currentUserId),
@@ -178,6 +180,41 @@ export class EventRepository {
                 { score: "desc" },
                 { registeredAt: "asc" },
             ],
+        });
+    }
+
+    // Problems
+    async addProblem(eventId: string, problemId: string, points: number, order: number): Promise<void> {
+        await this.prisma.eventProblem.create({
+            data: {
+                eventId,
+                problemId,
+                points,
+                order,
+            },
+        });
+    }
+
+    async removeProblem(eventId: string, problemId: string): Promise<void> {
+        await this.prisma.eventProblem.delete({
+            where: {
+                eventId_problemId: {
+                    eventId,
+                    problemId,
+                },
+            },
+        });
+    }
+
+    async updateProblemOrder(eventId: string, problemId: string, order: number): Promise<void> {
+        await this.prisma.eventProblem.update({
+            where: {
+                eventId_problemId: {
+                    eventId,
+                    problemId,
+                },
+            },
+            data: { order },
         });
     }
 }

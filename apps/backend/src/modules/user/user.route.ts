@@ -282,6 +282,12 @@ router.delete(
  *         schema:
  *           type: string
  *           description: Search query for community name
+ *       - in: query
+ *         name: moderated
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *           description: Filter for communities where the user is a moderator or creator
  *     responses:
  *       200:
  *         description: List of joined communities

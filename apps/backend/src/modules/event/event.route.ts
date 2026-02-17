@@ -2,8 +2,8 @@ import { Router } from "express";
 import { container } from "../../config/inversify";
 import { TYPES } from "../../types";
 import { EventController } from "./event.controller";
-import { AuthMiddleware, validateRequest } from "../../middlewares";
-import { createEventSchema, updateEventSchema, eventRegistrationSchema } from "@devio/zod-utils";
+import { AuthMiddleware, validateRequest, upload } from "../../middlewares";
+import { createEventSchema, updateEventSchema, eventRegistrationSchema, addEventProblemSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const eventController = container.get<EventController>(TYPES.EventController);
@@ -25,12 +25,19 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *         type:
  *           type: string
  *           enum: [HACKATHON, CTF, CONTEST, WORKSHOP, MEETUP]
+ *         status:
+ *           type: string
+ *           enum: [DRAFT, PENDING_APPROVAL, PUBLISHED, ONGOING, COMPLETED, CANCELLED]
+ *           default: DRAFT
  *         communityId:
  *           type: string
  *         startsAt:
  *           type: string
  *           format: date-time
  *         endsAt:
+ *           type: string
+ *           format: date-time
+ *         registrationDeadline:
  *           type: string
  *           format: date-time
  *         minAuraPoints:
@@ -55,6 +62,21 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *         externalUrl:
  *           type: string
  *           format: url
+ *         rules:
+ *           type: array
+ *           items:
+ *             type: string
+ *         prizes:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               rank:
+ *                 type: integer
+ *               prize:
+ *                 type: string
+ *               description:
+ *                 type: string
  *     UpdateEventInput:
  *       type: object
  *       properties:
@@ -65,6 +87,24 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *         status:
  *           type: string
  *           enum: [DRAFT, PENDING_APPROVAL, PUBLISHED, ONGOING, COMPLETED, CANCELLED]
+ *         registrationDeadline:
+ *           type: string
+ *           format: date-time
+ *         rules:
+ *           type: array
+ *           items:
+ *             type: string
+ *         prizes:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               rank:
+ *                 type: integer
+ *               prize:
+ *                 type: string
+ *               description:
+ *                 type: string
  *     EventRegistrationInput:
  *       type: object
  *       properties:
@@ -138,6 +178,11 @@ router.post(
  *         name: communityId
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: visibility
+ *         schema:
+ *           type: string
+ *           enum: [PUBLIC, PRIVATE, UNLISTED]
  *     responses:
  *       200:
  *         description: Events fetched successfully
@@ -263,6 +308,151 @@ router.post(
 router.get(
     "/:id/leaderboard",
     eventController.getLeaderboard
+);
+
+/**
+ * @swagger
+ * /events/{id}/image:
+ *   post:
+ *     summary: Upload event image
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Event image uploaded successfully
+ *       400:
+ *         description: No file uploaded
+ *       403:
+ *         description: Unauthorized to update this event
+ *       404:
+ *         description: Event not found
+ */
+router.post(
+    "/:id/image",
+    authMiddleware.guard,
+    upload.single("image"),
+    eventController.uploadImage
+);
+
+/**
+ * @swagger
+ * /events/{id}/image:
+ *   delete:
+ *     summary: Remove event image
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event image removed successfully
+ *       403:
+ *         description: Unauthorized to update this event
+ *       404:
+ *         description: Event not found
+ */
+router.delete(
+    "/:id/image",
+    authMiddleware.guard,
+    eventController.removeImage
+);
+
+/**
+ * @swagger
+ * /events/{id}/problems:
+ *   post:
+ *     summary: Add a problem to an event
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               problemId:
+ *                 type: string
+ *               points:
+ *                 type: integer
+ *               order:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Problem added successfully
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: Event or Problem not found
+ *       409:
+ *         description: Problem already added
+ */
+router.post(
+    "/:id/problems",
+    authMiddleware.guard,
+    validateRequest(addEventProblemSchema),
+    eventController.addEventProblem
+);
+
+/**
+ * @swagger
+ * /events/{id}/problems/{problemId}:
+ *   delete:
+ *     summary: Remove a problem from an event
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: problemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Problem removed successfully
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: Event or Problem not found
+ */
+router.delete(
+    "/:id/problems/:problemId",
+    authMiddleware.guard,
+    eventController.removeEventProblem
 );
 
 export { router };

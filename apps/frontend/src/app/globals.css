@@ -323,4 +323,10 @@ code {
     body {
         @apply bg-background text-foreground;
     }
+
+    /* Date picker icon visibility in dark mode */
+    .dark input::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
 }

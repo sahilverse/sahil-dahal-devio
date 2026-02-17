@@ -13,7 +13,7 @@ export default function CommunityNav({ isMod = false }: CommunityNavProps) {
     const searchParams = useSearchParams();
     const currentView = searchParams.get("view")?.toLowerCase() || "posts";
 
-    const navItems = ["Posts", "Members"];
+    const navItems = ["Posts", "Members", "Events"];
 
     const handleSelect = (item: string) => {
         const value = item.toLowerCase();

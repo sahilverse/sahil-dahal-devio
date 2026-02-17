@@ -47,11 +47,12 @@ export class UserController {
 
     getJoinedCommunities = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { userId } = req.params as { userId: string };
-        const { limit, cursor, query } = req.query as { limit?: string; cursor?: string; query?: string };
+        const { limit, cursor, query, moderated } = req.query as { limit?: string; cursor?: string; query?: string; moderated?: string };
 
         const parsedLimit = limit ? parseInt(limit, 10) : 10;
+        const moderatedOnly = moderated === "true";
 
-        const result = await this.userService.getJoinedCommunities(userId, parsedLimit, cursor, query);
+        const result = await this.userService.getJoinedCommunities(userId, parsedLimit, cursor, query, moderatedOnly);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Joined communities fetched successfully", result);
     });
 

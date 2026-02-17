@@ -7,6 +7,8 @@ export interface AuthUser {
     emailVerified: string | null;
     avatarUrl: string | null;
     role: string;
+    aura: number;
+    cipher: number;
     createdAt: string;
 }
 

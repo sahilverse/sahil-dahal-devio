@@ -6,7 +6,8 @@ import {
     EventType,
     NotificationType,
     CipherReason,
-    Prisma
+    Prisma,
+    EventVisibility
 } from "../../generated/prisma/client";
 import { ApiError, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
@@ -16,6 +17,9 @@ import { AuraService } from "../aura/aura.service";
 import { CommunityRepository } from "../community/community.repository";
 import { CreateEventInput, UpdateEventInput, EventRegistrationInput } from "@devio/zod-utils";
 import slugify from "slugify";
+import { StorageService } from "../storage/storage.service";
+import { v4 as uuidv4 } from "uuid";
+import { format } from "date-fns";
 
 @injectable()
 export class EventService {
@@ -25,6 +29,7 @@ export class EventService {
         @inject(TYPES.CipherService) private cipherService: CipherService,
         @inject(TYPES.AuraService) private auraService: AuraService,
         @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
+        @inject(TYPES.StorageService) private storageService: StorageService,
     ) { }
 
     async createEvent(userId: string, data: CreateEventInput) {
@@ -37,11 +42,23 @@ export class EventService {
 
         const slug = slugify(data.title, { lower: true, strict: true }) + "-" + Math.random().toString(36).substring(2, 7);
 
+        const { prizes, rules, ...rest } = data;
+
         const eventData: Prisma.EventCreateInput = {
-            ...data,
+            ...rest,
             slug,
             createdBy: { connect: { id: userId } },
             ...(data.communityId && { community: { connect: { id: data.communityId } } }),
+            rules: rules,
+            prizes: prizes ? {
+                create: prizes.map(p => ({
+                    rankFrom: p.rank,
+                    rankTo: p.rank,
+                    prize: p.prize,
+                    description: p.description,
+                }))
+            } : undefined,
+            isApproved: true,
         };
 
         delete (eventData as any).communityId;
@@ -59,11 +76,13 @@ export class EventService {
         type?: EventType;
         communityId?: string;
         currentUserId?: string;
+        visibility?: EventVisibility;
     }) {
         const events = await this.eventRepository.findMany({
             ...params,
             limit: params.limit || 10,
-            isApproved: params.status === EventStatus.PUBLISHED ? true : undefined,
+            isApproved: params.status === EventStatus.PUBLISHED ? true : false,
+            visibility: params.visibility ?? EventVisibility.PUBLIC,
         });
 
         let nextCursor: string | null = null;
@@ -75,11 +94,26 @@ export class EventService {
         return { events, nextCursor };
     }
 
-    async getEventById(id: string, currentUserId?: string) {
-        const event = await this.eventRepository.findById(id, currentUserId);
+    async getEventById(idOrSlug: string, currentUserId?: string) {
+        let event = await this.eventRepository.findById(idOrSlug, currentUserId);
+
+        if (!event) {
+            event = await this.eventRepository.findBySlug(idOrSlug, currentUserId);
+        }
+
         if (!event) {
             throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
         }
+
+        if (currentUserId) {
+            const isCreator = event.createdById === currentUserId;
+            let isModerator = false;
+            if (!isCreator && event.communityId) {
+                isModerator = await this.communityRepository.isModeratorOrCreator(event.communityId, currentUserId);
+            }
+            (event as any).canEdit = isCreator || isModerator;
+        }
+
         return event;
     }
 
@@ -100,7 +134,23 @@ export class EventService {
             }
         }
 
-        const updatedEvent = await this.eventRepository.update(id, data as Prisma.EventUpdateInput);
+        const { prizes, rules, ...rest } = data;
+
+        const updateData: Prisma.EventUpdateInput = {
+            ...rest,
+            rules: rules,
+            prizes: prizes ? {
+                deleteMany: {},
+                create: prizes.map(p => ({
+                    rankFrom: p.rank,
+                    rankTo: p.rank,
+                    prize: p.prize,
+                    description: p.description,
+                }))
+            } : undefined,
+        };
+
+        const updatedEvent = await this.eventRepository.update(id, updateData);
 
         if (updatedEvent.status === EventStatus.PUBLISHED || updatedEvent.status === EventStatus.ONGOING) {
             const participants = await this.eventRepository.getLeaderboard(id);
@@ -155,6 +205,14 @@ export class EventService {
             throw new ApiError(`Insufficient Aura Points. Required: ${event.minAuraPoints}`, StatusCodes.BAD_REQUEST);
         }
 
+        // Check Community Membership
+        if (event.communityId) {
+            const membership = await this.communityRepository.findMember(event.communityId, userId);
+            if (!membership) {
+                throw new ApiError("You must be a member of this community to join its events", StatusCodes.FORBIDDEN);
+            }
+        }
+
         // Handle Cipher Cost
         if (event.entryCipherCost > 0) {
             await this.cipherService.spendCipher(
@@ -182,5 +240,105 @@ export class EventService {
 
     async getLeaderboard(eventId: string) {
         return this.eventRepository.getLeaderboard(eventId);
+    }
+
+    async uploadEventImage(eventId: string, userId: string, file: Express.Multer.File): Promise<string> {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        // Verify ownership
+        if (event.createdById !== userId) {
+            if (event.communityId) {
+                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
+                if (!isAuthorized) {
+                    throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
+                }
+            } else {
+                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
+            }
+        }
+
+        // Delete old image if it exists
+        if (event.imageUrl) {
+            await this.storageService.deleteFile(event.imageUrl);
+        }
+
+        const datePath = format(new Date(), "yyyy/MM/dd");
+        const filename = `${uuidv4()}.webp`;
+        const path = `events/${datePath}/${filename}`;
+
+        const imageUrl = await this.storageService.uploadFile(file, path);
+        await this.eventRepository.update(eventId, { imageUrl });
+
+        logger.info(`Event image uploaded for event ${eventId} by user ${userId}`);
+        return imageUrl;
+    }
+
+    async removeEventImage(eventId: string, userId: string): Promise<void> {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        if (event.createdById !== userId) {
+            if (event.communityId) {
+                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
+                if (!isAuthorized) {
+                    throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
+                }
+            } else {
+                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
+            }
+        }
+
+        if (event.imageUrl) {
+            await this.storageService.deleteFile(event.imageUrl);
+        }
+
+        await this.eventRepository.update(eventId, { imageUrl: null });
+    }
+    async addEventProblem(eventId: string, userId: string, problemId: string, points: number, order: number): Promise<void> {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        // Verify ownership
+        await this.verifyEventModification(event, userId);
+
+        try {
+            await this.eventRepository.addProblem(eventId, problemId, points, order);
+        } catch (error: any) {
+            if (error.code === 'P2002') { 
+                throw new ApiError("Problem already added to this event", StatusCodes.CONFLICT);
+            }
+            throw error;
+        }
+    }
+
+    async removeEventProblem(eventId: string, userId: string, problemId: string): Promise<void> {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        // Verify ownership
+        await this.verifyEventModification(event, userId);
+
+        try {
+            await this.eventRepository.removeProblem(eventId, problemId);
+        } catch (error: any) {
+            if (error.code === 'P2025') { 
+                throw new ApiError("Problem not found in this event", StatusCodes.NOT_FOUND);
+            }
+            throw error;
+        }
+    }
+
+    private async verifyEventModification(event: any, userId: string) {
+        if (event.createdById !== userId) {
+            if (event.communityId) {
+                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
+                if (!isAuthorized) {
+                    throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
+                }
+            } else {
+                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
+            }
+        }
     }
 }
