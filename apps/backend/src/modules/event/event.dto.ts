@@ -76,7 +76,6 @@ export class EventResponseDto {
     @Expose() isApproved!: boolean;
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
-    @Expose() rules!: string[];
 
     @Expose()
     @Transform(({ obj }) => obj._count?.participants || 0)

@@ -178,11 +178,14 @@ export class EventService {
         return this.eventRepository.findPrizes(id);
     }
 
+    async getEventRules(id: string) {
+        return this.eventRepository.findRules(id);
+    }
+
     async getEventProblems(id: string, currentUserId?: string) {
         const event = await this.getEventById(id, currentUserId);
         const problems = await this.eventRepository.findProblems(event.id);
 
-        // Reveal Logic for CONTEST type
         if (event.type === EventType.CONTEST && !event.canEdit) {
             const now = new Date();
             const startsAt = new Date(event.startsAt);

@@ -75,6 +75,14 @@ export class EventRepository {
         });
     }
 
+    async findRules(eventId: string) {
+        const event = await this.prisma.event.findUnique({
+            where: { id: eventId },
+            select: { rules: true },
+        });
+        return event?.rules || [];
+    }
+
     async findMany(params: {
         cursor?: string;
         limit: number;

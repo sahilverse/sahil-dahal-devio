@@ -114,6 +114,12 @@ export class EventController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Event prizes fetched successfully", result);
     });
 
+    getEventRules = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params as { id: string };
+        const rules = await this.eventService.getEventRules(id);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Event rules fetched successfully", rules);
+    });
+
     getEventProblems = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params as { id: string };
         const currentUserId = req.user?.id;

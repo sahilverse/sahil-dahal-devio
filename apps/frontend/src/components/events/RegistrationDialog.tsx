@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
     Dialog,
     DialogContent,
@@ -16,13 +16,20 @@ import { Label } from "@/components/ui/label";
 import { useAppSelector } from "@/store/hooks";
 import { EventService } from "@/api/eventService";
 import { toast } from "sonner";
-import { Trophy, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { Trophy, ShieldCheck, AlertCircle, Loader2, CheckCircle2, XCircle, Ban, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface RegistrationDialogProps {
     event: any;
     onSuccess?: () => void;
 }
+
+type ButtonState = {
+    text: string;
+    variant: "default" | "secondary" | "destructive" | "outline" | "ghost";
+    disabled: boolean;
+    canOpenDialog: boolean;
+};
 
 export const RegistrationDialog: React.FC<RegistrationDialogProps> = ({ event, onSuccess }) => {
     const { user } = useAppSelector((state) => state.auth);
@@ -33,7 +40,30 @@ export const RegistrationDialog: React.FC<RegistrationDialogProps> = ({ event, o
 
     const userAura = user?.aura || 0;
     const hasEnoughAura = user ? (user.aura ?? 0) >= (event.minAuraPoints ?? 0) : false;
-    const isRegistered = event.participants?.some((p: any) => p.userId === user?.id);
+    const isRegistered = !!event.isParticipant;
+    const now = new Date();
+    const isDeadlinePassed = event.registrationDeadline && now > new Date(event.registrationDeadline);
+    const isEventEnded = event.status === "COMPLETED" || (event.endsAt && now > new Date(event.endsAt));
+    const isEventFull = event.maxParticipants && (event.participantCount || 0) >= event.maxParticipants;
+
+    const buttonState = useMemo((): ButtonState => {
+        if (isRegistered) {
+            return { text: "✅ Registered", variant: "secondary", disabled: true, canOpenDialog: false };
+        }
+        if (isEventEnded) {
+            return { text: "Event Ended", variant: "outline", disabled: true, canOpenDialog: false };
+        }
+        if (isDeadlinePassed) {
+            return { text: "Registration Closed", variant: "outline", disabled: true, canOpenDialog: false };
+        }
+        if (isEventFull) {
+            return { text: "Event Full", variant: "outline", disabled: true, canOpenDialog: false };
+        }
+        if (!hasEnoughAura) {
+            return { text: "Register Now", variant: "default", disabled: true, canOpenDialog: false };
+        }
+        return { text: "Register Now", variant: "default", disabled: false, canOpenDialog: true };
+    }, [isRegistered, isEventEnded, isDeadlinePassed, isEventFull, hasEnoughAura]);
 
     const handleRegister = async () => {
         if (!user) {
@@ -60,11 +90,21 @@ export const RegistrationDialog: React.FC<RegistrationDialogProps> = ({ event, o
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant={isRegistered ? "secondary" : "default"}
+                    variant={buttonState.variant}
                     className="w-full font-bold h-12 text-lg shadow-lg"
-                    disabled={isRegistered || !hasEnoughAura}
+                    disabled={buttonState.disabled}
+                    onClick={(e) => {
+                        if (!user) {
+                            e.preventDefault();
+                            router.push("/auth/login");
+                            return;
+                        }
+                        if (!buttonState.canOpenDialog) {
+                            e.preventDefault();
+                        }
+                    }}
                 >
-                    {isRegistered ? "Registered" : "Register Now"}
+                    {buttonState.text}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-card">
@@ -122,7 +162,7 @@ export const RegistrationDialog: React.FC<RegistrationDialogProps> = ({ event, o
                                 onChange={(e) => setTeamName(e.target.value)}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Minimum team size: {event.teamSize || 1}
+                                Team size: {event.teamSize || 1} members
                             </p>
                         </div>
                     )}

@@ -502,6 +502,25 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                         </FormItem>
                                     )}
                                 />
+                                <FormField
+                                    control={form.control as any}
+                                    name="externalUrl"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">External Website</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="https://example.com"
+                                                    className="h-12 border-border/50 focus:border-brand-primary transition-all rounded-xl shadow-none"
+                                                    {...field}
+                                                    value={field.value ?? ""}
+                                                />
+                                            </FormControl>
+                                            <FormDescription className="text-[10px]">Optional link to official event page</FormDescription>
+                                            <FormMessage className="text-[10px] font-bold text-destructive" />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
                         </div>
                     )}

@@ -240,6 +240,27 @@ router.get(
 
 /**
  * @swagger
+ * /events/{id}/rules:
+ *   get:
+ *     summary: Get event rules
+ *     tags: [Event]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Rules fetched successfully
+ */
+router.get(
+    "/:id/rules",
+    eventController.getEventRules
+);
+
+/**
+ * @swagger
  * /events/{id}/problems:
  *   get:
  *     summary: Get event problems

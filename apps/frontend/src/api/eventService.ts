@@ -91,4 +91,9 @@ export const EventService = {
         const { data } = await api.get(`/events/${eventId}/problems`);
         return data.result;
     },
+
+    getEventRules: async (eventId: string) => {
+        const { data } = await api.get(`/events/${eventId}/rules`);
+        return data.result;
+    },
 };

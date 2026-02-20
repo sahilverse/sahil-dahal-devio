@@ -15,6 +15,7 @@ import {
     ExternalLink,
     Clock,
     ShieldAlert,
+    ShieldCheck,
     Star,
     Share2,
     Info,
@@ -47,6 +48,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
     const { data: prizes, isLoading: prizesLoading } = useQuery({
         queryKey: ["eventPrizes", event?.id],
         queryFn: () => EventService.getEventPrizes(event.id),
+        enabled: !!event?.id,
+    });
+
+    const { data: rules, isLoading: rulesLoading } = useQuery({
+        queryKey: ["eventRules", event?.id],
+        queryFn: () => EventService.getEventRules(event.id),
         enabled: !!event?.id,
     });
 
@@ -161,6 +168,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                     <Tabs defaultValue="about" className="w-full">
                         <TabsList className="bg-muted/50 p-1 w-full justify-start overflow-x-auto scrollbar-none gap-2 h-12 rounded-xl">
                             <TabsTrigger value="about" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">About</TabsTrigger>
+                            <TabsTrigger value="rules" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">Rules</TabsTrigger>
                             {event.type === "CONTEST" && (
                                 <TabsTrigger value="problems" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">Problems</TabsTrigger>
                             )}
@@ -171,6 +179,39 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                         <TabsContent value="about" className="mt-6">
                             <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:text-muted-foreground">
                                 <MarkdownContent content={event.description} />
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="rules" className="mt-6">
+                            <div className="space-y-4">
+                                {rulesLoading ? (
+                                    <div className="space-y-3">
+                                        <Skeleton className="h-12 w-full rounded-xl" />
+                                        <Skeleton className="h-12 w-full rounded-xl" />
+                                        <Skeleton className="h-12 w-full rounded-xl" />
+                                    </div>
+                                ) : rules?.length > 0 ? (
+                                    <div className="bg-card border border-border/50 rounded-2xl overflow-hidden">
+                                        <div className="bg-muted/30 p-4 border-b border-border/50 flex items-center gap-2">
+                                            <ShieldCheck className="w-5 h-5 text-brand-primary" />
+                                            <h3 className="font-bold">Official Event Rules</h3>
+                                        </div>
+                                        <div className="divide-y divide-border/50">
+                                            {rules.map((rule: string, index: number) => (
+                                                <div key={index} className="p-4 flex gap-4 items-start hover:bg-muted/10 transition-colors">
+                                                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold flex items-center justify-center">
+                                                        {index + 1}
+                                                    </span>
+                                                    <p className="text-sm text-foreground/80 leading-relaxed pt-0.5">{rule}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="py-10 text-center bg-muted/20 rounded-2xl border border-dashed text-muted-foreground font-medium">
+                                        No specific rules have been listed for this event.
+                                    </div>
+                                )}
                             </div>
                         </TabsContent>
 
@@ -323,16 +364,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                                 )}
                                 {event.registrationDeadline && (
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground flex items-center gap-2">
-                                            <Calendar className="w-3.5 h-3.5" /> Reg. Closes
+                                        <span className="text-muted-foreground flex items-center gap-2 whitespace-nowrap shrink-0">
+                                            <Calendar className="w-3.5 h-3.5" /> Deadline
                                         </span>
-                                        <span className={`font-medium ${new Date() > new Date(event.registrationDeadline) ? "text-destructive" : "text-foreground"}`}>
+                                        <span className={`font-medium text-right ${new Date() > new Date(event.registrationDeadline) ? "text-destructive" : "text-foreground"}`}>
                                             {format(new Date(event.registrationDeadline), "MMM d, h:mm a")}
                                         </span>
                                     </div>
                                 )}
                                 {event.externalUrl && (
-                                    <Link href={event.externalUrl} target="_blank">
+                                    <Link href={event.externalUrl} target="_blank" rel="noopener noreferrer">
                                         <Button variant="link" className="px-0 h-auto text-primary text-sm flex items-center gap-2">
                                             <ExternalLink className="w-3.5 h-3.5" /> Official Website
                                         </Button>
