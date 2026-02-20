@@ -9,8 +9,6 @@ export class EventSocketHandler implements ISocketHandler {
     public setup(io: Server, subClient?: Redis): void {
         const eventNamespace = io.of("/events");
 
-        // Note: No auth middleware applied here as per user request
-
         eventNamespace.on("connection", (socket: Socket) => {
             logger.info(`Event socket connected: ${socket.id}`);
 
