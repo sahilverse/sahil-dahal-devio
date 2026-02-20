@@ -96,6 +96,7 @@ export const TYPES = {
     EventService: Symbol.for("EventService"),
     EventController: Symbol.for("EventController"),
     EventGuard: Symbol.for("EventGuard"),
+    EventSocketHandler: Symbol.for("EventSocketHandler"),
 };
 
 export * from "./jwt";

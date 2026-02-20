@@ -1,7 +1,10 @@
 "use client";
 
-import React, { use } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { use, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, useRouter } from "next/navigation";
+import { io } from "socket.io-client";
+import { SOCKET_URL } from "@/lib/constants";
 import { EventService } from "@/api/eventService";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -33,6 +36,19 @@ import ManageEventProblems from "@/components/events/ManageEventProblems";
 
 export default function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    const [activeTab, setActiveTab] = useState<string>("about");
+
+    // Initialize tab from URL
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
 
     const { data: event, isLoading, error, refetch } = useQuery({
         queryKey: ["event", slug],
@@ -62,6 +78,35 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
         queryFn: () => EventService.getEventProblems(event.id),
         enabled: !!event?.id,
     });
+
+    // Real-time Leaderboard Socket
+    useEffect(() => {
+        if (!event?.id) return;
+
+        const eventSocket = io(`${SOCKET_URL}/events`, {
+            transports: ["websocket"],
+        });
+
+        eventSocket.on("connect", () => {
+            eventSocket.emit("join_event", event.id);
+        });
+
+        eventSocket.on("leaderboard_updated", () => {
+            queryClient.invalidateQueries({ queryKey: ["leaderboard", event.id] });
+        });
+
+        return () => {
+            eventSocket.emit("leave_event", event.id);
+            eventSocket.disconnect();
+        };
+    }, [event?.id, queryClient]);
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", value);
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
 
     if (isLoading) {
         return (
@@ -165,7 +210,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                         </div>
                     </div>
 
-                    <Tabs defaultValue="about" className="w-full">
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                         <TabsList className="bg-muted/50 p-1 w-full justify-start overflow-x-auto scrollbar-none gap-2 h-12 rounded-xl">
                             <TabsTrigger value="about" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">About</TabsTrigger>
                             <TabsTrigger value="rules" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">Rules</TabsTrigger>

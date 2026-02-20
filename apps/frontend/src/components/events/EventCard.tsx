@@ -92,11 +92,27 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </CardContent>
 
             <CardFooter className="p-4 pt-0">
-                <Link href={`/events/${event.slug || event.id}`} className="w-full">
-                    <Button variant={isOngoing ? "default" : "outline"} className="w-full font-semibold">
-                        {isOngoing ? "View Live" : isCompleted ? "View Results" : "Learn More"}
-                    </Button>
-                </Link>
+                {(() => {
+                    const isParticipant = event.userParticipation !== undefined;
+                    let href = `/events/${event.slug || event.id}`;
+                    let label = "Learn More";
+
+                    if (isOngoing) {
+                        label = "View Live";
+                        href += isParticipant ? "?tab=problems" : "?tab=about";
+                    } else if (isCompleted) {
+                        label = "View Results";
+                        href += "?tab=leaderboard";
+                    }
+
+                    return (
+                        <Link href={href} className="w-full">
+                            <Button variant={isOngoing ? "default" : "outline"} className="w-full font-semibold">
+                                {label}
+                            </Button>
+                        </Link>
+                    );
+                })()}
             </CardFooter>
         </Card>
     );

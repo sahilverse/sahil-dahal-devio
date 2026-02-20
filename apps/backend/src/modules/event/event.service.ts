@@ -20,6 +20,7 @@ import slugify from "slugify";
 import { StorageService } from "../storage/storage.service";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
+import { SocketService } from "../socket";
 
 @injectable()
 export class EventService {
@@ -30,6 +31,7 @@ export class EventService {
         @inject(TYPES.AuraService) private auraService: AuraService,
         @inject(TYPES.CommunityRepository) private communityRepository: CommunityRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
+        @inject(TYPES.SocketService) private socketService: SocketService,
     ) { }
 
     async createEvent(userId: string, data: CreateEventInput) {
@@ -186,15 +188,23 @@ export class EventService {
         const event = await this.getEventById(id, currentUserId);
         const problems = await this.eventRepository.findProblems(event.id);
 
-        if (event.type === EventType.CONTEST && !event.canEdit) {
+        if (!event.canEdit && !event.isApproved) {
             const now = new Date();
-            const startsAt = new Date(event.startsAt);
-            if (now < startsAt) {
+            if (now < new Date(event.startsAt)) {
                 return [];
             }
         }
 
         return problems;
+    }
+
+    public emitLeaderboardUpdate(eventId: string) {
+        try {
+            this.socketService.io.of("/events").to(`event:${eventId}`).emit("leaderboard_updated");
+            logger.debug(`Broadcasted leaderboard_updated for event: ${eventId}`);
+        } catch (error: any) {
+            logger.error(`Failed to emit leaderboard update: ${error.message}`);
+        }
     }
 
     async updateEvent(id: string, userId: string, data: UpdateEventInput) {

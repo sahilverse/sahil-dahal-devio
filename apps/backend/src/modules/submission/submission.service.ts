@@ -13,6 +13,7 @@ import { CipherService } from "../cipher";
 import { MINIO_BUCKET_PROBLEMS } from "../../config/constants";
 import { logger, ApiError, normalizeContent } from "../../utils";
 import { EventRepository } from "../event/event.repository";
+import { EventService } from "../event/event.service";
 
 type ProblemWithRelations = PrismaProblem & { testCases: TestCase[] };
 
@@ -27,7 +28,8 @@ export class SubmissionService {
         @inject(TYPES.Judge0Service) private judge0Service: Judge0Service,
         @inject(TYPES.ActivityService) private activityService: ActivityService,
         @inject(TYPES.CipherService) private cipherService: CipherService,
-        @inject(TYPES.EventRepository) private eventRepository: EventRepository
+        @inject(TYPES.EventRepository) private eventRepository: EventRepository,
+        @inject(TYPES.EventService) private eventService: EventService
     ) { }
 
     async submit(
@@ -127,6 +129,7 @@ export class SubmissionService {
 
             if (scoreDelta > 0) {
                 await this.submissionRepository.updateEventScore(userId, eventId, scoreDelta);
+                this.eventService.emitLeaderboardUpdate(eventId);
             }
         }
 
