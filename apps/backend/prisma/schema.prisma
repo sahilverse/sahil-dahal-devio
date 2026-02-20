@@ -129,6 +129,7 @@ model User {
   savePosts              SavePost[]
   pinnedPosts            PinnedPost[]
   problemDrafts          UserProblemDraft[]
+  companyMembers         CompanyMember[]
 
   @@index([username])
   @@index([email])
@@ -1516,6 +1517,35 @@ model UserSkill {
   @@index([skillId])
 }
 
+enum CompanyVerificationTier {
+  UNVERIFIED
+  DOMAIN_VERIFIED
+  OFFICIAL
+}
+
+enum CompanyRole {
+  OWNER
+  RECRUITER
+  MEMBER
+}
+
+model CompanyMember {
+  id        String      @id @default(cuid())
+  companyId String      @map("company_id")
+  userId    String      @map("user_id")
+  role      CompanyRole @default(MEMBER)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@index([userId])
+}
+
 model Company {
   id         String  @id @default(cuid())
   name       String  @unique
@@ -1527,13 +1557,16 @@ model Company {
   location    String?
   size        String?
 
-  isVerified Boolean @default(false) @map("is_verified")
+  isVerified       Boolean                 @default(false) @map("is_verified")
+  verificationTier CompanyVerificationTier @default(UNVERIFIED) @map("verification_tier")
+  verifiedDomain   String?                 @map("verified_domain")
 
   ownerId String @map("owner_id")
   owner   User   @relation("company_owner", fields: [ownerId], references: [id])
 
   jobs        Job[]
   experiences UserExperience[]
+  members     CompanyMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
