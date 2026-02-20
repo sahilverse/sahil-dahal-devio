@@ -219,6 +219,51 @@ router.get(
 
 /**
  * @swagger
+ * /events/{id}/prizes:
+ *   get:
+ *     summary: Get event prizes
+ *     tags: [Event]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prizes fetched successfully
+ */
+router.get(
+    "/:id/prizes",
+    eventController.getEventPrizes
+);
+
+/**
+ * @swagger
+ * /events/{id}/problems:
+ *   get:
+ *     summary: Get event problems
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Problems fetched successfully
+ */
+router.get(
+    "/:id/problems",
+    authMiddleware.extractUser,
+    eventController.getEventProblems
+);
+
+/**
+ * @swagger
  * /events/{id}:
  *   patch:
  *     summary: Update an event

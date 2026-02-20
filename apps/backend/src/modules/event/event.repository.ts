@@ -47,30 +47,31 @@ export class EventRepository {
     async findById(id: string, currentUserId?: string): Promise<any | null> {
         return this.prisma.event.findUnique({
             where: { id },
-            include: {
-                ...this.getEventInclude(currentUserId),
-                prizes: true,
-                problems: {
-                    include: {
-                        problem: true,
-                    },
-                },
-            },
+            include: this.getEventInclude(currentUserId),
         });
     }
 
     async findBySlug(slug: string, currentUserId?: string): Promise<any | null> {
         return this.prisma.event.findUnique({
             where: { slug },
+            include: this.getEventInclude(currentUserId),
+        });
+    }
+
+    async findProblems(eventId: string) {
+        return this.prisma.eventProblem.findMany({
+            where: { eventId },
             include: {
-                ...this.getEventInclude(currentUserId),
-                prizes: true,
-                problems: {
-                    include: {
-                        problem: true,
-                    },
-                },
+                problem: true,
             },
+            orderBy: { order: "asc" },
+        });
+    }
+
+    async findPrizes(eventId: string) {
+        return this.prisma.eventPrize.findMany({
+            where: { eventId },
+            orderBy: { rankFrom: "asc" },
         });
     }
 
@@ -83,8 +84,11 @@ export class EventRepository {
         currentUserId?: string;
         isApproved?: boolean;
         visibility?: EventVisibility;
+        startsAt?: Prisma.DateTimeFilter;
+        endsAt?: Prisma.DateTimeFilter;
+        OR?: Prisma.EventWhereInput[];
     }): Promise<Event[]> {
-        const { cursor, limit, status, type, communityId, currentUserId, isApproved, visibility } = params;
+        const { cursor, limit, status, type, communityId, currentUserId, isApproved, visibility, startsAt, endsAt, OR } = params;
 
         return this.prisma.event.findMany({
             take: limit + 1,
@@ -96,6 +100,9 @@ export class EventRepository {
                 ...(communityId && { communityId }),
                 ...(isApproved !== undefined && { isApproved }),
                 ...(visibility && { visibility }),
+                ...(startsAt && { startsAt }),
+                ...(endsAt && { endsAt }),
+                ...(OR && { OR }),
             },
             orderBy: { startsAt: "asc" },
             include: this.getEventInclude(currentUserId),
@@ -215,6 +222,25 @@ export class EventRepository {
                 },
             },
             data: { order },
+        });
+    }
+
+    async findActiveEventsForProblem(problemId: string): Promise<any[]> {
+        const now = new Date();
+        return this.prisma.event.findMany({
+            where: {
+                problems: {
+                    some: { problemId }
+                },
+                startsAt: { lte: now },
+                endsAt: { gte: now },
+                status: EventStatus.ONGOING,
+            },
+            select: {
+                id: true,
+                title: true,
+                type: true,
+            }
         });
     }
 }

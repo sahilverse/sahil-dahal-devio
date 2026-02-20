@@ -3,11 +3,13 @@
 import { useFetchProblem } from "@/hooks/useProblems";
 import { ProblemWorkspace } from "@/components/problems/ProblemWorkspace";
 import { Loader2, AlertCircle } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function ProblemPage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const slug = params.slug as string;
+    const eventId = searchParams.get("eventId") || undefined;
 
     const { data: problem, isLoading, error } = useFetchProblem(slug);
 
@@ -40,5 +42,5 @@ export default function ProblemPage() {
         );
     }
 
-    return <ProblemWorkspace problem={problem} />;
+    return <ProblemWorkspace problem={problem} eventId={eventId} />;
 }

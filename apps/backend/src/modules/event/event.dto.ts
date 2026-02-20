@@ -101,14 +101,6 @@ export class EventResponseDto {
     @Expose()
     @Type(() => EventCommunityDto)
     community?: EventCommunityDto;
-
-    @Expose()
-    @Type(() => EventPrizeDto)
-    prizes?: EventPrizeDto[];
-
-    @Expose()
-    @Type(() => EventProblemDto)
-    problems?: EventProblemDto[];
 }
 
 @Exclude()

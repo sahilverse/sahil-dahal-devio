@@ -12,7 +12,7 @@ import { PostRepository } from "../modules/post/post.repository";
 import { PostService } from "../modules/post/post.service";
 import { PostController } from "../modules/post/post.controller";
 import { prisma } from "./prisma";
-import { AuthMiddleware } from "../middlewares";
+import { AuthMiddleware, EventGuard } from "../middlewares";
 import type { Transporter } from "nodemailer";
 import { MailService } from "../modules/mail";
 import { VerificationRepository, VerificationService } from "../modules/verification";
@@ -136,8 +136,10 @@ container.bind<ConversationService>(TYPES.ConversationService).to(ConversationSe
 container.bind<ConversationController>(TYPES.ConversationController).to(ConversationController).inSingletonScope();
 container.bind<ISocketHandler>(TYPES.SocketHandler).to(ConversationSocketHandler).inSingletonScope();
 
+container.bind<EventController>(TYPES.EventController).to(EventController).inSingletonScope();
+container.bind<EventGuard>(TYPES.EventGuard).to(EventGuard).inSingletonScope();
 container.bind<EventRepository>(TYPES.EventRepository).to(EventRepository).inSingletonScope();
 container.bind<EventService>(TYPES.EventService).to(EventService).inSingletonScope();
-container.bind<EventController>(TYPES.EventController).to(EventController).inSingletonScope();
+
 
 export { container };

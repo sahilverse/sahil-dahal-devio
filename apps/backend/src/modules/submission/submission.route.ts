@@ -2,12 +2,13 @@ import { Router } from "express";
 import { SubmissionController } from "./submission.controller";
 import { container } from "../../config/inversify";
 import { TYPES } from "../../types";
-import { AuthMiddleware, validateQuery, validateRequest } from "../../middlewares";
-import { RunSubmissionSchema, SubmitSubmissionSchema, GetSubmissionsSchema } from "@devio/zod-utils";
+import { AuthMiddleware, validateQuery, validateRequest, EventGuard } from "../../middlewares";
+import { RunSubmissionSchema, SubmitSubmissionSchema, GetSubmissionsSchema, EventSubmitSubmissionSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const controller = container.get<SubmissionController>(TYPES.SubmissionController);
 const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
+const eventGuard = container.get<EventGuard>(TYPES.EventGuard);
 
 /**
  * @swagger
@@ -162,5 +163,49 @@ router.post("/submit", authMiddleware.guard, authMiddleware.verifiedOnly, valida
  *         description: Submissions retrieved
  */
 router.get("/:slug", authMiddleware.guard, validateQuery(GetSubmissionsSchema), controller.list);
+
+/**
+ * @swagger
+ * /submissions/events/{id}/problems/{slug}/submit:
+ *   post:
+ *     summary: Submit a solution for an event/contest
+ *     tags: [Submissions]
+ *     security:
+ *       - BearerAuth: []
+ *     description: Submit code for a specific contest problem. Enforces registration and contest timing. No general bounties awarded.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Event ID
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         description: Problem slug
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code, language]
+ *             properties:
+ *               code:
+ *                 type: string
+ *               language:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Event submission processed
+ */
+router.post(
+    "/events/:id/problems/:slug/submit",
+    authMiddleware.guard,
+    authMiddleware.verifiedOnly,
+    eventGuard.participantOnly,
+    eventGuard.ongoingOnly,
+    validateRequest(EventSubmitSubmissionSchema),
+    controller.submitToEvent
+);
 
 export default router;

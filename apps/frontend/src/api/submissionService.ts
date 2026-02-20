@@ -12,6 +12,11 @@ export const submissionService = {
         return res.result;
     },
 
+    submitToEvent: async (eventId: string, slug: string, data: { code: string; language: string }) => {
+        const { data: res } = await api.post<{ result: Submission }>(`/submissions/events/${eventId}/problems/${slug}/submit`, data);
+        return res.result;
+    },
+
     getSubmissions: async (slug: string, params: { cursor?: string; limit?: number } = {}) => {
         const { data: res } = await api.get<{ result: { items: Submission[]; nextCursor: string | null } }>(
             `/submissions/${slug}`,

@@ -31,6 +31,7 @@ import {
     Loader2,
     Trophy,
     ShieldCheck,
+    Users2,
 } from "lucide-react";
 import { EventService } from "@/api/eventService";
 import { toast } from "sonner";
@@ -39,6 +40,10 @@ import EventCommunitySelector from "./EventCommunitySelector";
 import RulesSection from "./RulesSection";
 import PrizesSection from "./PrizesSection";
 import EventImageUpload from "./EventImageUpload";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { Switch } from "@/components/ui/switch";
 
 interface CreateEventFormProps {
     initialCommunityId?: string;
@@ -53,9 +58,18 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isImageRemoved, setIsImageRemoved] = useState(false);
 
+    const { user } = useSelector((state: RootState) => state.auth);
+    const { openLogin } = useAuthModal();
+
+    React.useEffect(() => {
+        if (!user && !isEditing) {
+            openLogin();
+        }
+    }, [user, openLogin, isEditing]);
+
     const form = useForm<CreateEventInput>({
         resolver: zodResolver(createEventSchema) as any,
-        mode: "all",
+        mode: "onBlur",
         defaultValues: initialData ? {
             ...initialData,
             communityId: initialData.communityId || initialData.community?.id || initialCommunityId || "",
@@ -64,8 +78,9 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
             registrationDeadline: initialData.registrationDeadline ? new Date(initialData.registrationDeadline).toISOString().slice(0, 16) : "",
             type: initialData.type as any,
             status: initialData.status as any,
+            requiresTeam: initialData.requiresTeam ?? false,
+            teamSize: initialData.teamSize ?? 2,
             maxParticipants: initialData.maxParticipants ?? "",
-            teamSize: initialData.teamSize ?? undefined,
             externalUrl: initialData.externalUrl ?? "",
             imageUrl: initialData.imageUrl ?? "",
             visibility: initialData.visibility ?? EventVisibility.PUBLIC,
@@ -81,8 +96,10 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
             entryCipherCost: 0,
             rules: [],
             prizes: [],
-            status: EventStatus.DRAFT,
+            status: EventStatus.PUBLISHED,
             visibility: EventVisibility.PUBLIC,
+            requiresTeam: false,
+            teamSize: 2,
         },
     });
 
@@ -201,11 +218,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                     </div>
                                                 </div>
                                                 <FormMessage className="text-[10px] font-bold text-destructive" />
-                                                {form.formState.errors.title && (
-                                                    <p className="text-[10px] font-bold text-destructive mt-1">
-                                                        {form.formState.errors.title.message}
-                                                    </p>
-                                                )}
                                             </FormItem>
                                         )}
                                     />
@@ -231,11 +243,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                     </SelectContent>
                                                 </Select>
                                                 <FormMessage className="text-[10px] font-bold text-destructive" />
-                                                {form.formState.errors.type && (
-                                                    <p className="text-[10px] font-bold text-destructive mt-1">
-                                                        {form.formState.errors.type.message}
-                                                    </p>
-                                                )}
                                             </FormItem>
                                         )}
                                     />
@@ -248,12 +255,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hosting In</FormLabel>
                                                 <EventCommunitySelector value={field.value} onChange={field.onChange} />
                                                 <FormMessage className="text-[10px] font-bold text-destructive" />
-                                                {/* Fallback error display */}
-                                                {form.formState.errors.communityId && (
-                                                    <p className="text-[10px] font-bold text-destructive mt-1">
-                                                        {form.formState.errors.communityId.message || "Please select a community"}
-                                                    </p>
-                                                )}
                                             </FormItem>
                                         )}
                                     />
@@ -281,11 +282,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 </div>
                                             </div>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                            {form.formState.errors.description && (
-                                                <p className="text-[10px] font-bold text-destructive mt-1">
-                                                    {form.formState.errors.description.message}
-                                                </p>
-                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -312,11 +308,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                             </FormControl>
                                             <FormDescription className="text-[10px]">Leave empty for unlimited</FormDescription>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                            {form.formState.errors.maxParticipants && (
-                                                <p className="text-[10px] font-bold text-destructive mt-1">
-                                                    {form.formState.errors.maxParticipants.message}
-                                                </p>
-                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -331,11 +322,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 <Input type="number" className="h-11 border-border/50 focus:border-brand-primary rounded-xl" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} />
                                             </FormControl>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                            {form.formState.errors.minAuraPoints && (
-                                                <p className="text-[10px] font-bold text-destructive mt-1">
-                                                    {form.formState.errors.minAuraPoints.message}
-                                                </p>
-                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -350,14 +336,68 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 <Input type="number" className="h-11 border-border/50 focus:border-brand-primary rounded-xl" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} />
                                             </FormControl>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                            {form.formState.errors.entryCipherCost && (
-                                                <p className="text-[10px] font-bold text-destructive mt-1">
-                                                    {form.formState.errors.entryCipherCost.message}
-                                                </p>
-                                            )}
                                         </FormItem>
                                     )}
                                 />
+                            </div>
+
+                            <div className="p-4 bg-muted/20 border border-border/50 rounded-2xl space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <Users2 className="w-4 h-4 text-brand-primary" />
+                                            <FormLabel className="text-sm font-bold">Team Registration</FormLabel>
+                                        </div>
+                                        <FormDescription className="text-xs">Require participants to join as teams rather than individuals.</FormDescription>
+                                    </div>
+                                    <FormField
+                                        control={form.control as any}
+                                        name="requiresTeam"
+                                        render={({ field }) => (
+                                            <FormControl>
+                                                <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                        )}
+                                    />
+                                </div>
+
+                                {form.watch("requiresTeam") && (
+                                    <div className="pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <FormField
+                                            control={form.control as any}
+                                            name="teamSize"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Required Team Size</FormLabel>
+                                                        <span className="text-xs font-black text-brand-primary">{field.value || 2} Members</span>
+                                                    </div>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="range"
+                                                            min="2"
+                                                            max="10"
+                                                            step="1"
+                                                            className="h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                                                            {...field}
+                                                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground/50 px-1">
+                                                        <span>2</span>
+                                                        <span>4</span>
+                                                        <span>6</span>
+                                                        <span>8</span>
+                                                        <span>10</span>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <RulesSection control={form.control} />
@@ -405,11 +445,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                            {form.formState.errors.startsAt && (
-                                                <p className="text-[10px] font-bold text-destructive mt-1">
-                                                    {form.formState.errors.startsAt.message}
-                                                </p>
-                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -426,11 +461,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                            {form.formState.errors.endsAt && (
-                                                <p className="text-[10px] font-bold text-destructive mt-1">
-                                                    {form.formState.errors.endsAt.message}
-                                                </p>
-                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -447,30 +477,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-[10px] font-bold text-destructive" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control as any}
-                                    name="status"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Event Status</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger className="h-12 border-border/50 focus:border-brand-primary rounded-xl cursor-pointer shadow-none">
-                                                        <SelectValue placeholder="Select status" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent className="rounded-xl border-border/50 shadow-xl">
-                                                    {Object.values(EventStatus).map((status) => (
-                                                        <SelectItem key={status} value={status} className="cursor-pointer focus:bg-brand-primary/10 rounded-md m-1 font-medium italic">
-                                                            {status}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
                                         </FormItem>
                                     )}
                                 />
@@ -550,6 +556,6 @@ export default function CreateEventForm({ initialCommunityId, initialData, isEdi
                     </div>
                 </form>
             </Form>
-        </div >
+        </div>
     );
 }

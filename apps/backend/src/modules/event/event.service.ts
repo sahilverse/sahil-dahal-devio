@@ -78,20 +78,70 @@ export class EventService {
         currentUserId?: string;
         visibility?: EventVisibility;
     }) {
-        const events = await this.eventRepository.findMany({
+        const now = new Date();
+        const queryParams: any = {
             ...params,
             limit: params.limit || 10,
-            isApproved: params.status === EventStatus.PUBLISHED ? true : false,
+            isApproved: true,
             visibility: params.visibility ?? EventVisibility.PUBLIC,
-        });
+        };
+
+        // Time-aware filtering for exploration tabs
+        if (params.status === EventStatus.PUBLISHED) {
+            queryParams.status = EventStatus.PUBLISHED;
+            queryParams.startsAt = { gt: now };
+        } else if (params.status === EventStatus.ONGOING) {
+            delete queryParams.status;
+            queryParams.OR = [
+                { status: EventStatus.ONGOING },
+                {
+                    status: EventStatus.PUBLISHED,
+                    startsAt: { lte: now },
+                    endsAt: { gte: now }
+                }
+            ];
+        } else if (params.status === EventStatus.COMPLETED) {
+            delete queryParams.status;
+            queryParams.OR = [
+                { status: EventStatus.COMPLETED },
+                {
+                    status: { in: [EventStatus.PUBLISHED, EventStatus.ONGOING] },
+                    endsAt: { lt: now }
+                }
+            ];
+        }
+
+        const events = await this.eventRepository.findMany(queryParams);
 
         let nextCursor: string | null = null;
-        if (events.length > params.limit) {
+        if (events.length > queryParams.limit) {
             const nextItem = events.pop();
             nextCursor = nextItem?.id || null;
         }
 
-        return { events, nextCursor };
+        const mappedEvents = events.map(event => this.withComputedStatus(event));
+
+        return { events: mappedEvents, nextCursor };
+    }
+
+    private withComputedStatus(event: any) {
+        const now = new Date();
+        let computedStatus = event.status;
+
+        if (event.status === EventStatus.PUBLISHED || event.status === EventStatus.ONGOING) {
+            const startsAt = new Date(event.startsAt);
+            const endsAt = new Date(event.endsAt);
+
+            if (now < startsAt) {
+                computedStatus = EventStatus.PUBLISHED;
+            } else if (now >= startsAt && now <= endsAt) {
+                computedStatus = EventStatus.ONGOING;
+            } else {
+                computedStatus = EventStatus.COMPLETED;
+            }
+        }
+
+        return { ...event, status: computedStatus };
     }
 
     async getEventById(idOrSlug: string, currentUserId?: string) {
@@ -107,14 +157,41 @@ export class EventService {
 
         if (currentUserId) {
             const isCreator = event.createdById === currentUserId;
+            const participant = await this.eventRepository.findParticipant(event.id, currentUserId);
+            const isParticipant = !!participant;
+
             let isModerator = false;
-            if (!isCreator && event.communityId) {
+            // A participant cannot be a moderator for the same event
+            if (!isCreator && !isParticipant && event.communityId) {
                 isModerator = await this.communityRepository.isModeratorOrCreator(event.communityId, currentUserId);
             }
-            (event as any).canEdit = isCreator || isModerator;
+
+            (event as any).isParticipant = isParticipant;
+            (event as any).participant = participant;
+            (event as any).canEdit = (isCreator || isModerator) && !isParticipant;
         }
 
-        return event;
+        return this.withComputedStatus(event);
+    }
+
+    async getEventPrizes(id: string) {
+        return this.eventRepository.findPrizes(id);
+    }
+
+    async getEventProblems(id: string, currentUserId?: string) {
+        const event = await this.getEventById(id, currentUserId);
+        const problems = await this.eventRepository.findProblems(event.id);
+
+        // Reveal Logic for CONTEST type
+        if (event.type === EventType.CONTEST && !event.canEdit) {
+            const now = new Date();
+            const startsAt = new Date(event.startsAt);
+            if (now < startsAt) {
+                return [];
+            }
+        }
+
+        return problems;
     }
 
     async updateEvent(id: string, userId: string, data: UpdateEventInput) {
@@ -182,6 +259,10 @@ export class EventService {
 
         if (event.status !== EventStatus.PUBLISHED && event.status !== EventStatus.ONGOING) {
             throw new ApiError("Registration is not open for this event", StatusCodes.BAD_REQUEST);
+        }
+
+        if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) {
+            throw new ApiError("Registration deadline has passed", StatusCodes.BAD_REQUEST);
         }
 
         if (new Date() > new Date(event.endsAt)) {
@@ -305,7 +386,7 @@ export class EventService {
         try {
             await this.eventRepository.addProblem(eventId, problemId, points, order);
         } catch (error: any) {
-            if (error.code === 'P2002') { 
+            if (error.code === 'P2002') {
                 throw new ApiError("Problem already added to this event", StatusCodes.CONFLICT);
             }
             throw error;
@@ -322,7 +403,7 @@ export class EventService {
         try {
             await this.eventRepository.removeProblem(eventId, problemId);
         } catch (error: any) {
-            if (error.code === 'P2025') { 
+            if (error.code === 'P2025') {
                 throw new ApiError("Problem not found in this event", StatusCodes.NOT_FOUND);
             }
             throw error;
@@ -330,6 +411,12 @@ export class EventService {
     }
 
     private async verifyEventModification(event: any, userId: string) {
+        // If the user is a participant, they cannot modify the event even if they are a moderator
+        const participant = await this.eventRepository.findParticipant(event.id, userId);
+        if (participant) {
+            throw new ApiError("Participants cannot modify the event", StatusCodes.FORBIDDEN);
+        }
+
         if (event.createdById !== userId) {
             if (event.communityId) {
                 const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);

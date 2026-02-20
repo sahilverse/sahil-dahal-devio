@@ -13,6 +13,11 @@ export const SubmitSubmissionSchema = z.object({
     eventId: z.uuid().optional().nullable(),
 });
 
+export const EventSubmitSubmissionSchema = z.object({
+    language: z.string().min(1, "Language is required"),
+    code: z.string().min(1, "Code content is required"),
+});
+
 export const GetSubmissionsSchema = z.object({
     cursor: z.string().optional(),
     limit: z.preprocess((val) => (val ? parseInt(val as string, 10) : 10), z.number().min(1).max(100)).optional(),

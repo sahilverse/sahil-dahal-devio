@@ -46,9 +46,10 @@ const storage: LayoutStorage = {
 
 interface ProblemWorkspaceProps {
     problem: Problem;
+    eventId?: string;
 }
 
-export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
+export function ProblemWorkspace({ problem, eventId }: ProblemWorkspaceProps) {
     const { user } = useAppSelector((state) => state.auth);
     const { openLogin } = useAuthModal();
 
@@ -159,7 +160,7 @@ export function ProblemWorkspace({ problem }: ProblemWorkspaceProps) {
         setConsoleTab("result");
         expandConsoleIfNeeded();
 
-        submitMutation.mutate({ slug: problem.slug, code, language });
+        submitMutation.mutate({ slug: problem.slug, code, language, eventId });
     };
 
     const handleRunRef = useRef(handleRun);

@@ -81,4 +81,14 @@ export const EventService = {
     removeEventProblem: async (eventId: string, problemId: string): Promise<void> => {
         await api.delete(`/events/${eventId}/problems/${problemId}`);
     },
+
+    getEventPrizes: async (eventId: string) => {
+        const { data } = await api.get(`/events/${eventId}/prizes`);
+        return data.result;
+    },
+
+    getEventProblems: async (eventId: string) => {
+        const { data } = await api.get(`/events/${eventId}/problems`);
+        return data.result;
+    },
 };

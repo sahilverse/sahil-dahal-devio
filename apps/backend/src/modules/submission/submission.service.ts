@@ -12,6 +12,7 @@ import { ActivityService } from "../activity/activity.service";
 import { CipherService } from "../cipher";
 import { MINIO_BUCKET_PROBLEMS } from "../../config/constants";
 import { logger, ApiError, normalizeContent } from "../../utils";
+import { EventRepository } from "../event/event.repository";
 
 type ProblemWithRelations = PrismaProblem & { testCases: TestCase[] };
 
@@ -25,10 +26,19 @@ export class SubmissionService {
         @inject(TYPES.StorageService) private storageService: StorageService,
         @inject(TYPES.Judge0Service) private judge0Service: Judge0Service,
         @inject(TYPES.ActivityService) private activityService: ActivityService,
-        @inject(TYPES.CipherService) private cipherService: CipherService
+        @inject(TYPES.CipherService) private cipherService: CipherService,
+        @inject(TYPES.EventRepository) private eventRepository: EventRepository
     ) { }
 
-    async submit(slug: string, code: string, language: string, userId: string, eventId?: string, timezoneOffset?: number) {
+    async submit(
+        slug: string,
+        code: string,
+        language: string,
+        userId: string,
+        options: { eventId?: string; awardBounty: boolean; timezoneOffset?: number }
+    ) {
+        const { eventId, awardBounty, timezoneOffset } = options;
+
         // 1. Fetch Full Problem (to get ALL test cases)
         const problem = await this.problemRepository.findBySlug(slug) as unknown as ProblemWithRelations;
         if (!problem) throw new ApiError("Problem not found", StatusCodes.NOT_FOUND);
@@ -125,8 +135,8 @@ export class SubmissionService {
 
         await this.activityService.logActivity(userId, activityType, timezoneOffset);
 
-        // 11. Award Cipher (Bounty) only on first solve
-        if (isFirstSolve && problem.cipherReward > 0) {
+        // 11. Award Cipher (Bounty) only on first solve AND if allowed (not an event solve)
+        if (awardBounty && isFirstSolve && problem.cipherReward > 0) {
             await this.cipherService.awardCipher(
                 userId,
                 problem.cipherReward,

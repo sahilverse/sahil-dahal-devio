@@ -44,6 +44,18 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
         enabled: !!event?.id,
     });
 
+    const { data: prizes, isLoading: prizesLoading } = useQuery({
+        queryKey: ["eventPrizes", event?.id],
+        queryFn: () => EventService.getEventPrizes(event.id),
+        enabled: !!event?.id,
+    });
+
+    const { data: problems, isLoading: problemsLoading, refetch: refetchProblems } = useQuery({
+        queryKey: ["eventProblems", event?.id],
+        queryFn: () => EventService.getEventProblems(event.id),
+        enabled: !!event?.id,
+    });
+
     if (isLoading) {
         return (
             <div className="space-y-8 animate-pulse lg:pr-50">
@@ -164,17 +176,22 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
 
                         <TabsContent value="prizes" className="mt-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {event.prizes?.length > 0 ? (
-                                    event.prizes.map((prize: any) => (
+                                {prizesLoading ? (
+                                    <div className="col-span-2 space-y-3">
+                                        <Skeleton className="h-24 w-full rounded-2xl" />
+                                        <Skeleton className="h-24 w-full rounded-2xl" />
+                                    </div>
+                                ) : prizes?.length > 0 ? (
+                                    prizes.map((prize: any) => (
                                         <div key={prize.id} className="p-6 bg-card border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                             <div className="flex items-center gap-4">
                                                 <div className="bg-yellow-500/10 p-4 rounded-2xl">
                                                     <Trophy className="w-8 h-8 text-yellow-500" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-bold">{prize.title}</h3>
+                                                    <h3 className="text-xl font-bold">{prize.prize}</h3>
                                                     <p className="text-sm text-muted-foreground">{prize.description}</p>
-                                                    {prize.prizeValue && <p className="text-primary font-bold mt-1">${prize.prizeValue}</p>}
+                                                    <p className="text-xs text-muted-foreground mt-1">Rank {prize.rankFrom}{prize.rankTo !== prize.rankFrom ? ` - ${prize.rankTo}` : ''}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -196,8 +213,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                                 {event.canEdit ? (
                                     <ManageEventProblems
                                         eventId={event.id}
-                                        currentProblems={event.problems || []}
-                                        onRefresh={() => refetch()}
+                                        currentProblems={problems || []}
+                                        onRefresh={() => refetchProblems()}
                                     />
                                 ) : (
                                     <div className="space-y-4">
@@ -206,9 +223,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                                             <p className="text-sm text-muted-foreground">Solve these challenges to earn points and climb the leaderboard.</p>
                                         </div>
                                         <div className="grid grid-cols-1 gap-4">
-                                            {event.problems?.length > 0 ? (
-                                                [...event.problems].sort((a: any, b: any) => (a.order || 0) - (b.order || 0)).map((ep: any, index: number) => (
-                                                    <Link key={ep.id || ep.problemId} href={`/p/${ep.problem?.slug}`}>
+                                            {problemsLoading ? (
+                                                <div className="space-y-3">
+                                                    <Skeleton className="h-16 w-full rounded-xl" />
+                                                    <Skeleton className="h-16 w-full rounded-xl" />
+                                                    <Skeleton className="h-16 w-full rounded-xl" />
+                                                </div>
+                                            ) : problems?.length > 0 ? (
+                                                [...problems].sort((a: any, b: any) => (a.order || 0) - (b.order || 0)).map((ep: any, index: number) => (
+                                                    <Link key={ep.id || ep.problemId} href={`/p/${ep.problem?.slug}?eventId=${event.id}`}>
                                                         <div className="p-4 bg-card border border-border/50 rounded-xl hover:shadow-md transition-all flex items-center justify-between group cursor-pointer">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-xs font-black text-muted-foreground group-hover:bg-brand-primary group-hover:text-white transition-colors">
@@ -227,8 +250,18 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                                                     </Link>
                                                 ))
                                             ) : (
-                                                <div className="py-20 text-center bg-muted/20 rounded-2xl border border-dashed text-muted-foreground font-medium">
-                                                    No problems added to this contest yet.
+                                                <div className="py-20 text-center bg-muted/20 rounded-2xl border border-dashed text-muted-foreground font-medium px-6">
+                                                    {new Date() < new Date(event.startsAt) ? (
+                                                        <div className="space-y-2">
+                                                            <div className="bg-brand-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                                <Clock className="w-6 h-6 text-brand-primary" />
+                                                            </div>
+                                                            <h4 className="text-foreground font-black tracking-tight">Problems Revealed at Start</h4>
+                                                            <p className="text-xs text-muted-foreground max-w-xs mx-auto">This contest is currently locked. Problems will automatically become available once the countdown reaches zero.</p>
+                                                        </div>
+                                                    ) : (
+                                                        "No problems added to this contest yet."
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -276,8 +309,28 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                                     <span className="text-muted-foreground flex items-center gap-2">
                                         <Users className="w-3.5 h-3.5" /> Team Size
                                     </span>
-                                    <span className="font-medium text-foreground">{event.requiresTeam ? `Max ${event.teamSize}` : "Solo"}</span>
+                                    <span className="font-medium text-foreground">{event.requiresTeam ? `${event.teamSize} Members` : "Solo"}</span>
                                 </div>
+                                {event.maxParticipants && (
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground flex items-center gap-2">
+                                            <LayoutList className="w-3.5 h-3.5" /> Free Slots
+                                        </span>
+                                        <span className="font-medium text-foreground">
+                                            {Math.max(0, event.maxParticipants - (event.participantCount || 0))} / {event.maxParticipants}
+                                        </span>
+                                    </div>
+                                )}
+                                {event.registrationDeadline && (
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground flex items-center gap-2">
+                                            <Calendar className="w-3.5 h-3.5" /> Reg. Closes
+                                        </span>
+                                        <span className={`font-medium ${new Date() > new Date(event.registrationDeadline) ? "text-destructive" : "text-foreground"}`}>
+                                            {format(new Date(event.registrationDeadline), "MMM d, h:mm a")}
+                                        </span>
+                                    </div>
+                                )}
                                 {event.externalUrl && (
                                     <Link href={event.externalUrl} target="_blank">
                                         <Button variant="link" className="px-0 h-auto text-primary text-sm flex items-center gap-2">

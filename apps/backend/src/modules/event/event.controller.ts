@@ -5,7 +5,7 @@ import { EventService } from "./event.service";
 import { asyncHandler, ResponseHandler } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { plainToInstance } from "class-transformer";
-import { EventResponseDto, GetEventsDto, EventParticipantDto } from "./event.dto";
+import { EventResponseDto, GetEventsDto, EventParticipantDto, EventPrizeDto, EventProblemDto } from "./event.dto";
 
 @injectable()
 export class EventController {
@@ -105,5 +105,20 @@ export class EventController {
 
         await this.eventService.removeEventProblem(id, userId, problemId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Problem removed from event successfully");
+    });
+
+    getEventPrizes = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params as { id: string };
+        const prizes = await this.eventService.getEventPrizes(id);
+        const result = plainToInstance(EventPrizeDto, prizes, { excludeExtraneousValues: true });
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Event prizes fetched successfully", result);
+    });
+
+    getEventProblems = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params as { id: string };
+        const currentUserId = req.user?.id;
+        const problems = await this.eventService.getEventProblems(id, currentUserId);
+        const result = plainToInstance(EventProblemDto, problems, { excludeExtraneousValues: true });
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Event problems fetched successfully", result);
     });
 }

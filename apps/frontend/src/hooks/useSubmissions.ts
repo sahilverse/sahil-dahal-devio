@@ -12,8 +12,13 @@ export const useRunSubmission = () => {
 export const useSubmitSubmission = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (data: { slug: string; code: string; language: string; eventId?: string }) =>
-            submissionService.submit(data),
+        mutationFn: (data: { slug: string; code: string; language: string; eventId?: string }) => {
+            if (data.eventId) {
+                const { eventId, slug, ...rest } = data;
+                return submissionService.submitToEvent(eventId, slug, rest);
+            }
+            return submissionService.submit(data);
+        },
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["submissions", variables.slug] });
             queryClient.invalidateQueries({ queryKey: ["problem", variables.slug] });

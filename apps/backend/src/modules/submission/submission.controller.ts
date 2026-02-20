@@ -28,7 +28,11 @@ export class SubmissionController {
         const timezoneOffsetHeader = req.headers['x-timezone-offset'];
         const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
 
-        const submission = await this.submissionService.submit(slug, code, language, userId, eventId, timezoneOffset);
+        const submission = await this.submissionService.submit(slug, code, language, userId, {
+            eventId,
+            awardBounty: true,
+            timezoneOffset
+        });
 
         return ResponseHandler.sendResponse(res, StatusCodes.OK, "Submission processed", plainToInstance(SubmissionDto, submission));
     });
@@ -44,5 +48,23 @@ export class SubmissionController {
             items: plainToInstance(SubmissionDto, result.items),
             nextCursor: result.nextCursor
         });
+    });
+
+    submitToEvent = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
+        const { id: eventId, slug } = req.params;
+        const { code, language } = req.body;
+        const userId = req.user.id;
+
+        const timezoneOffsetHeader = req.headers['x-timezone-offset'];
+        const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
+
+        // Event submissions DO NOT award bounties
+        const submission = await this.submissionService.submit(slug, code, language, userId, {
+            eventId,
+            awardBounty: false,
+            timezoneOffset
+        });
+
+        return ResponseHandler.sendResponse(res, StatusCodes.OK, "Event submission processed", plainToInstance(SubmissionDto, submission));
     });
 }
