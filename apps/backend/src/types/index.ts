@@ -38,6 +38,10 @@ export const TYPES = {
     CompanyService: Symbol.for("CompanyService"),
     CompanyController: Symbol.for("CompanyController"),
 
+    JobRepository: Symbol.for("JobRepository"),
+    JobService: Symbol.for("JobService"),
+    JobController: Symbol.for("JobController"),
+
     SkillRepository: Symbol.for("SkillRepository"),
     SkillService: Symbol.for("SkillService"),
     SkillController: Symbol.for("SkillController"),

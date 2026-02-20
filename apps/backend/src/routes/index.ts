@@ -18,6 +18,7 @@ import { router as commentRoutes } from "../modules/comment/comment.route";
 import { router as notificationRoutes } from "../modules/notification/notification.route";
 import { router as conversationRoutes } from "../modules/conversation/conversation.route";
 import { router as eventRoutes } from "../modules/event/event.route";
+import { router as jobRoutes } from "../modules/job/job.route";
 
 const router: Router = Router();
 
@@ -38,6 +39,7 @@ router.use("/notifications", notificationRoutes);
 router.use(commentRoutes);
 router.use("/conversations", conversationRoutes);
 router.use("/events", eventRoutes);
+router.use("/jobs", jobRoutes);
 
 
 

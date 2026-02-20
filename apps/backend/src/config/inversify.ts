@@ -4,6 +4,7 @@ import { RedisManager } from "./redis";
 import { AuthService, AuthController, AuthRepository, TokenService, OAuthService, OAuthController } from "../modules/auth";
 import { UserRepository, UserService, UserController } from "../modules/user";
 import { CompanyRepository, CompanyService, CompanyController } from "../modules/company";
+import { JobRepository, JobService, JobController } from "../modules/job";
 import { ActivityRepository, ActivityService, ActivityController } from "../modules/activity";
 import { AuraRepository, AuraService, AuraController } from "../modules/aura";
 import { SkillRepository, SkillService, SkillController } from "../modules/skill";
@@ -72,6 +73,10 @@ container.bind<CompanyController>(TYPES.CompanyController).to(CompanyController)
 container.bind<SkillRepository>(TYPES.SkillRepository).to(SkillRepository).inSingletonScope();
 container.bind<SkillService>(TYPES.SkillService).to(SkillService).inSingletonScope();
 container.bind<SkillController>(TYPES.SkillController).to(SkillController).inSingletonScope();
+
+container.bind<JobRepository>(TYPES.JobRepository).to(JobRepository).inSingletonScope();
+container.bind<JobService>(TYPES.JobService).to(JobService).inSingletonScope();
+container.bind<JobController>(TYPES.JobController).to(JobController).inSingletonScope();
 
 container.bind<TopicRepository>(TYPES.TopicRepository).to(TopicRepository).inSingletonScope();
 container.bind<TopicService>(TYPES.TopicService).to(TopicService).inSingletonScope();
