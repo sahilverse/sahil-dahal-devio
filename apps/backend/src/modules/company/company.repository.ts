@@ -73,6 +73,19 @@ export class CompanyRepository {
                         lastName: true,
                         avatarUrl: true
                     }
+                },
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                firstName: true,
+                                lastName: true,
+                                avatarUrl: true
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -126,6 +139,25 @@ export class CompanyRepository {
                     userId
                 }
             }
+        });
+    }
+
+    async findUserManagedCompanies(userId: string): Promise<Company[]> {
+        return this.prisma.company.findMany({
+            where: {
+                OR: [
+                    { ownerId: userId },
+                    {
+                        members: {
+                            some: {
+                                userId,
+                                role: { in: ["OWNER", "RECRUITER"] }
+                            }
+                        }
+                    }
+                ]
+            },
+            orderBy: { name: "asc" }
         });
     }
 }

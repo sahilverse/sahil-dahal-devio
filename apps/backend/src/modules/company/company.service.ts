@@ -3,14 +3,18 @@ import { TYPES } from "../../types";
 import { CompanyRepository } from "./company.repository";
 import type { CompanySearchResponse } from "./company.types";
 import { CompanyRole } from "../../generated/prisma/client";
-import { ApiError } from "../../utils";
+import { ApiError, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import slugify from "slugify";
+import { StorageService } from "../storage/storage.service";
+import { v4 as uuidv4 } from "uuid";
+import { format } from "date-fns";
 
 @injectable()
 export class CompanyService {
     constructor(
-        @inject(TYPES.CompanyRepository) private companyRepository: CompanyRepository
+        @inject(TYPES.CompanyRepository) private companyRepository: CompanyRepository,
+        @inject(TYPES.StorageService) private storageService: StorageService,
     ) { }
 
     async searchCompanies(query: string): Promise<CompanySearchResponse[]> {
@@ -103,5 +107,53 @@ export class CompanyService {
             verifiedDomain: domain,
             isVerified: true
         });
+    }
+
+    async getManagedCompanies(userId: string) {
+        return this.companyRepository.findUserManagedCompanies(userId);
+    }
+
+    async uploadLogo(companyId: string, userId: string, file: Express.Multer.File): Promise<string> {
+        const company = await this.getCompanyById(companyId);
+
+        // Check permissions: Owner or Recruiter
+        const member = await this.companyRepository.findMember(companyId, userId);
+        const isAuthorized = company.ownerId === userId || (member && (member.role === "OWNER" || member.role === "RECRUITER"));
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update this company", StatusCodes.FORBIDDEN);
+        }
+
+        // Delete old logo if exists
+        if (company.logoUrl) {
+            await this.storageService.deleteFile(company.logoUrl);
+        }
+
+        const datePath = format(new Date(), "yyyy/MM/dd");
+        const filename = `${uuidv4()}.webp`;
+        const path = `companies/${datePath}/${filename}`;
+
+        const logoUrl = await this.storageService.uploadFile(file, path);
+        await this.companyRepository.update(companyId, { logoUrl });
+
+        logger.info(`Company logo uploaded for company ${companyId} by user ${userId}`);
+        return logoUrl;
+    }
+
+    async removeLogo(companyId: string, userId: string): Promise<void> {
+        const company = await this.getCompanyById(companyId);
+
+        const member = await this.companyRepository.findMember(companyId, userId);
+        const isAuthorized = company.ownerId === userId || (member && (member.role === "OWNER" || member.role === "RECRUITER"));
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update this company", StatusCodes.FORBIDDEN);
+        }
+
+        if (company.logoUrl) {
+            await this.storageService.deleteFile(company.logoUrl);
+            await this.companyRepository.update(companyId, { logoUrl: null });
+            logger.info(`Company logo removed for company ${companyId} by user ${userId}`);
+        }
     }
 }

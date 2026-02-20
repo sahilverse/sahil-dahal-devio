@@ -2,7 +2,7 @@ import { Router } from "express";
 import { container } from "../../config";
 import { TYPES } from "../../types";
 import { CompanyController } from "./company.controller";
-import { AuthMiddleware } from "../../middlewares/auth";
+import { AuthMiddleware, upload } from "../../middlewares";
 
 const router: Router = Router();
 const companyController = container.get<CompanyController>(TYPES.CompanyController);
@@ -33,6 +33,24 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 router.get(
     "/search",
     companyController.searchCompanies
+);
+
+/**
+ * @swagger
+ * /companies/managed:
+ *   get:
+ *     summary: Get companies managed by the authenticated user
+ *     tags: [Company]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Managed companies fetched successfully
+ */
+router.get(
+    "/managed",
+    authMiddleware.guard,
+    companyController.getManagedCompanies
 );
 
 /**
@@ -196,6 +214,71 @@ router.post(
     "/:id/verify-domain",
     authMiddleware.guard,
     companyController.verifyDomain
+);
+
+/**
+ * @swagger
+ * /companies/{id}/logo:
+ *   post:
+ *     summary: Upload company logo
+ *     tags: [Company]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               logo:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Company logo uploaded successfully
+ *       400:
+ *         description: No file uploaded
+ *       403:
+ *         description: Unauthorized
+ */
+router.post(
+    "/:id/logo",
+    authMiddleware.guard,
+    upload.single("logo"),
+    companyController.uploadLogo
+);
+
+/**
+ * @swagger
+ * /companies/{id}/logo:
+ *   delete:
+ *     summary: Remove company logo
+ *     tags: [Company]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Company logo removed successfully
+ *       403:
+ *         description: Unauthorized
+ */
+router.delete(
+    "/:id/logo",
+    authMiddleware.guard,
+    companyController.removeLogo
 );
 
 export { router };

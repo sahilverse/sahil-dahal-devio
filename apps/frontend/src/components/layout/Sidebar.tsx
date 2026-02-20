@@ -15,7 +15,9 @@ import {
     Users,
     Code,
     Menu,
-    SquareTerminal
+    SquareTerminal,
+    Building2,
+    Building
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -25,6 +27,7 @@ import { toggleSidebar, setSidebarOpen } from "@/slices/ui/uiSlice";
 import CreateCommunityModal from "../community/CreateCommunityModal";
 import { useEffect } from "react";
 import { useJoinedCommunities } from "@/hooks/useCommunities";
+import { useFetchUserCompanies } from "@/hooks/useCompanies";
 import UserAvatar from "@/components/navbar/UserAvatar";
 
 export default function Sidebar() {
@@ -37,6 +40,7 @@ export default function Sidebar() {
 
     const { data: communitiesData } = useJoinedCommunities(user?.id, 10);
     const joinedCommunities = communitiesData?.pages.flatMap((page) => page.communities) || [];
+    const { data: managedCompanies } = useFetchUserCompanies();
 
     const isActive = (path: string) => pathname === path;
     const isAuthenticated = !!user;
@@ -239,6 +243,53 @@ export default function Sidebar() {
                                 </div>
                             </div>
 
+                            <hr className="border-gray-200 dark:border-gray-800 my-4" />
+
+                            <div className="mb-6">
+                                {isSidebarOpen ? (
+                                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex justify-between items-center group">
+                                        <span>Organizations</span>
+                                        <Link href="/c/new" className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-brand-primary">
+                                            Manage All
+                                        </Link>
+                                    </div>
+                                ) : null}
+
+                                <div className="space-y-1 mb-2">
+                                    <Link
+                                        href="/c/new"
+                                        className={cn(
+                                            "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left",
+                                            !isSidebarOpen && "justify-center px-0"
+                                        )}
+                                        title={!isSidebarOpen ? "Create Organization" : undefined}
+                                    >
+                                        <Building2 className="w-5 h-5 text-gray-500" />
+                                        {isSidebarOpen && "Create Organization"}
+                                    </Link>
+                                </div>
+
+                                <div className="space-y-1">
+                                    {managedCompanies?.map((company: any) => (
+                                        <Link
+                                            key={company.id}
+                                            href={`/c/${company.slug}`}
+                                            className={cn(
+                                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                                                isActive(`/c/${company.slug}`) && "bg-brand-primary/10 text-brand-primary",
+                                                !isSidebarOpen && "justify-center px-0"
+                                            )}
+                                            title={!isSidebarOpen ? `c/${company.slug}` : undefined}
+                                        >
+                                            <UserAvatar
+                                                user={{ username: company.name, avatarUrl: company.logoUrl }}
+                                                size="xs"
+                                            />
+                                            {isSidebarOpen && <span className="truncate">{company.name}</span>}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
                         </>
                     )}
                 </nav>

@@ -12,7 +12,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { cn, formatCompactNumber } from "@/lib/utils";
 
 export default function TopicSelector() {
-    const { control, setValue, watch } = useFormContext();
+    const { control, setValue, watch } = useFormContext<any>();
     const [open, setOpen] = React.useState(false);
     const [inputValue, setInputValue] = React.useState("");
     const selectedTopics = watch("topics") || [];

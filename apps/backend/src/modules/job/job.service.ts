@@ -3,6 +3,7 @@ import { TYPES } from "../../types";
 import { JobRepository } from "./job.repository";
 import { CompanyService } from "../company/company.service";
 import { CompanyRepository } from "../company/company.repository";
+import { TopicService } from "../topic/topic.service";
 import { Job, Prisma } from "../../generated/prisma/client";
 import { ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
@@ -13,11 +14,12 @@ export class JobService {
     constructor(
         @inject(TYPES.JobRepository) private jobRepository: JobRepository,
         @inject(TYPES.CompanyService) private companyService: CompanyService,
-        @inject(TYPES.CompanyRepository) private companyRepository: CompanyRepository
+        @inject(TYPES.CompanyRepository) private companyRepository: CompanyRepository,
+        @inject(TYPES.TopicService) private topicService: TopicService
     ) { }
 
     async createJob(userId: string, data: any) {
-        const { companyId, title } = data;
+        const { companyId, title, topics } = data;
 
         // 1. Get Company and verify tier
         const company = await this.companyService.getCompanyById(companyId);
@@ -35,14 +37,23 @@ export class JobService {
             throw new ApiError("You do not have permission to post jobs for this company", StatusCodes.FORBIDDEN);
         }
 
-        // 3. Generate Slug
+        // 3. Resolve Topics 
+        const topicIds: string[] = [];
+        if (topics && Array.isArray(topics)) {
+            for (const topicName of topics) {
+                const topic = await this.topicService.createTopic(topicName);
+                if (topic) topicIds.push(topic.id);
+            }
+        }
+
+        // 4. Generate Slug
         let slug = slugify(title, { lower: true, strict: true });
         const existing = await this.jobRepository.findBySlug(slug);
         if (existing) {
             slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
         }
 
-        // 4. Create Job
+        // 5. Create Job with Topics
         return this.jobRepository.create({
             title: data.title,
             slug,
@@ -55,7 +66,12 @@ export class JobService {
             currency: data.currency || "NPR",
             applyLink: data.applyLink,
             company: { connect: { id: companyId } },
-            author: { connect: { id: userId } }
+            author: { connect: { id: userId } },
+            topics: {
+                create: topicIds.map(id => ({
+                    topic: { connect: { id } }
+                }))
+            }
         });
     }
 

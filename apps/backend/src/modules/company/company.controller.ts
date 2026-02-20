@@ -52,4 +52,31 @@ export class CompanyController {
         const company = await this.companyService.verifyDomain(companyId, userId, email);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Domain verified successfully", company);
     });
+
+    getManagedCompanies = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const companies = await this.companyService.getManagedCompanies(userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Managed companies fetched successfully", companies);
+    });
+
+    uploadLogo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+        const file = req.file;
+
+        if (!file) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "No file uploaded");
+        }
+
+        const logoUrl = await this.companyService.uploadLogo(id, userId, file);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Company logo uploaded successfully", { logoUrl });
+    });
+
+    removeLogo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params as { id: string };
+
+        await this.companyService.removeLogo(id, userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Company logo removed successfully");
+    });
 }

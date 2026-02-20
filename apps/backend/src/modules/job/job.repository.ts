@@ -28,6 +28,11 @@ export class JobRepository {
                     include: {
                         skill: true
                     }
+                },
+                topics: {
+                    include: {
+                        topic: true
+                    }
                 }
             }
         });
@@ -45,6 +50,11 @@ export class JobRepository {
                         firstName: true,
                         lastName: true,
                         avatarUrl: true
+                    }
+                },
+                topics: {
+                    include: {
+                        topic: true
                     }
                 }
             }
