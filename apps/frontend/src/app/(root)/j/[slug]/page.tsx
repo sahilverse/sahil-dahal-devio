@@ -50,7 +50,7 @@ export default function JobDetailPage() {
     };
 
     return (
-        <div className="container max-w-6xl py-10 space-y-8 animate-in fade-in duration-500">
+        <div className="container max-w-6xl py-6 space-y-8 animate-in fade-in duration-500">
             {/* Breadcrumbs / Back */}
             <div className="flex items-center justify-between">
                 <nav className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -76,7 +76,7 @@ export default function JobDetailPage() {
                             <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
                                 <Link href={`/c/${job.company?.slug}`} className="flex items-center gap-2 text-foreground hover:text-brand-primary transition-colors group">
                                     <span className="font-bold underline decoration-border/50 underline-offset-4 group-hover:decoration-brand-primary/30">
-                                        {job.company?.name}
+                                        c/{job.company?.name}
                                     </span>
                                     {job.company?.verificationTier && (
                                         <VerificationBadge tier={job.company.verificationTier} size="sm" />
@@ -111,7 +111,7 @@ export default function JobDetailPage() {
                                 icon={<DollarSign className="size-4" />}
                                 label="Compensation"
                                 value={job.salaryMin || job.salaryMax ?
-                                    `${job.salaryMin ? job.salaryMin.toLocaleString() : "..."} - ${job.salaryMax ? job.salaryMax.toLocaleString() : "..."} ${job.currency}` :
+                                    `${job.salaryMin ? job.salaryMin.toLocaleString() : "..."} - ${job.salaryMax ? job.salaryMax.toLocaleString() : "..."}` :
                                     "Undisclosed"}
                             />
                         </div>

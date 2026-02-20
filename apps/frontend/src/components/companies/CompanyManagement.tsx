@@ -127,7 +127,7 @@ export default function CompanyManagement({ company }: CompanyManagementProps) {
                                                 </Badge>
                                             )}
                                         </div>
-                                        <p className="text-xs text-muted-foreground font-medium truncate">@{member.user?.username}</p>
+                                        <p className="text-xs text-muted-foreground font-medium truncate">u/{member.user?.username}</p>
                                     </div>
                                 </div>
 

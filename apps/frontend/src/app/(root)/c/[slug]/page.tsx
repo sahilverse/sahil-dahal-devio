@@ -49,11 +49,11 @@ export default function CompanyProfilePage() {
     );
 
     return (
-        <div className="container max-w-5xl py-10 space-y-8 animate-in fade-in duration-500">
+        <div className="container max-w-5xl py-6 space-y-8 animate-in fade-in duration-500">
             {/* Header Navigation */}
             <div className="flex items-center justify-between">
                 <Button variant="ghost" asChild className="rounded-xl text-muted-foreground hover:text-foreground -ml-4">
-                    <Link href="/j">
+                    <Link href="/jobs">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Board
                     </Link>
@@ -70,7 +70,7 @@ export default function CompanyProfilePage() {
                 <Card className="border-border/40 bg-card/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden p-8 md:p-10 shadow-2xl shadow-brand-primary/5">
                     <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
                         {/* Company Logo/Icon */}
-                        <div className="relative h-28 w-28 md:h-32 md:w-32 shrink-0 overflow-hidden rounded-3xl border border-border/50 bg-muted/30 shadow-xl">
+                        <div className="relative h-28 w-28 md:h-32 md:w-32 shrink-0 overflow-hidden rounded-3xl border border-border/50 bg-muted/30 shadow-xl bg-transparent">
                             {company.logoUrl ? (
                                 <Image
                                     src={company.logoUrl}
@@ -141,7 +141,7 @@ export default function CompanyProfilePage() {
                     <TabsList className="bg-transparent h-auto p-0 gap-8">
                         <TabsTrigger
                             value="jobs"
-                            className="bg-transparent border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary transition-all"
+                            className="bg-transparent border-b-2 border-transparent rounded-none px-3 py-3 text-sm font-bold data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary transition-all cursor-pointer"
                         >
                             Open Positions
                             {jobsResponse?.total ? (
@@ -152,14 +152,14 @@ export default function CompanyProfilePage() {
                         </TabsTrigger>
                         <TabsTrigger
                             value="about"
-                            className="bg-transparent border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary transition-all"
+                            className="bg-transparent border-b-2 border-transparent rounded-none px-3 py-3 text-sm font-bold data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary transition-all cursor-pointer"
                         >
                             About
                         </TabsTrigger>
                         {isManager && (
                             <TabsTrigger
                                 value="manage"
-                                className="bg-transparent border-b-2 border-transparent rounded-none px-0 py-3 text-sm font-bold data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary transition-all"
+                                className="bg-transparent border-b-2 border-transparent rounded-none px-3 py-3 text-sm font-bold data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary transition-all cursor-pointer"
                             >
                                 Manage
                                 <ShieldCheck className="ml-2 h-3.5 w-3.5" />
