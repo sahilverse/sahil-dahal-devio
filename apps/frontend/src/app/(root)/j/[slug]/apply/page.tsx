@@ -97,7 +97,7 @@ export default function ApplyJobPage() {
                     </div>
                     <div>
                         <p className="text-sm font-black">{job.title}</p>
-                        <p className="text-xs text-muted-foreground font-medium">at {job.company?.name}</p>
+                        <p className="text-xs text-muted-foreground font-medium">at c/{job.company?.name}</p>
                     </div>
                 </div>
             </div>
@@ -116,7 +116,7 @@ export default function ApplyJobPage() {
                             required
                         />
                         <p className="text-[10px] text-muted-foreground font-medium ml-1">
-                            Tip: Highlight your most relevant experience and why you're interested in {job.company?.name}.
+                            Tip: Highlight your most relevant experience and why you're interested in c/{job.company?.name}.
                         </p>
                     </div>
 

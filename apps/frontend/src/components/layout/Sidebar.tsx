@@ -285,7 +285,7 @@ export default function Sidebar() {
                                                 user={{ username: company.name, avatarUrl: company.logoUrl }}
                                                 size="xs"
                                             />
-                                            {isSidebarOpen && <span className="truncate">{company.name}</span>}
+                                            {isSidebarOpen && <span className="truncate">c/{company.name}</span>}
                                         </Link>
                                     ))}
                                 </div>

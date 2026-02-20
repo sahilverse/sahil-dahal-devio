@@ -8,12 +8,9 @@ import {
     Briefcase,
     MapPin,
     DollarSign,
-    Calendar,
-    ArrowLeft,
     ExternalLink,
     Share2,
     Clock,
-    Building2,
     Globe,
     ChevronRight,
     Sparkles
@@ -209,13 +206,13 @@ export default function JobDetailPage() {
                                             <Image src={job.company.logoUrl} alt={job.company.name} fill className="object-cover" />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-brand-primary/10 text-brand-primary font-black uppercase">
-                                                {job.company?.name.charAt(0)}
+                                                c/
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <Link href={`/c/${job.company?.slug}`} className="font-bold text-foreground hover:text-brand-primary transition-colors block truncate">
-                                            {job.company?.name}
+                                            c/{job.company?.name}
                                         </Link>
                                         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
                                             {job.company?.verificationTier && <VerificationBadge tier={job.company.verificationTier} size="sm" />}

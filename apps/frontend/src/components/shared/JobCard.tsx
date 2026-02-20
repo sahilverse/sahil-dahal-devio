@@ -63,7 +63,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
                             </h3>
                             <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-sm font-semibold text-muted-foreground hover:underline">
-                                    {job.company?.name}
+                                    c/{job.company?.name}
                                 </span>
                                 {job.company?.verificationTier && (
                                     <VerificationBadge tier={job.company.verificationTier} size="sm" />

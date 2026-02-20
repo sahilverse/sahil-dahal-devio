@@ -110,7 +110,7 @@ export default function CompanyProfilePage() {
                         <div className="flex-1 space-y-4">
                             <div className="space-y-2">
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight">{company.name}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight">c/{company.name}</h1>
                                     <VerificationBadge tier={company.verificationTier} size="md" showText />
                                 </div>
                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground">
