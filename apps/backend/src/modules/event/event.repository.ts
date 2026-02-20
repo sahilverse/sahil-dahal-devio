@@ -148,10 +148,23 @@ export class EventRepository {
         });
     }
 
+    async unregisterParticipant(eventId: string, userId: string): Promise<void> {
+        await this.prisma.eventParticipant.delete({
+            where: { eventId_userId: { eventId, userId } },
+        });
+    }
+
     async updateParticipantStatus(eventId: string, userId: string, status: ParticipantStatus): Promise<EventParticipant> {
         return this.prisma.eventParticipant.update({
             where: { eventId_userId: { eventId, userId } },
             data: { status },
+        });
+    }
+
+    async updateParticipantScore(eventId: string, userId: string, score: number): Promise<EventParticipant> {
+        return this.prisma.eventParticipant.update({
+            where: { eventId_userId: { eventId, userId } },
+            data: { score },
         });
     }
 
@@ -176,25 +189,73 @@ export class EventRepository {
         });
     }
 
-    async getLeaderboard(eventId: string, limit: number = 50): Promise<EventParticipant[]> {
-        return this.prisma.eventParticipant.findMany({
+    async getLeaderboard(eventId: string, requiresTeam: boolean = false, limit: number = 50): Promise<any[]> {
+        if (!requiresTeam) {
+            return this.prisma.eventParticipant.findMany({
+                take: limit,
+                where: { eventId, score: { gt: 0 } },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            firstName: true,
+                            lastName: true,
+                            avatarUrl: true,
+                        },
+                    },
+                },
+                orderBy: [
+                    { score: "desc" },
+                    { registeredAt: "asc" },
+                ],
+            });
+        }
+
+        // Team-based leaderboard
+        const teamResults = await this.prisma.eventParticipant.groupBy({
+            by: ['teamName'],
+            where: {
+                eventId,
+                teamName: { not: null },
+                score: { gt: 0 }
+            },
+            _max: {
+                score: true,
+                registeredAt: true,
+            },
+            orderBy: {
+                _max: {
+                    score: 'desc'
+                }
+            },
             take: limit,
+        });
+
+        return teamResults.map(res => ({
+            teamName: res.teamName,
+            score: res._max.score,
+            registeredAt: res._max.registeredAt,
+            isTeam: true
+        }));
+    }
+
+    async findAllParticipants(eventId: string) {
+        return this.prisma.eventParticipant.findMany({
             where: { eventId },
             include: {
                 user: {
                     select: {
                         id: true,
                         username: true,
+                        email: true,
                         firstName: true,
                         lastName: true,
                         avatarUrl: true,
                     },
                 },
             },
-            orderBy: [
-                { score: "desc" },
-                { registeredAt: "asc" },
-            ],
+            orderBy: { registeredAt: "desc" },
         });
     }
 

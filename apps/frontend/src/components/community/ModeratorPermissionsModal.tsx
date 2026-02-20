@@ -27,6 +27,7 @@ const PERMISSION_LABELS = {
     manageUsers: "Manage Users (Ban, Mute, Approve Members)",
     manageConfig: "Manage Settings (Community Look, Rules, Config)",
     managePostsAndComments: "Manage Content (Approve/Remove Posts & Comments)",
+    manageEvents: "Manage Events (Create, Edit, Delete, Manual Scoring)",
 };
 
 export default function ModeratorPermissionsModal({
@@ -43,6 +44,7 @@ export default function ModeratorPermissionsModal({
         manageUsers: false,
         manageConfig: false,
         managePostsAndComments: false,
+        manageEvents: false,
     });
 
     useEffect(() => {
@@ -53,6 +55,7 @@ export default function ModeratorPermissionsModal({
                     manageUsers: !!currentPermissions.manageUsers,
                     manageConfig: !!currentPermissions.manageConfig,
                     managePostsAndComments: !!currentPermissions.managePostsAndComments,
+                    manageEvents: !!currentPermissions.manageEvents,
                 });
             } else if (isInvite) {
                 setPermissions({
@@ -60,6 +63,7 @@ export default function ModeratorPermissionsModal({
                     manageUsers: true,
                     manageConfig: true,
                     managePostsAndComments: true,
+                    manageEvents: true,
                 });
             }
         }
@@ -72,11 +76,12 @@ export default function ModeratorPermissionsModal({
                 manageUsers: checked,
                 manageConfig: checked,
                 managePostsAndComments: checked,
+                manageEvents: checked,
             });
         } else {
             const next = { ...permissions, [key]: checked };
             if (!checked) next.everything = false;
-            const allSpecifics = ["manageUsers", "manageConfig", "managePostsAndComments"];
+            const allSpecifics = ["manageUsers", "manageConfig", "managePostsAndComments", "manageEvents"];
             if (allSpecifics.every(k => next[k])) next.everything = true;
 
             setPermissions(next);
@@ -131,7 +136,7 @@ export default function ModeratorPermissionsModal({
                     </div>
 
                     <div className="space-y-3 pl-1">
-                        {["manageUsers", "manageConfig", "managePostsAndComments"].map((key) => (
+                        {["manageUsers", "manageConfig", "managePostsAndComments", "manageEvents"].map((key) => (
                             <div key={key} className="flex items-center space-x-3">
                                 <Checkbox
                                     id={`perm-${key}`}

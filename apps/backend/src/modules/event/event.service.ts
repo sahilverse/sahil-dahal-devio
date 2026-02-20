@@ -7,7 +7,8 @@ import {
     NotificationType,
     CipherReason,
     Prisma,
-    EventVisibility
+    EventVisibility,
+    ParticipantStatus
 } from "../../generated/prisma/client";
 import { ApiError, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
@@ -36,9 +37,9 @@ export class EventService {
 
     async createEvent(userId: string, data: CreateEventInput) {
         if (data.communityId) {
-            const isAuthorized = await this.communityRepository.isModeratorOrCreator(data.communityId, userId);
+            const isAuthorized = await this.communityRepository.checkMemberPermission(data.communityId, userId, "manageEvents");
             if (!isAuthorized) {
-                throw new ApiError("Only community moderators can create events for this community", StatusCodes.FORBIDDEN);
+                throw new ApiError("You do not have permission to create events in this community", StatusCodes.FORBIDDEN);
             }
         }
 
@@ -165,7 +166,7 @@ export class EventService {
             let isModerator = false;
             // A participant cannot be a moderator for the same event
             if (!isCreator && !isParticipant && event.communityId) {
-                isModerator = await this.communityRepository.isModeratorOrCreator(event.communityId, currentUserId);
+                isModerator = await this.communityRepository.checkMemberPermission(event.communityId, currentUserId, "manageEvents");
             }
 
             (event as any).isParticipant = isParticipant;
@@ -213,15 +214,12 @@ export class EventService {
             throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
         }
 
-        if (event.createdById !== userId) {
-            if (event.communityId) {
-                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
-                if (!isAuthorized) {
-                    throw new ApiError("Only community moderators can update events for this community", StatusCodes.FORBIDDEN);
-                }
-            } else {
-                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-            }
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, userId, "manageEvents")
+            : event.createdById === userId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update this event", StatusCodes.FORBIDDEN);
         }
 
         const { prizes, rules, ...rest } = data;
@@ -333,23 +331,27 @@ export class EventService {
     }
 
     async getLeaderboard(eventId: string) {
-        return this.eventRepository.getLeaderboard(eventId);
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        const now = new Date();
+        if (now < new Date(event.startsAt)) {
+            throw new ApiError("Leaderboard is not available until the event starts", StatusCodes.FORBIDDEN);
+        }
+
+        return this.eventRepository.getLeaderboard(eventId, event.requiresTeam);
     }
 
     async uploadEventImage(eventId: string, userId: string, file: Express.Multer.File): Promise<string> {
         const event = await this.eventRepository.findById(eventId);
         if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
 
-        // Verify ownership
-        if (event.createdById !== userId) {
-            if (event.communityId) {
-                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
-                if (!isAuthorized) {
-                    throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-                }
-            } else {
-                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-            }
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, userId, "manageEvents")
+            : event.createdById === userId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update this event", StatusCodes.FORBIDDEN);
         }
 
         // Delete old image if it exists
@@ -372,15 +374,12 @@ export class EventService {
         const event = await this.eventRepository.findById(eventId);
         if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
 
-        if (event.createdById !== userId) {
-            if (event.communityId) {
-                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
-                if (!isAuthorized) {
-                    throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-                }
-            } else {
-                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-            }
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, userId, "manageEvents")
+            : event.createdById === userId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update this event", StatusCodes.FORBIDDEN);
         }
 
         if (event.imageUrl) {
@@ -429,16 +428,75 @@ export class EventService {
         if (participant) {
             throw new ApiError("Participants cannot modify the event", StatusCodes.FORBIDDEN);
         }
+    }
 
-        if (event.createdById !== userId) {
-            if (event.communityId) {
-                const isAuthorized = await this.communityRepository.isModeratorOrCreator(event.communityId, userId);
-                if (!isAuthorized) {
-                    throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-                }
-            } else {
-                throw new ApiError("Unauthorized to update this event", StatusCodes.FORBIDDEN);
-            }
+    async getAdminParticipants(eventId: string, userId: string) {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, userId, "manageEvents")
+            : event.createdById === userId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to view the participant list", StatusCodes.FORBIDDEN);
         }
+
+        return this.eventRepository.findAllParticipants(eventId);
+    }
+
+    async updateManualScore(eventId: string, moderatorId: string, participantUserId: string, score: number) {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, moderatorId, "manageEvents")
+            : event.createdById === moderatorId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update scores for this event", StatusCodes.FORBIDDEN);
+        }
+
+        const participant = await this.eventRepository.findParticipant(eventId, participantUserId);
+        if (!participant) {
+            throw new ApiError("Participant not found in this event", StatusCodes.NOT_FOUND);
+        }
+
+        const updated = await this.eventRepository.updateParticipantScore(eventId, participantUserId, score);
+        this.emitLeaderboardUpdate(eventId);
+        return updated;
+    }
+
+    async removeParticipantMod(eventId: string, moderatorId: string, participantUserId: string) {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, moderatorId, "manageEvents")
+            : event.createdById === moderatorId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to remove participants from this event", StatusCodes.FORBIDDEN);
+        }
+
+        await this.eventRepository.unregisterParticipant(eventId, participantUserId);
+        this.emitLeaderboardUpdate(eventId);
+    }
+
+    async updateParticipantStatusMod(eventId: string, moderatorId: string, participantUserId: string, status: ParticipantStatus) {
+        const event = await this.eventRepository.findById(eventId);
+        if (!event) throw new ApiError("Event not found", StatusCodes.NOT_FOUND);
+
+        const isAuthorized = event.communityId
+            ? await this.communityRepository.checkMemberPermission(event.communityId, moderatorId, "manageEvents")
+            : event.createdById === moderatorId;
+
+        if (!isAuthorized) {
+            throw new ApiError("You do not have permission to update participant status", StatusCodes.FORBIDDEN);
+        }
+
+        const updated = await this.eventRepository.updateParticipantStatus(eventId, participantUserId, status);
+        this.emitLeaderboardUpdate(eventId);
+        return updated;
     }
 }

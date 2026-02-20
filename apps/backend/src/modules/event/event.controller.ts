@@ -127,4 +127,34 @@ export class EventController {
         const result = plainToInstance(EventProblemDto, problems, { excludeExtraneousValues: true });
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Event problems fetched successfully", result);
     });
+
+    getAdminParticipants = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params as { id: string };
+        const userId = req.user!.id;
+        const participants = await this.eventService.getAdminParticipants(id, userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Admin participant list fetched successfully", participants);
+    });
+
+    updateManualScore = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params as { id: string };
+        const { userId: participantUserId, score } = req.body;
+        const moderatorId = req.user!.id;
+        const updated = await this.eventService.updateManualScore(id, moderatorId, participantUserId, score);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Participant score updated successfully", updated);
+    });
+
+    removeParticipantMod = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id, userId: participantUserId } = req.params as { id: string; userId: string };
+        const moderatorId = req.user!.id;
+        await this.eventService.removeParticipantMod(id, moderatorId, participantUserId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Participant removed successfully");
+    });
+
+    updateParticipantStatusMod = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id, userId: participantUserId } = req.params as { id: string; userId: string };
+        const { status } = req.body;
+        const moderatorId = req.user!.id;
+        const updated = await this.eventService.updateParticipantStatusMod(id, moderatorId, participantUserId, status as any);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Participant status updated successfully", updated);
+    });
 }

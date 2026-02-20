@@ -36,7 +36,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ participants
                         const isTop3 = rank <= 3;
 
                         return (
-                            <tr key={participant.id} className="hover:bg-muted/30 transition-colors">
+                            <tr key={participant.id || participant.teamName} className="hover:bg-muted/30 transition-colors">
                                 <td className="px-6 py-4 font-bold">
                                     {isTop3 ? (
                                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
@@ -50,11 +50,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ participants
                                     <div className="flex items-center gap-3">
                                         <Avatar className="w-8 h-8">
                                             <AvatarImage src={participant.user?.avatarUrl} />
-                                            <AvatarFallback>{participant.user?.username?.[0]}</AvatarFallback>
+                                            <AvatarFallback>{(participant.user?.username || participant.teamName || "?")[0]}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold leading-none">{participant.user?.username}</p>
-                                            {participant.teamName && (
+                                            <p className="font-semibold leading-none">{participant.user?.username || participant.teamName}</p>
+                                            {participant.isTeam ? (
+                                                <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-wider">Team Entries</p>
+                                            ) : participant.teamName && (
                                                 <p className="text-xs text-muted-foreground mt-1">Team: {participant.teamName}</p>
                                             )}
                                         </div>
@@ -62,7 +64,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ participants
                                 </td>
                                 <td className="px-6 py-4">
                                     <Badge variant="outline" className="capitalize text-[10px]">
-                                        {participant.status.toLowerCase()}
+                                        {(participant.status || "COMPLETED").toLowerCase()}
                                     </Badge>
                                 </td>
                                 <td className="px-6 py-4 text-right font-mono font-bold text-primary">

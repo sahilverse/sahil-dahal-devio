@@ -421,7 +421,7 @@ model CommunityMember {
   userId      String @map("user_id")
 
   isMod       Boolean @default(false) @map("is_mod")
-  permissions Json? // { everything, manageUsers, manageConfig, managePostsAndComments }
+  permissions Json? // { everything, manageUsers, manageConfig, managePostsAndComments, manageEvents }
 
   joinedAt DateTime @default(now())
 

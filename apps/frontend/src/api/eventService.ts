@@ -96,4 +96,24 @@ export const EventService = {
         const { data } = await api.get(`/events/${eventId}/rules`);
         return data.result;
     },
+
+    getAdminParticipants: async (eventId: string) => {
+        const { data } = await api.get(`/events/${eventId}/participants-admin`);
+        return data.result;
+    },
+
+    updateManualScore: async (eventId: string, userId: string, score: number) => {
+        const { data } = await api.post(`/events/${eventId}/score-manual`, { userId, score });
+        return data.result;
+    },
+
+    removeParticipantMod: async (eventId: string, userId: string) => {
+        const { data } = await api.delete(`/events/${eventId}/participants/${userId}`);
+        return data.result;
+    },
+
+    updateParticipantStatusMod: async (eventId: string, userId: string, status: string) => {
+        const { data } = await api.patch(`/events/${eventId}/participants/${userId}/status`, { status });
+        return data.result;
+    },
 };

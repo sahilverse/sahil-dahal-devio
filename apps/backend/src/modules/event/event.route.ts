@@ -521,4 +521,141 @@ router.delete(
     eventController.removeEventProblem
 );
 
+/**
+ * @swagger
+ * /events/{id}/participants-admin:
+ *   get:
+ *     summary: Get all participants for an event (Admin/Moderator only)
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Admin participant list fetched successfully
+ *       403:
+ *         description: Unauthorized
+ */
+router.get(
+    "/:id/participants-admin",
+    authMiddleware.guard,
+    eventController.getAdminParticipants
+);
+
+/**
+ * @swagger
+ * /events/{id}/score-manual:
+ *   post:
+ *     summary: Update a participant's score manually (Admin/Moderator only)
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId, score]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               score:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Score updated successfully
+ *       403:
+ *         description: Unauthorized
+ */
+router.post(
+    "/:id/score-manual",
+    authMiddleware.guard,
+    eventController.updateManualScore
+);
+
+/**
+ * @swagger
+ * /events/{id}/participants/{userId}:
+ *   delete:
+ *     summary: Remove a participant from an event (Admin/Moderator only)
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Participant removed successfully
+ *       403:
+ *         description: Unauthorized
+ */
+router.delete(
+    "/:id/participants/:userId",
+    authMiddleware.guard,
+    eventController.removeParticipantMod
+);
+
+/**
+ * @swagger
+ * /events/{id}/participants/{userId}/status:
+ *   patch:
+ *     summary: Update a participant's status (Admin/Moderator only)
+ *     tags: [Event]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [REGISTERED, CHECKED_IN, COMPLETED, DISQUALIFIED]
+ *     responses:
+ *       200:
+ *         description: Participant status updated successfully
+ *       403:
+ *         description: Unauthorized
+ */
+router.patch(
+    "/:id/participants/:userId/status",
+    authMiddleware.guard,
+    eventController.updateParticipantStatusMod
+);
+
 export { router };

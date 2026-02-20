@@ -33,6 +33,7 @@ import { RegistrationDialog } from "@/components/events/RegistrationDialog";
 import { LeaderboardTable } from "@/components/events/LeaderboardTable";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
 import ManageEventProblems from "@/components/events/ManageEventProblems";
+import { AdminParticipantList } from "@/components/events/AdminParticipantList";
 
 export default function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
@@ -219,6 +220,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                             )}
                             <TabsTrigger value="prizes" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">Prizes</TabsTrigger>
                             <TabsTrigger value="leaderboard" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">Leaderboard</TabsTrigger>
+                            {event.canEdit && (
+                                <TabsTrigger value="admin-participants" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">Participants</TabsTrigger>
+                            )}
                         </TabsList>
 
                         <TabsContent value="about" className="mt-6">
@@ -291,8 +295,26 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                         </TabsContent>
 
                         <TabsContent value="leaderboard" className="mt-6">
-                            <LeaderboardTable participants={leaderboard || []} />
+                            {new Date() < new Date(event.startsAt) ? (
+                                <div className="py-20 text-center bg-muted/20 rounded-2xl border border-dashed text-muted-foreground font-medium px-6">
+                                    <div className="bg-brand-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Clock className="w-6 h-6 text-brand-primary" />
+                                    </div>
+                                    <h4 className="text-foreground font-black tracking-tight">Leaderboard Coming Soon</h4>
+                                    <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-2">
+                                        The leaderboard is currently locked and will be revealed once the event officially starts at {format(new Date(event.startsAt), "MMM d, h:mm a")}.
+                                    </p>
+                                </div>
+                            ) : (
+                                <LeaderboardTable participants={leaderboard || []} />
+                            )}
                         </TabsContent>
+
+                        {event.canEdit && (
+                            <TabsContent value="admin-participants" className="mt-6">
+                                <AdminParticipantList eventId={event.id} />
+                            </TabsContent>
+                        )}
 
                         {event.type === "CONTEST" && (
                             <TabsContent value="problems" className="mt-6">
