@@ -39,13 +39,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
         >
             <div className="flex items-start gap-4">
                 {/* Company Logo */}
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border/50 bg-muted/30 p-1 transition-transform group-hover:scale-105">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border/50 bg-muted/30 transition-transform group-hover:scale-105">
                     {job.company?.logoUrl ? (
                         <Image
                             src={job.company.logoUrl}
                             alt={job.company.name}
                             fill
-                            className="object-contain p-1"
+                            className="object-cover"
                         />
                     ) : (
                         <div className="flex h-full w-full items-center justify-center bg-brand-primary/10 text-brand-primary text-xl font-black uppercase">

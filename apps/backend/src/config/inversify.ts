@@ -5,6 +5,7 @@ import { AuthService, AuthController, AuthRepository, TokenService, OAuthService
 import { UserRepository, UserService, UserController } from "../modules/user";
 import { CompanyRepository, CompanyService, CompanyController } from "../modules/company";
 import { JobRepository, JobService, JobController } from "../modules/job";
+import { JobApplicationRepository, JobApplicationService, JobApplicationController } from "../modules/job-application";
 import { ActivityRepository, ActivityService, ActivityController } from "../modules/activity";
 import { AuraRepository, AuraService, AuraController } from "../modules/aura";
 import { SkillRepository, SkillService, SkillController } from "../modules/skill";
@@ -77,6 +78,10 @@ container.bind<SkillController>(TYPES.SkillController).to(SkillController).inSin
 container.bind<JobRepository>(TYPES.JobRepository).to(JobRepository).inSingletonScope();
 container.bind<JobService>(TYPES.JobService).to(JobService).inSingletonScope();
 container.bind<JobController>(TYPES.JobController).to(JobController).inSingletonScope();
+
+container.bind<JobApplicationRepository>(TYPES.JobApplicationRepository).to(JobApplicationRepository).inSingletonScope();
+container.bind<JobApplicationService>(TYPES.JobApplicationService).to(JobApplicationService).inSingletonScope();
+container.bind<JobApplicationController>(TYPES.JobApplicationController).to(JobApplicationController).inSingletonScope();
 
 container.bind<TopicRepository>(TYPES.TopicRepository).to(TopicRepository).inSingletonScope();
 container.bind<TopicService>(TYPES.TopicService).to(TopicService).inSingletonScope();

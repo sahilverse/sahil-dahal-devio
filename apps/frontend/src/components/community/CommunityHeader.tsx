@@ -43,10 +43,6 @@ export default function CommunityHeader({ community }: CommunityHeaderProps) {
         joinMutation.mutate(undefined);
     };
 
-    const handleShare = async () => {
-        // Shared via sidebar now
-    };
-
     const handleIconSave = (file: File) => {
         const formData = new FormData();
         formData.append("icon", file);

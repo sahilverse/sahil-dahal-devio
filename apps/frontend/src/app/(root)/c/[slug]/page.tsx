@@ -30,6 +30,7 @@ import { format } from "date-fns";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import CompanyManagement from "@/components/companies/CompanyManagement";
+import UserAvatar from "@/components/navbar/UserAvatar";
 
 export default function CompanyProfilePage() {
     const { slug } = useParams() as { slug: string };
@@ -86,16 +87,17 @@ export default function CompanyProfilePage() {
 
             {/* Profile Hero Section */}
             <div className="relative overflow-visible">
-                <Card className="border-border/40 bg-card/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden p-8 md:p-10 shadow-2xl shadow-brand-primary/5">
-                    <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
+                <Card className="border-border/40 bg-card/60 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-brand-primary/5 mt-12 md:mt-16">
+                    <div className="flex flex-col md:flex-row gap-8 items-center md:items-start relative z-10">
                         {/* Company Logo/Icon */}
-                        <div className="relative h-28 w-28 md:h-32 md:w-32 shrink-0 overflow-hidden rounded-3xl border border-border/50 bg-muted/30 shadow-xl bg-transparent">
+                        <div className="relative h-28 w-28 md:h-32 md:w-32 shrink-0 overflow-hidden rounded-full border-4 border-card bg-card shadow-xl ring-1 ring-border/10 -mt-20 md:-mt-24">
                             {company.logoUrl ? (
                                 <Image
                                     src={company.logoUrl}
                                     alt={company.name}
                                     fill
-                                    className="object-contain p-2"
+                                    className="object-cover"
+
                                 />
                             ) : (
                                 <div className="flex h-full w-full items-center justify-center bg-brand-primary/10 text-brand-primary text-4xl font-black uppercase">

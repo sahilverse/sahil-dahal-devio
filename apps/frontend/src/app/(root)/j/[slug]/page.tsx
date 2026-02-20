@@ -22,18 +22,28 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow, format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { Edit3 } from "lucide-react";
 
 export default function JobDetailPage() {
     const { slug } = useParams() as { slug: string };
     const { data: job, isLoading } = useFetchJob(slug);
+    const { user: currentUser } = useSelector((state: RootState) => state.auth);
+    const { openLogin } = useAuthModal();
 
     if (isLoading) return <JobDetailSkeleton />;
     if (!job) return <JobNotFound />;
+
+    const isCreatorOrRecruiter = currentUser && (
+        job.authorId === currentUser.id ||
+        job.company?.ownerId === currentUser.id ||
+        (job.company as any)?.members?.some((m: any) => m.userId === currentUser.id && (m.role === "OWNER" || m.role === "RECRUITER"))
+    );
 
     const workplaceLabels = {
         ON_SITE: "On-site",
@@ -54,7 +64,7 @@ export default function JobDetailPage() {
             {/* Breadcrumbs / Back */}
             <div className="flex items-center justify-between">
                 <nav className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Link href="/j" className="hover:text-foreground transition-colors">Jobs</Link>
+                    <Link href="/jobs" className="hover:text-foreground transition-colors">Jobs</Link>
                     <ChevronRight className="h-4 w-4" />
                     <span className="text-foreground truncate max-w-[200px]">{job.title}</span>
                 </nav>
@@ -149,32 +159,54 @@ export default function JobDetailPage() {
                     {/* Apply Card */}
                     <Card className="p-6 border-brand-primary/20 bg-brand-primary/[0.03] backdrop-blur-md rounded-3xl sticky top-28 space-y-6">
                         <div className="space-y-2">
-                            <h3 className="text-lg font-black">Ready to apply?</h3>
-                            <p className="text-sm text-muted-foreground font-medium">This position is verified and actively accepting applications.</p>
+                            <h3 className="text-lg font-black">{isCreatorOrRecruiter ? "Manage your posting" : "Ready to apply?"}</h3>
+                            <p className="text-sm text-muted-foreground font-medium">
+                                {isCreatorOrRecruiter
+                                    ? "As a recruiter, you can modify the job details or view applicants."
+                                    : "This position is verified and actively accepting applications."}
+                            </p>
                         </div>
 
-                        <Button asChild size="lg" className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group">
-                            {job.applyLink ? (
+                        {isCreatorOrRecruiter ? (
+                            <Button asChild size="lg" className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group">
+                                <Link href={`/jobs/edit/${job.id}`}>
+                                    Edit Job Posting
+                                    <Edit3 className="ml-2 h-5 w-5" />
+                                </Link>
+                            </Button>
+                        ) : !currentUser ? (
+                            <Button
+                                size="lg"
+                                className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group"
+                                onClick={openLogin}
+                            >
+                                Sign in to Apply
+                                <ChevronRight className="ml-1 h-5 w-5" />
+                            </Button>
+                        ) : job.applyLink ? (
+                            <Button asChild size="lg" className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group">
                                 <a href={job.applyLink} target="_blank" rel="noopener noreferrer">
                                     Apply on External Site
                                     <ExternalLink className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                                 </a>
-                            ) : (
+                            </Button>
+                        ) : (
+                            <Button asChild size="lg" className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group">
                                 <Link href={`/j/${job.slug}/apply`}>
                                     Apply for this Role
                                     <ChevronRight className="ml-1 h-5 w-5" />
                                 </Link>
-                            )}
-                        </Button>
+                            </Button>
+                        )}
 
                         <div className="pt-4 border-t border-border/40 space-y-6">
                             {/* Company Preview */}
                             <div className="space-y-4">
                                 <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">About the Recruiter</h4>
                                 <div className="flex items-center gap-4">
-                                    <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-border/50 bg-muted/30">
+                                    <div className="relative size-12 shrink-0 overflow-hidden rounded-full border border-border/50 bg-muted/30">
                                         {job.company?.logoUrl ? (
-                                            <Image src={job.company.logoUrl} alt={job.company.name} fill className="object-contain p-1" />
+                                            <Image src={job.company.logoUrl} alt={job.company.name} fill className="object-cover" />
                                         ) : (
                                             <div className="flex h-full w-full items-center justify-center bg-brand-primary/10 text-brand-primary font-black uppercase">
                                                 {job.company?.name.charAt(0)}

@@ -42,6 +42,10 @@ export const TYPES = {
     JobService: Symbol.for("JobService"),
     JobController: Symbol.for("JobController"),
 
+    JobApplicationRepository: Symbol.for("JobApplicationRepository"),
+    JobApplicationService: Symbol.for("JobApplicationService"),
+    JobApplicationController: Symbol.for("JobApplicationController"),
+
     SkillRepository: Symbol.for("SkillRepository"),
     SkillService: Symbol.for("SkillService"),
     SkillController: Symbol.for("SkillController"),

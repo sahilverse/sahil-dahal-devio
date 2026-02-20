@@ -69,7 +69,7 @@ export default function JobBoardPage() {
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/50 transition-colors group-focus-within:text-brand-primary" />
                         <Input
-                            placeholder="Search by title, company, or keywords..."
+                            placeholder="Search by title, company, or topic..."
                             className="h-14 bg-muted/30 border-none rounded-2xl pl-12 text-base font-medium placeholder:text-muted-foreground/40 focus-visible:ring-2 focus-visible:ring-brand-primary/20"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}

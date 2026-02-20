@@ -49,9 +49,9 @@ export const VerificationBadge: React.FC<VerificationBadgeProps> = ({
     const Icon = config.icon;
 
     const sizeClasses = {
-        sm: "h-4 w-4 text-[10px]",
-        md: "h-6 w-6 text-xs",
-        lg: "h-8 w-8 text-sm",
+        sm: "h-3.5 w-3.5",
+        md: "h-5 w-5",
+        lg: "h-7 w-7",
     };
 
     const tooltipId = `v-badge-${tier}-${Math.random().toString(36).substr(2, 9)}`;
@@ -61,19 +61,24 @@ export const VerificationBadge: React.FC<VerificationBadgeProps> = ({
             <div
                 data-tooltip-id={tooltipId}
                 className={cn(
-                    "flex items-center gap-1.5 rounded-full px-2 py-0.5 transition-all duration-300 cursor-help",
+                    "flex items-center justify-center transition-all duration-300 cursor-help rounded-full flex-shrink-0",
                     config.bg,
                     config.aura,
+                    showText ? "px-2 py-1 gap-1.5" : {
+                        "size-6": size === "sm",
+                        "size-8": size === "md",
+                        "size-10": size === "lg",
+                    },
                     className
                 )}
             >
                 <Icon className={cn(sizeClasses[size], config.color)} />
                 {showText && (
-                    <span className={cn("font-bold uppercase tracking-tight", config.color)}>
+                    <span className={cn("font-bold uppercase tracking-tight", size === "sm" ? "text-[10px]" : "text-xs", config.color)}>
                         {config.label}
                     </span>
                 )}
-            </div>
+            </div >
             <Tooltip
                 id={tooltipId}
                 place="top"

@@ -63,4 +63,9 @@ export const JobService = {
     delete: async (id: string): Promise<void> => {
         await api.delete(`/jobs/${id}`);
     },
+
+    apply: async (jobId: string, data: { coverLetter?: string, resumeUrl?: string }): Promise<any> => {
+        const { data: response } = await api.post("/jobs/applications/apply", { jobId, ...data });
+        return response.result;
+    },
 };
