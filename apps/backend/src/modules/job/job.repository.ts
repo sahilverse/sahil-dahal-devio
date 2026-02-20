@@ -63,18 +63,20 @@ export class JobRepository {
 
     async findAll(params: {
         companyId?: string;
-        isActive?: boolean;
+        isActive?: boolean | string;
         query?: string;
-        skip?: number;
-        take?: number;
+        type?: string;
+        skip?: number | string;
+        take?: number | string;
     }) {
-        const { companyId, isActive, query, skip = 0, take = 10 } = params;
+        const { companyId, isActive, query, type, skip = 0, take = 10 } = params;
 
         const where: Prisma.JobWhereInput = {
-            isActive: isActive ?? true
+            isActive: typeof isActive === "string" ? isActive === "true" : (isActive ?? true)
         };
 
         if (companyId) where.companyId = companyId;
+        if (type) where.type = type as any;
         if (query) {
             where.OR = [
                 { title: { contains: query, mode: "insensitive" } },
@@ -90,14 +92,15 @@ export class JobRepository {
                         select: {
                             id: true,
                             name: true,
+                            slug: true,
                             logoUrl: true,
                             isVerified: true,
                             verificationTier: true
                         }
                     }
                 },
-                skip,
-                take,
+                skip: Number(skip),
+                take: Number(take),
                 orderBy: { createdAt: "desc" }
             }),
             this.prisma.job.count({ where })

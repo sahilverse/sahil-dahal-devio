@@ -48,6 +48,20 @@ export default function CompanyProfilePage() {
         company.members?.some(m => m.userId === currentUser.id && (m.role === "OWNER" || m.role === "RECRUITER"))
     );
 
+    const handleShare = () => {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({
+                title: `${company.name} on Dev.io`,
+                text: company.description || `Check out ${company.name} on Dev.io`,
+                url: url,
+            }).catch((error) => console.log('Error sharing', error));
+        } else {
+            navigator.clipboard.writeText(url);
+            import("sonner").then(({ toast }) => toast.success("Link copied to clipboard!"));
+        }
+    };
+
     return (
         <div className="container max-w-5xl py-6 space-y-8 animate-in fade-in duration-500">
             {/* Header Navigation */}
@@ -59,7 +73,12 @@ export default function CompanyProfilePage() {
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="rounded-xl size-10">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="rounded-xl size-10"
+                        onClick={handleShare}
+                    >
                         <Share2 className="h-4 w-4" />
                     </Button>
                 </div>

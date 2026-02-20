@@ -5,6 +5,7 @@ import { CompanyService } from "../company/company.service";
 import { CompanyRepository } from "../company/company.repository";
 import { TopicService } from "../topic/topic.service";
 import { Job, Prisma } from "../../generated/prisma/client";
+import { JobResponseDto, PaginatedJobsResponseDto } from "./job.dto";
 import { ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import slugify from "slugify";
@@ -75,13 +76,13 @@ export class JobService {
         });
     }
 
-    async getJobBySlug(slug: string) {
+    async getJobBySlug(slug: string): Promise<JobResponseDto> {
         const job = await this.jobRepository.findBySlug(slug);
         if (!job) throw new ApiError("Job not found", StatusCodes.NOT_FOUND);
         return job;
     }
 
-    async getJobs(params: any) {
+    async getJobs(params: any): Promise<PaginatedJobsResponseDto> {
         return this.jobRepository.findAll(params);
     }
 

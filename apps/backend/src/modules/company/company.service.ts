@@ -3,6 +3,7 @@ import { TYPES } from "../../types";
 import { CompanyRepository } from "./company.repository";
 import type { CompanySearchResponse } from "./company.types";
 import { CompanyRole } from "../../generated/prisma/client";
+import { CreateCompanyDto, UpdateCompanyDto, CompanyResponseDto } from "./company.dto";
 import { ApiError, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import slugify from "slugify";
@@ -42,19 +43,19 @@ export class CompanyService {
         return company;
     }
 
-    async getCompanyById(id: string) {
+    async getCompanyById(id: string): Promise<CompanyResponseDto> {
         const company = await this.companyRepository.findById(id);
         if (!company) throw new ApiError("Company not found", StatusCodes.NOT_FOUND);
         return company;
     }
 
-    async getCompanyBySlug(slug: string) {
+    async getCompanyBySlug(slug: string): Promise<CompanyResponseDto> {
         const company = await this.companyRepository.findBySlug(slug);
         if (!company) throw new ApiError("Company not found", StatusCodes.NOT_FOUND);
         return company;
     }
 
-    async updateCompany(companyId: string, userId: string, data: any) {
+    async updateCompany(companyId: string, userId: string, data: any): Promise<CompanyResponseDto> {
         const company = await this.getCompanyById(companyId);
 
         // Check permissions (Owner only for now)

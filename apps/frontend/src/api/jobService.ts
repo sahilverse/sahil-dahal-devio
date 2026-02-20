@@ -18,7 +18,7 @@ export interface Job {
     companyId: string;
     authorId: string;
     createdAt: string;
-    company?: Company;
+    company?: Company & { slug: string };
     topics?: { topic: { name: string; slug: string } }[];
 }
 

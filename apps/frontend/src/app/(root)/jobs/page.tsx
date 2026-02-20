@@ -76,9 +76,6 @@ export default function JobBoardPage() {
                         />
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-border/40 bg-muted/10 shrink-0">
-                            <SlidersHorizontal className="h-5 w-5" />
-                        </Button>
                     </div>
                 </div>
 
