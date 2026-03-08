@@ -949,6 +949,7 @@ model CyberRoom {
   imageUrl      String? @map("image_url")
   estimatedTime Int?    @map("estimated_time")
   pointsReward  Int     @default(0) @map("points_reward")
+  imageId       String  @default("alpine:latest") @map("image_id")
 
   isPublished Boolean @default(false) @map("is_published")
 

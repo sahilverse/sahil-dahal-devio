@@ -37,7 +37,7 @@ import { ConversationSocketHandler } from "../modules/conversation/conversation.
 import { EventRepository, EventService, EventController } from "../modules/event";
 import { EventSocketHandler } from "../modules/event/event.socket";
 import { LabRepository, LabService, LabController } from "../modules/lab";
-import { CyberRoomRepository, CyberRoomService, CyberRoomController, CTFService, VMSessionService } from "../modules/cyber-room";
+import { CyberRoomRepository, CyberRoomService, CyberRoomSyncService, CyberRoomController, CTFService, VMSessionService } from "../modules/cyber-room";
 
 
 const container = new Container();
@@ -160,6 +160,7 @@ container.bind<LabController>(TYPES.LabController).to(LabController).inSingleton
 
 container.bind<CyberRoomRepository>(TYPES.CyberRoomRepository).to(CyberRoomRepository).inSingletonScope();
 container.bind<CyberRoomService>(TYPES.CyberRoomService).to(CyberRoomService).inSingletonScope();
+container.bind<CyberRoomSyncService>(TYPES.CyberRoomSyncService).to(CyberRoomSyncService).inSingletonScope();
 container.bind<CyberRoomController>(TYPES.CyberRoomController).to(CyberRoomController).inSingletonScope();
 
 container.bind<CTFService>(TYPES.CTFService).to(CTFService).inSingletonScope();

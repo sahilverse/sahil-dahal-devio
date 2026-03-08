@@ -47,8 +47,9 @@ export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY!;
 export const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY!;
 export const MINIO_USE_SSL = process.env.MINIO_USE_SSL === 'true';
 
-export const MINIO_BUCKET_NAME = process.env.MINIO_BUCKET_NAME || "devio-uploads";
-export const MINIO_BUCKET_PROBLEMS = process.env.MINIO_BUCKET_PROBLEMS || "devio-problems";
+export const MINIO_BUCKET_NAME = process.env.MINIO_BUCKET_NAME!;
+export const MINIO_BUCKET_PROBLEMS = process.env.MINIO_BUCKET_PROBLEMS!;
+export const MINIO_BUCKET_LABS = process.env.MINIO_BUCKET_LABS!;
 
 export const CODE_SANDBOX_URL = process.env.CODE_SANDBOX_URL || 'http://localhost:5000';
 
@@ -62,3 +63,8 @@ export const PROBLEM_REDIS_KEYS = {
 
 // Judge0
 export const JUDGE0_URL = process.env.JUDGE0_URL || "http://localhost:2358";
+
+
+// Lab Orchestrator
+export const LAB_ORCHESTRATOR_URL = process.env.LAB_ORCHESTRATOR_URL!;
+export const LAB_ORCHESTRATOR_SECRET = process.env.LAB_ORCHESTRATOR_SECRET!;

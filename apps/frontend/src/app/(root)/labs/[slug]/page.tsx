@@ -3,14 +3,15 @@
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useFetchLab, useFetchChallenges, useSubmitFlag, useFetchActiveSession, useStartSession, useExtendSession, useTerminateSession, useFetchEnrollment, useJoinRoom } from "@/hooks/useLabs";
-import { Shield, Lock, Unlock, Flag, Clock, HardDrive, TerminalSquare, AlertCircle, Play, Square, Plus } from "lucide-react";
+import { Shield, Lock, Unlock, Flag, Clock, HardDrive, TerminalSquare, AlertCircle, Play, Square, Plus, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow, addMinutes } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { LabTerminal } from "@/components/labs/LabTerminal";
 
 export default function RoomDetailPage() {
     const params = useParams();
@@ -29,6 +30,7 @@ export default function RoomDetailPage() {
     const submitFlag = useSubmitFlag();
 
     const [flagAnswers, setFlagAnswers] = useState<Record<string, string>>({});
+    const [isFocused, setIsFocused] = useState(false);
 
     if (isLoadingRoom) return <div className="p-10 text-center animate-pulse">Loading Room...</div>;
     if (!room) return <div className="p-10 text-center text-red-500">Room not found.</div>;
@@ -48,193 +50,226 @@ export default function RoomDetailPage() {
     return (
         <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden bg-background">
             {/* Left Panel: Content & Tasks */}
-            <div className="w-full lg:w-1/2 flex flex-col border-r border-border/50 shrink-0 h-full overflow-y-auto custom-scrollbar">
-                {/* Header Image */}
-                <div className="relative h-48 sm:h-64 w-full shrink-0">
-                    {room.imageUrl ? (
-                        <Image src={room.imageUrl} alt={room.title} fill className="object-cover" />
-                    ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-950 flex items-center justify-center">
-                            <Shield className="h-20 w-20 text-slate-800" />
-                        </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="bg-background/50 backdrop-blur-md">
-                                {room.difficulty}
-                            </Badge>
-                            {room.pointsReward > 0 && (
-                                <Badge className="bg-brand-primary/80 backdrop-blur-md">
-                                    {room.pointsReward} Points
-                                </Badge>
-                            )}
-                        </div>
-                        <h1 className="text-3xl font-black text-foreground drop-shadow-md">{room.title}</h1>
-                    </div>
-                </div>
-
-                <div className="p-6 space-y-8 flex-1">
-                    {/* Enrollment Section */}
-                    {!isEnrolled ? (
-                        <div className="bg-brand-primary/10 border border-brand-primary/20 rounded-2xl p-6 text-center space-y-4">
-                            <h3 className="text-lg font-bold">Ready to take on the challenge?</h3>
-                            <p className="text-sm text-muted-foreground">Join this room to access tasks, start machines, and submit flags.</p>
-                            <Button
-                                onClick={handleJoin}
-                                disabled={joinRoom.isPending}
-                                className="w-full sm:w-auto font-black px-8"
-                            >
-                                {joinRoom.isPending ? "Joining..." : "Join Room"}
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50">
-                            <div className="flex flex-col">
-                                <span className="text-sm text-muted-foreground font-medium">Your Progress</span>
-                                <span className="text-xl font-black text-brand-primary">{enrollment.progress || 0}%</span>
-                            </div>
-                            <div className="w-1/2 bg-muted rounded-full h-3 overflow-hidden">
-                                <div
-                                    className="bg-brand-primary h-full rounded-full transition-all duration-500 ease-out"
-                                    style={{ width: `${enrollment.progress || 0}%` }}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Room Description */}
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-brand-primary">
-                        <ReactMarkdown>{room.description}</ReactMarkdown>
-                    </div>
-
-                    {/* Tasks / Challenges List */}
-                    <div className="space-y-4 pt-4 border-t border-border/30">
-                        <h2 className="text-xl font-black flex items-center gap-2">
-                            <Flag className="h-5 w-5 text-brand-primary" />
-                            Tasks & Challenges
-                        </h2>
-
-                        {!isEnrolled ? (
-                            <div className="flex items-center gap-2 text-muted-foreground text-sm p-4 bg-muted/20 rounded-xl border border-dashed border-border/50">
-                                <Lock className="h-4 w-4" />
-                                Join the room to view tasks.
-                            </div>
-                        ) : challenges?.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No tasks available yet.</p>
+            {!isFocused && (
+                <div className="w-full lg:w-[480px] flex flex-col border-r border-border/50 shrink-0 h-full overflow-y-auto custom-scrollbar transition-all duration-300">
+                    {/* Header Image */}
+                    <div className="relative h-48 sm:h-64 w-full shrink-0">
+                        {room.imageUrl ? (
+                            <Image src={room.imageUrl} alt={room.title} fill className="object-cover" />
                         ) : (
-                            <div className="space-y-4">
-                                {challenges?.map((challenge, index) => {
-                                    const isSolved = challenge.isSolved;
-                                    return (
-                                        <div key={challenge.id} className={cn(
-                                            "border rounded-2xl p-5 transition-colors",
-                                            isSolved ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border/50"
-                                        )}>
-                                            <div className="flex items-start justify-between gap-4 mb-4">
-                                                <div>
-                                                    <h3 className="font-bold text-foreground">
-                                                        Task {index + 1}: {challenge.title}
-                                                    </h3>
-                                                    <p className="text-sm text-muted-foreground mt-1">
-                                                        {challenge.points} points • {challenge.type}
-                                                    </p>
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-950 flex items-center justify-center">
+                                <Shield className="h-20 w-20 text-slate-800" />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                        <div className="absolute bottom-6 left-6 right-6">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Badge variant="outline" className="bg-background/50 backdrop-blur-md border-white/10 uppercase tracking-tighter font-black">
+                                    {room.difficulty}
+                                </Badge>
+                                {room.pointsReward > 0 && (
+                                    <Badge className="bg-brand-primary/80 backdrop-blur-md">
+                                        {room.pointsReward} Points
+                                    </Badge>
+                                )}
+                            </div>
+                            <h1 className="text-3xl font-black text-foreground drop-shadow-md">{room.title}</h1>
+                        </div>
+                    </div>
+
+                    <div className="p-6 space-y-8 flex-1">
+                        {/* Enrollment Section */}
+                        {!isEnrolled ? (
+                            <div className="bg-brand-primary/10 border border-brand-primary/20 rounded-2xl p-6 text-center space-y-4">
+                                <h3 className="text-lg font-bold">Ready to take on the challenge?</h3>
+                                <p className="text-sm text-muted-foreground">Join this room to access tasks, start machines, and submit flags.</p>
+                                <Button
+                                    onClick={handleJoin}
+                                    disabled={joinRoom.isPending}
+                                    className="w-full sm:w-auto font-black px-8"
+                                >
+                                    {joinRoom.isPending ? "Joining..." : "Join Room"}
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50 shadow-sm">
+                                <div className="flex flex-col">
+                                    <span className="text-xs text-muted-foreground font-black uppercase tracking-widest">Your Progress</span>
+                                    <span className="text-xl font-black text-brand-primary">{enrollment.progress || 0}%</span>
+                                </div>
+                                <div className="w-1/2 bg-muted rounded-full h-2.5 overflow-hidden">
+                                    <div
+                                        className="bg-brand-primary h-full rounded-full transition-all duration-700 ease-in-out"
+                                        style={{ width: `${enrollment.progress || 0}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Room Description */}
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-black prose-a:text-brand-primary prose-strong:text-foreground">
+                            <ReactMarkdown>{room.description}</ReactMarkdown>
+                        </div>
+
+                        {/* Tasks / Challenges List */}
+                        <div className="space-y-4 pt-4 border-t border-border/30">
+                            <h2 className="text-xl font-black flex items-center gap-2">
+                                <Flag className="h-5 w-5 text-brand-primary" />
+                                Tasks & Challenges
+                            </h2>
+
+                            {!isEnrolled ? (
+                                <div className="flex items-center gap-2 text-muted-foreground text-sm p-4 bg-muted/20 rounded-xl border border-dashed border-border/50">
+                                    <Lock className="h-4 w-4" />
+                                    Join the room to view tasks.
+                                </div>
+                            ) : challenges?.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No tasks available yet.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {challenges?.map((challenge, index) => {
+                                        const isSolved = challenge.isSolved;
+                                        return (
+                                            <div key={challenge.id} className={cn(
+                                                "border rounded-2xl p-5 transition-all duration-300",
+                                                isSolved ? "bg-emerald-500/[0.03] border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]" : "bg-card border-border/50 hover:border-brand-primary/30"
+                                            )}>
+                                                <div className="flex items-start justify-between gap-4 mb-4">
+                                                    <div>
+                                                        <h3 className="font-bold text-foreground">
+                                                            Task {index + 1}: {challenge.title}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <Badge variant="outline" className="text-[10px] font-bold py-0 h-4 uppercase bg-muted/20">
+                                                                {challenge.points} pts
+                                                            </Badge>
+                                                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
+                                                                {challenge.type}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {isSolved ? (
+                                                        <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 shrink-0 font-black">
+                                                            <Unlock className="w-3 h-3 mr-1" />
+                                                            SOLVED
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-muted-foreground/60 shrink-0 font-bold border-border/40">
+                                                            PENDING
+                                                        </Badge>
+                                                    )}
                                                 </div>
-                                                {isSolved ? (
-                                                    <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 shrink-0">
-                                                        <Unlock className="w-3 h-3 mr-1" />
-                                                        Solved
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="outline" className="text-muted-foreground shrink-0">
-                                                        Pending
-                                                    </Badge>
+
+                                                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mb-4">
+                                                    <ReactMarkdown>{challenge.description}</ReactMarkdown>
+                                                </div>
+
+                                                {/* Flag Submission */}
+                                                {challenge.type === "FLAG" && !isSolved && (
+                                                    <div className="flex gap-2 mt-4">
+                                                        <Input
+                                                            placeholder="devio{flag_here}"
+                                                            value={flagAnswers[challenge.id] || ""}
+                                                            onChange={(e) => setFlagAnswers({ ...flagAnswers, [challenge.id]: e.target.value })}
+                                                            className="font-mono bg-muted/30 focus-visible:ring-brand-primary h-10"
+                                                        />
+                                                        <Button
+                                                            onClick={() => handleSubmitFlag(challenge.id)}
+                                                            disabled={!flagAnswers[challenge.id] || submitFlag.isPending}
+                                                            className="shrink-0 font-black h-10 px-6"
+                                                        >
+                                                            Submit
+                                                        </Button>
+                                                    </div>
                                                 )}
                                             </div>
-
-                                            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mb-4">
-                                                <ReactMarkdown>{challenge.description}</ReactMarkdown>
-                                            </div>
-
-                                            {/* Flag Submission */}
-                                            {challenge.type === "FLAG" && !isSolved && (
-                                                <div className="flex gap-2 mt-4">
-                                                    <Input
-                                                        placeholder="devio{flag_here}"
-                                                        value={flagAnswers[challenge.id] || ""}
-                                                        onChange={(e) => setFlagAnswers({ ...flagAnswers, [challenge.id]: e.target.value })}
-                                                        className="font-mono bg-muted/30"
-                                                    />
-                                                    <Button
-                                                        onClick={() => handleSubmitFlag(challenge.id)}
-                                                        disabled={!flagAnswers[challenge.id] || submitFlag.isPending}
-                                                        className="shrink-0"
-                                                    >
-                                                        Submit
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Right Panel: Target Machine / Interactive Area */}
-            <div className="hidden lg:flex flex-1 flex-col bg-slate-950 text-slate-300 relative">
-                {/* Active Session Top Bar */}
-                <div className="h-14 shrink-0 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 z-10 shadow-sm relative">
-                    <div className="flex items-center gap-3">
-                        <HardDrive className={cn("h-5 w-5", hasActiveMachine ? "text-emerald-400" : "text-slate-600")} />
-                        <span className="font-bold text-sm tracking-wide text-slate-100">TARGET MACHINE</span>
-                        {hasActiveMachine && (
-                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-mono text-[10px]">
-                                {activeSession.ipAddress || "Provisioning IP..."}
-                            </Badge>
-                        )}
+            <div className={cn(
+                "flex-1 flex flex-col bg-[#020617] relative transition-all duration-300",
+                isFocused ? "w-full" : "hidden lg:flex"
+            )}>
+                {/* Active Session Top Bar - Ultra Compact HUD */}
+                <div className="h-16 shrink-0 bg-slate-900/60 backdrop-blur-2xl border-b border-slate-800/40 flex items-center justify-between px-3 z-10 transition-all">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsFocused(!isFocused)}
+                            className="h-9 w-9 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all rounded-lg shrink-0"
+                            title={isFocused ? "Show Tasks" : "Maximize Terminal"}
+                        >
+                            {isFocused ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                        </Button>
+
+                        <div className="flex flex-col shrink-0">
+                            <span className="font-bold text-[8px] tracking-[0.2em] text-slate-500 uppercase leading-none mb-0.5">Target</span>
+                            <div className="flex items-center gap-2">
+                                <h2 className="font-mono text-xs font-black text-slate-100 uppercase tracking-tight">
+                                    {hasActiveMachine ? activeSession.ipAddress || "..." : "---.---.---.---"}
+                                </h2>
+                                {hasActiveMachine && (
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                        <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                                        <span className="text-[7px] font-black text-emerald-400 tracking-widest uppercase">Live</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {isEnrolled && (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             {hasActiveMachine ? (
                                 <>
-                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 rounded-lg text-xs font-bold font-mono">
-                                        <Clock className="w-3.5 h-3.5" />
-                                        <span>
-                                            Expires {formatDistanceToNow(new Date(activeSession.expiresAt), { addSuffix: true })}
-                                        </span>
+                                    <div className="flex flex-col items-end shrink-0 mr-1">
+                                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.1em] leading-none mb-0.5">Remaining</span>
+                                        <div className="flex items-center gap-1 text-amber-500 font-mono text-[11px] font-black">
+                                            <Clock className="w-3 h-3" />
+                                            <span>
+                                                {formatDistanceToNow(new Date(activeSession.expiresAt), { addSuffix: false })}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => extendSession.mutate(activeSession.id)}
-                                        className="h-8 text-xs border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
-                                        title="Extend by 30 mins (Costs 50 Cipher)"
-                                    >
-                                        <Plus className="w-3.5 h-3.5 mr-1" />
-                                        Add Time
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => terminateSession.mutate(activeSession.id)}
-                                        className="h-8 text-xs"
-                                    >
-                                        <Square className="w-3.5 h-3.5 mr-1 fill-current" />
-                                        Terminate
-                                    </Button>
+
+                                    <div className="flex gap-1 bg-slate-800/30 p-1 rounded-lg border border-slate-800/50 shrink-0">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => extendSession.mutate(activeSession.id)}
+                                            disabled={extendSession.isPending}
+                                            className="h-8 rounded-md text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-emerald-500/10 hover:text-emerald-400 px-2"
+                                        >
+                                            <Plus className="w-3.5 h-3.5 mr-1" />
+                                            {extendSession.isPending ? "..." : "Extend"}
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => terminateSession.mutate(activeSession.id)}
+                                            disabled={terminateSession.isPending}
+                                            className="h-8 rounded-md text-[9px] font-black uppercase tracking-widest bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 text-white px-3"
+                                        >
+                                            <Square className="w-2 h-2 mr-1.5 fill-current" />
+                                            End
+                                        </Button>
+                                    </div>
                                 </>
                             ) : (
                                 <Button
                                     onClick={() => startSession.mutate(room.id)}
                                     disabled={startSession.isPending}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold tracking-wide h-8"
-                                    size="sm"
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-black tracking-[0.1em] uppercase text-[10px] h-9 px-5 rounded-lg transition-all shadow-lg"
                                 >
-                                    <Play className="w-4 h-4 mr-1.5 fill-current" />
+                                    <Play className="w-3.5 h-3.5 mr-2 fill-current" />
                                     {startSession.isPending ? "Starting..." : "Start Machine"}
                                 </Button>
                             )}
@@ -243,53 +278,51 @@ export default function RoomDetailPage() {
                 </div>
 
                 {/* Machine Content Area */}
-                <div className="flex-1 overflow-hidden relative group">
+                <div className="flex-1 overflow-hidden relative group bg-black">
                     {!isEnrolled ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-slate-950">
-                            <Lock className="h-16 w-16 text-slate-800 mb-6 drop-shadow-lg" />
-                            <h2 className="text-2xl font-black text-slate-300 mb-2">Access Denied</h2>
-                            <p className="text-slate-500 max-w-sm">
+                            <Lock className="h-16 w-16 text-slate-800 mb-6 drop-shadow-2xl" />
+                            <h2 className="text-2xl font-black text-slate-300 mb-2 uppercase tracking-tighter">Access Denied</h2>
+                            <p className="text-slate-500 max-w-sm text-sm font-medium">
                                 You must join this room to interact with the target environment.
                             </p>
+                            <Button onClick={handleJoin} className="mt-8 font-black uppercase tracking-widest text-xs px-8">Join Now</Button>
                         </div>
                     ) : !hasActiveMachine ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat opacity-80 mix-blend-overlay" style={{ backgroundSize: '100px' }}>
                             <div className="relative z-10 flex flex-col items-center">
-                                <TerminalSquare className="h-16 w-16 text-slate-700 mb-6 drop-shadow-lg" />
-                                <h2 className="text-2xl font-black text-slate-300 mb-2">Machine Offline</h2>
-                                <p className="text-slate-500 max-w-md">
-                                    Click "Start Machine" above to provision your isolated target environment. Once active, you'll be given an IP address to attack.
+                                <TerminalSquare className="h-20 w-20 text-slate-800 mb-8 drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]" />
+                                <h2 className="text-3xl font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Machine Offline</h2>
+                                <p className="text-slate-600 max-w-md text-sm font-bold leading-relaxed mb-8">
+                                    Click "Start Machine" above to provision your isolated target environment. Once active, you'll be given a real-time Linux shell.
                                 </p>
+                                <div className="flex gap-4 opacity-30 grayscale pointer-events-none">
+                                    <div className="h-1 bg-slate-800 w-12 rounded-full" />
+                                    <div className="h-1 bg-slate-800 w-12 rounded-full" />
+                                    <div className="h-1 bg-slate-800 w-12 rounded-full" />
+                                </div>
                             </div>
                             <div className="absolute inset-0 bg-slate-950 pointer-events-none -z-10" />
                         </div>
                     ) : (
-                        <div className="w-full h-full bg-black relative flex flex-col items-center justify-center text-center p-8">
-                            <AlertCircle className="w-16 h-16 text-emerald-500/50 mb-4 animate-pulse" />
-                            <h3 className="text-xl font-bold text-emerald-400 mb-2 font-mono drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]">
-                                Connection Established
-                            </h3>
-                            <p className="text-slate-400 max-w-lg mb-6 leading-relaxed">
-                                The machine is running. Connect to it via your provided OpenVPN profile or use the web terminal below.
-                                <br /><br />
-                                <span className="text-slate-300 font-mono bg-slate-900 border border-slate-700 px-3 py-1 rounded-md text-sm">Target IP: {activeSession.ipAddress || "Waiting for DHCP..."}</span>
-                            </p>
+                        <div className="w-full h-full flex flex-col">
+                            {/* The Real Terminal */}
+                            <div className="flex-1 bg-black">
+                                <LabTerminal instanceId={activeSession.instanceId || ""} />
+                            </div>
 
-                            {/* Placeholder for Interactive Terminal/Guacamole */}
-                            <div className="w-full max-w-3xl h-64 border border-slate-800 rounded-xl bg-slate-900 flex flex-col items-center justify-center shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 w-full h-8 bg-slate-950 border-b border-slate-800 flex items-center px-4">
-                                    <div className="flex gap-1.5">
-                                        <div className="w-3 h-3 rounded-full bg-rose-500/80"></div>
-                                        <div className="w-3 h-3 rounded-full bg-amber-500/80"></div>
-                                        <div className="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+                            {/* Help Footer */}
+                            {!isFocused && (
+                                <div className="h-8 bg-slate-900/30 border-t border-slate-800/30 flex items-center px-6 justify-between">
+                                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.15em] flex items-center gap-2">
+                                        Lab Orchestrator WebSocket Bridge Active
+                                    </p>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-[9px] font-mono text-slate-700">NODE: {activeSession.instanceId?.slice(0, 8)}</span>
+                                        <span className="text-[9px] font-mono text-slate-700 uppercase leading-none">Ubuntu 22.04 LTS</span>
                                     </div>
                                 </div>
-                                <TerminalSquare className="w-10 h-10 text-slate-700 mb-3" />
-                                <p className="text-sm font-medium text-slate-500 font-mono text-center px-4">
-                                    [Interactive Terminal Interface]<br />
-                                    (To be integrated via xterm.js or Guacamole)
-                                </p>
-                            </div>
+                            )}
                         </div>
                     )}
                 </div>

@@ -31,6 +31,9 @@ services:
 
       MINIO_NOTIFY_WEBHOOK_ENABLE_problems: "on"
       MINIO_NOTIFY_WEBHOOK_ENDPOINT_problems: "http://host.docker.internal:8000/api/problems/webhook/minio"
+
+      MINIO_NOTIFY_WEBHOOK_ENABLE_labs: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_labs: "http://host.docker.internal:8000/api/cyber-rooms/webhook/minio"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

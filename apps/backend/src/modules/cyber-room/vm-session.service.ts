@@ -8,10 +8,12 @@ import { StatusCodes } from "http-status-codes";
 import { plainToInstance } from "class-transformer";
 import { addMinutes } from "date-fns";
 import { CipherReason } from "../../generated/prisma/client";
+import axios from "axios";
+import { LAB_ORCHESTRATOR_URL } from "../../config/constants";
 
 const BASE_SESSION_MINUTES = 30;
 const EXTENSION_MINUTES = 30;
-const EXTENSION_COST = 50; // 50 Ciphers for 30 mins
+const EXTENSION_COST = 50;
 
 @injectable()
 export class VMSessionService {
@@ -27,8 +29,30 @@ export class VMSessionService {
             return plainToInstance(VMSessionResponseDto, activeSession, { excludeExtraneousValues: true });
         }
 
-        // TODO: Call Lab Orchestrator to provision machine
-        // const instance = await this.orchestrator.provision(...)
+        // Get room to get imageId
+        const room = await this.cyberRoomRepository.findRoomById(roomId);
+        if (!room) {
+            throw new ApiError("Room not found", StatusCodes.NOT_FOUND);
+        }
+
+        // Provision machine via Lab Orchestrator
+        let instanceId = null;
+        let ipAddress = null;
+
+        try {
+            const response = await axios.post(`${LAB_ORCHESTRATOR_URL}/api/instances/provision`, {
+                roomId,
+                userId,
+                imageId: room.imageId || "alpine:latest"
+            });
+
+            const instance = response.data.result;
+            instanceId = instance.instanceId;
+            ipAddress = instance.ipAddress;
+        } catch (error: any) {
+            logger.error(error, `Failed to provision lab machine:`);
+            throw new ApiError("Failed to start lab environment. Please check if Lab Orchestrator is running.", StatusCodes.SERVICE_UNAVAILABLE);
+        }
 
         const expiresAt = addMinutes(new Date(), BASE_SESSION_MINUTES);
 
@@ -38,8 +62,8 @@ export class VMSessionService {
             status: "RUNNING",
             expiresAt,
             startedAt: new Date(),
-            // instanceId: instance.id,
-            // ipAddress: instance.ip
+            instanceId: instanceId,
+            ipAddress: ipAddress
         });
 
         logger.info(`Started VM session ${session.id} for user ${userId} in room ${roomId}. Expires at ${expiresAt}`);
@@ -82,7 +106,17 @@ export class VMSessionService {
             throw new ApiError("Session not found", StatusCodes.NOT_FOUND);
         }
 
-        // TODO: Call Lab Orchestrator to kill machine
+        if (session.instanceId) {
+            try {
+                const orchestratorUrl = process.env.LAB_ORCHESTRATOR_URL || "http://localhost:5500";
+                const orchestratorSecret = process.env.LAB_ORCHESTRATOR_SECRET || "devio-secret-key";
+
+                await axios.post(`${orchestratorUrl}/api/instances/${session.instanceId}/terminate`, {});
+            } catch (error: any) {
+                logger.error(`Failed to terminate lab machine ${session.instanceId}:`, error?.response?.data || error.message);
+                // We don't throw an error here, we still want to mark the session as terminated in the DB
+            }
+        }
 
         await this.cyberRoomRepository.updateSession(sessionId, {
             status: "TERMINATED",

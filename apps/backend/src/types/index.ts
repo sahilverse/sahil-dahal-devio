@@ -112,6 +112,7 @@ export const TYPES = {
 
     CyberRoomRepository: Symbol.for("CyberRoomRepository"),
     CyberRoomService: Symbol.for("CyberRoomService"),
+    CyberRoomSyncService: Symbol.for("CyberRoomSyncService"),
     CyberRoomController: Symbol.for("CyberRoomController"),
 
     CTFService: Symbol.for("CTFService"),
