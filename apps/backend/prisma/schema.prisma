@@ -964,15 +964,22 @@ model CyberRoom {
   @@index([isPublished])
 }
 
+enum CTFChallengeType {
+  INFO
+  FLAG
+  MULTIPLE_CHOICE
+}
+
 model CTFChallenge {
   id     String @id @default(cuid())
   roomId String @map("room_id")
 
   title       String
   description String
+  type        CTFChallengeType @default(FLAG)
   flag        String
-  points      Int    @default(10)
-  order       Int    @default(0)
+  points      Int              @default(10)
+  order       Int              @default(0)
 
   hints String[]
 
@@ -1030,12 +1037,15 @@ model VMSession {
   roomId String? @map("room_id")
 
   instanceId String? @map("instance_id")
+  imageId    String? @map("image_id")
   ipAddress  String? @map("ip_address")
 
   status    VMStatus @default(PENDING)
   expiresAt DateTime @map("expires_at")
 
-  createdAt DateTime @default(now())
+  createdAt    DateTime  @default(now())
+  startedAt    DateTime? @map("started_at")
+  terminatedAt DateTime? @map("terminated_at")
 
   user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   room CyberRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
