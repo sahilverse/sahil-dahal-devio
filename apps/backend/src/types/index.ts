@@ -105,6 +105,17 @@ export const TYPES = {
     EventController: Symbol.for("EventController"),
     EventGuard: Symbol.for("EventGuard"),
     EventSocketHandler: Symbol.for("EventSocketHandler"),
+
+    LabRepository: Symbol.for("LabRepository"),
+    LabService: Symbol.for("LabService"),
+    LabController: Symbol.for("LabController"),
+
+    CyberRoomRepository: Symbol.for("CyberRoomRepository"),
+    CyberRoomService: Symbol.for("CyberRoomService"),
+    CyberRoomController: Symbol.for("CyberRoomController"),
+
+    CTFService: Symbol.for("CTFService"),
+    VMSessionService: Symbol.for("VMSessionService"),
 };
 
 export * from "./jwt";

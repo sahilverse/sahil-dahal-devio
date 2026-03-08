@@ -36,6 +36,8 @@ import { ConversationRepository, ConversationService, ConversationController } f
 import { ConversationSocketHandler } from "../modules/conversation/conversation.socket";
 import { EventRepository, EventService, EventController } from "../modules/event";
 import { EventSocketHandler } from "../modules/event/event.socket";
+import { LabRepository, LabService, LabController } from "../modules/lab";
+import { CyberRoomRepository, CyberRoomService, CyberRoomController, CTFService, VMSessionService } from "../modules/cyber-room";
 
 
 const container = new Container();
@@ -124,8 +126,6 @@ container.bind<CipherRepository>(TYPES.CipherRepository).to(CipherRepository).in
 container.bind<CipherService>(TYPES.CipherService).to(CipherService).inSingletonScope();
 container.bind<CipherController>(TYPES.CipherController).to(CipherController).inSingletonScope();
 
-
-
 container.bind<ProblemDraftRepository>(TYPES.ProblemDraftRepository).to(ProblemDraftRepository).inSingletonScope();
 container.bind<ProblemDraftService>(TYPES.ProblemDraftService).to(ProblemDraftService).inSingletonScope();
 
@@ -153,6 +153,17 @@ container.bind<EventRepository>(TYPES.EventRepository).to(EventRepository).inSin
 container.bind<EventService>(TYPES.EventService).to(EventService).inSingletonScope();
 container.bind<EventSocketHandler>(TYPES.EventSocketHandler).to(EventSocketHandler).inSingletonScope();
 container.bind<ISocketHandler>(TYPES.SocketHandler).to(EventSocketHandler).inSingletonScope();
+
+container.bind<LabRepository>(TYPES.LabRepository).to(LabRepository).inSingletonScope();
+container.bind<LabService>(TYPES.LabService).to(LabService).inSingletonScope();
+container.bind<LabController>(TYPES.LabController).to(LabController).inSingletonScope();
+
+container.bind<CyberRoomRepository>(TYPES.CyberRoomRepository).to(CyberRoomRepository).inSingletonScope();
+container.bind<CyberRoomService>(TYPES.CyberRoomService).to(CyberRoomService).inSingletonScope();
+container.bind<CyberRoomController>(TYPES.CyberRoomController).to(CyberRoomController).inSingletonScope();
+
+container.bind<CTFService>(TYPES.CTFService).to(CTFService).inSingletonScope();
+container.bind<VMSessionService>(TYPES.VMSessionService).to(VMSessionService).inSingletonScope();
 
 
 export { container };

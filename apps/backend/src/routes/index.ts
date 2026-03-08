@@ -20,6 +20,8 @@ import { router as conversationRoutes } from "../modules/conversation/conversati
 import { router as eventRoutes } from "../modules/event/event.route";
 import { router as jobRoutes } from "../modules/job/job.route";
 import { router as jobApplicationRoutes } from "../modules/job-application/job-application.route";
+import { router as labRoutes } from "../modules/lab/lab.route";
+import { router as cyberRoomRoutes } from "../modules/cyber-room/cyber-room.route";
 
 const router: Router = Router();
 
@@ -42,6 +44,8 @@ router.use("/conversations", conversationRoutes);
 router.use("/events", eventRoutes);
 router.use("/jobs/applications", jobApplicationRoutes);
 router.use("/jobs", jobRoutes);
+router.use("/labs", labRoutes);
+router.use("/cyber-rooms", cyberRoomRoutes);
 
 
 
