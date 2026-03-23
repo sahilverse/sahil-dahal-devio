@@ -54,7 +54,22 @@ export class LabVMService {
             throw new ApiError("Failed to start lab environment. Please check if Lab Orchestrator is running.", StatusCodes.SERVICE_UNAVAILABLE);
         }
 
-        const expiresAt = addMinutes(new Date(), BASE_SESSION_MINUTES);
+        let expiresAt = addMinutes(new Date(), BASE_SESSION_MINUTES);
+
+        // Check for last terminated session to calculate remaining time
+        const lastTerminated = await this.labRepository.findLastTerminatedSession(userId, roomId);
+        if (lastTerminated && lastTerminated.terminatedAt) {
+            const lastExpiry = new Date(lastTerminated.expiresAt);
+            const lastTermination = new Date(lastTerminated.terminatedAt);
+
+            const remainingMs = lastExpiry.getTime() - lastTermination.getTime();
+            
+            // If there was remaining time (ended early), carry it over
+            if (remainingMs > 0) {
+                expiresAt = new Date(Date.now() + remainingMs);
+                logger.info(`Carrying forward ${Math.round(remainingMs / 1000 / 60)}m of remaining time for user ${userId} in room ${roomId}.`);
+            }
+        }
 
         const session = await this.labRepository.createSession({
             user: { connect: { id: userId } },

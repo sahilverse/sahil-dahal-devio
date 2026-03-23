@@ -1,5 +1,6 @@
 import { injectable, inject } from "inversify";
 import type { PrismaClient, CyberRoom, CyberRoomEnrollment, Prisma } from "../../generated/prisma/client";
+import { VMStatus } from "../../generated/prisma/client";
 import { TYPES } from "../../types";
 
 @injectable()
@@ -116,7 +117,7 @@ export class LabRepository {
     async createSubmission(data: Prisma.CTFSubmissionCreateInput): Promise<any> {
         return this.prisma.cTFSubmission.create({ data });
     }
-    
+
     async countSolvedChallenges(userId: string, roomId: string): Promise<number> {
         return this.prisma.cTFSubmission.count({
             where: {
@@ -138,7 +139,7 @@ export class LabRepository {
             where: {
                 userId,
                 roomId,
-                status: "RUNNING",
+                status: VMStatus.RUNNING,
                 expiresAt: {
                     gt: new Date()
                 }
@@ -160,6 +161,20 @@ export class LabRepository {
     async findSessionById(id: string): Promise<any | null> {
         return this.prisma.vMSession.findUnique({
             where: { id }
+        });
+    }
+
+    async findLastTerminatedSession(userId: string, roomId: string): Promise<any | null> {
+        return this.prisma.vMSession.findFirst({
+            where: {
+                userId,
+                roomId,
+                status: VMStatus.TERMINATED,
+                terminatedAt: { not: null }
+            },
+            orderBy: {
+                terminatedAt: "desc"
+            }
         });
     }
 
