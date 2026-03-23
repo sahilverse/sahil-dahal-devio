@@ -72,6 +72,8 @@ export const LabTerminal: React.FC<LabTerminalProps> = ({ instanceId }) => {
         });
 
         // Establish WebSocket connection
+
+        // TODO: Can this be connected to main backend instead of connecting directly to Lab Orchestrator? This way we can have better control and also send some metadata like auth token, user info etc.
         const wsUrl = new URL(LAB_ORCHESTRATOR_URL || "http://localhost:5500");
         wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
         wsUrl.pathname = "/terminal";

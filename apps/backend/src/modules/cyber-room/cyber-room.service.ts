@@ -19,8 +19,8 @@ export class CyberRoomService {
         return plainToInstance(CTFChallengeResponseDto, challenges, { excludeExtraneousValues: true });
     }
 
-    async submitFlag(challengeId: string, userId: string, answer: string): Promise<CTFSubmissionResponseDto> {
-        return this.ctfService.submitFlag(challengeId, userId, answer);
+    async submitFlag(challengeId: string, userId: string, answer: string, timezoneOffset?: number): Promise<CTFSubmissionResponseDto> {
+        return this.ctfService.submitFlag(challengeId, userId, answer, timezoneOffset);
     }
 
     async startVMSession(userId: string, roomId: string): Promise<VMSessionResponseDto> {

@@ -25,8 +25,8 @@ export class CyberRoomController {
     submitFlag = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user!.id;
         const { challengeId } = req.params;
-        const { answer } = req.body;
-        const result = await this.cyberRoomService.submitFlag(challengeId as string, userId, answer);
+        const { answer, timezoneOffset } = req.body;
+        const result = await this.cyberRoomService.submitFlag(challengeId as string, userId, answer, timezoneOffset);
         ResponseHandler.sendResponse(res, StatusCodes.OK, result.message, result);
     });
 

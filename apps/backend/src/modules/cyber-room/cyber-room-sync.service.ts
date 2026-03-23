@@ -13,6 +13,7 @@ export class CyberRoomSyncService {
         @inject(TYPES.StorageService) private storageService: StorageService,
     ) { }
 
+    // handles the minio event when a new room structure file is uploaded, parses the content and syncs it with the database
     async handleMinioEvent(bucket: string, key: string): Promise<void> {
         if (!key.endsWith("room-structure.json")) return;
 

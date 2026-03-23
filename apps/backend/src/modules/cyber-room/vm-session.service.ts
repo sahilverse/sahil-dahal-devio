@@ -30,6 +30,7 @@ export class VMSessionService {
         }
 
         // Get room to get imageId
+        // TODO : Can optimize by just fetching the imageId instead of the whole room data
         const room = await this.cyberRoomRepository.findRoomById(roomId);
         if (!room) {
             throw new ApiError("Room not found", StatusCodes.NOT_FOUND);

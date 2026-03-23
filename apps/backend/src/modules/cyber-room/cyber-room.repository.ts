@@ -38,6 +38,31 @@ export class CyberRoomRepository {
     async createSubmission(data: Prisma.CTFSubmissionCreateInput): Promise<CTFSubmission> {
         return this.prisma.cTFSubmission.create({ data });
     }
+    
+    async countSolvedChallenges(userId: string, roomId: string): Promise<number> {
+        return this.prisma.cTFSubmission.count({
+            where: {
+                userId,
+                challenge: { roomId },
+                isCorrect: true
+            }
+        });
+    }
+
+    async countChallengesInRoom(roomId: string): Promise<number> {
+        return this.prisma.cTFChallenge.count({
+            where: { roomId }
+        });
+    }
+
+    async updateEnrollment(userId: string, roomId: string, data: Prisma.CyberRoomEnrollmentUpdateInput) {
+        return this.prisma.cyberRoomEnrollment.update({
+            where: {
+                roomId_userId: { roomId, userId }
+            },
+            data
+        });
+    }
 
     async findActiveSession(userId: string, roomId: string): Promise<VMSession | null> {
         return this.prisma.vMSession.findFirst({

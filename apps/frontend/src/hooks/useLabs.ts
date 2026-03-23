@@ -64,6 +64,7 @@ export function useSubmitFlag() {
             if (result.isCorrect) {
                 toast.success(result.message);
                 queryClient.invalidateQueries({ queryKey: ["ctf-challenges"] });
+                queryClient.invalidateQueries({ queryKey: ["lab-enrollment"] });
             } else {
                 toast.error(result.message);
             }
