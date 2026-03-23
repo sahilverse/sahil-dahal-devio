@@ -92,31 +92,31 @@ export const LabService = {
     },
 
     getChallenges: async (roomId: string): Promise<CTFChallenge[]> => {
-        const { data } = await api.get(`/cyber-rooms/${roomId}/challenges`);
+        const { data } = await api.get(`/labs/${roomId}/challenges`);
         return data.result;
     },
 
     submitFlag: async (challengeId: string, answer: string): Promise<CTFSubmissionResult> => {
-        const { data } = await api.post(`/cyber-rooms/challenges/${challengeId}/submit`, { answer });
+        const { data } = await api.post(`/labs/challenges/${challengeId}/submit`, { answer });
         return data.result;
     },
 
     startSession: async (roomId: string): Promise<VMSession> => {
-        const { data } = await api.post("/cyber-rooms/session", { roomId });
+        const { data } = await api.post("/labs/session", { roomId });
         return data.result;
     },
 
     getActiveSession: async (roomId: string): Promise<VMSession | null> => {
-        const { data } = await api.get(`/cyber-rooms/session/active/${roomId}`);
+        const { data } = await api.get(`/labs/session/active/${roomId}`);
         return data.result;
     },
 
     extendSession: async (sessionId: string): Promise<VMSession> => {
-        const { data } = await api.post(`/cyber-rooms/session/${sessionId}/extend`);
+        const { data } = await api.post(`/labs/session/${sessionId}/extend`);
         return data.result;
     },
 
     terminateSession: async (sessionId: string): Promise<void> => {
-        await api.post(`/cyber-rooms/session/${sessionId}/terminate`);
+        await api.post(`/labs/session/${sessionId}/terminate`);
     },
 };

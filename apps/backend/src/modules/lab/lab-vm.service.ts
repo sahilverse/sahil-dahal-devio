@@ -1,8 +1,8 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../types";
-import { CyberRoomRepository } from "./cyber-room.repository";
+import { LabRepository } from "./lab.repository";
 import { CipherService } from "../cipher/cipher.service";
-import { VMSessionResponseDto } from "./cyber-room.dto";
+import { VMSessionResponseDto } from "./lab.dto";
 import { ApiError, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { plainToInstance } from "class-transformer";
@@ -16,22 +16,21 @@ const EXTENSION_MINUTES = 30;
 const EXTENSION_COST = 50;
 
 @injectable()
-export class VMSessionService {
+export class LabVMService {
     constructor(
-        @inject(TYPES.CyberRoomRepository) private cyberRoomRepository: CyberRoomRepository,
+        @inject(TYPES.LabRepository) private labRepository: LabRepository,
         @inject(TYPES.CipherService) private cipherService: CipherService
     ) { }
 
     async startSession(userId: string, roomId: string): Promise<VMSessionResponseDto> {
         // Check for active session
-        const activeSession = await this.cyberRoomRepository.findActiveSession(userId, roomId);
+        const activeSession = await this.labRepository.findActiveSession(userId, roomId);
         if (activeSession) {
             return plainToInstance(VMSessionResponseDto, activeSession, { excludeExtraneousValues: true });
         }
 
         // Get room to get imageId
-        // TODO : Can optimize by just fetching the imageId instead of the whole room data
-        const room = await this.cyberRoomRepository.findRoomById(roomId);
+        const room = await this.labRepository.findById(roomId);
         if (!room) {
             throw new ApiError("Room not found", StatusCodes.NOT_FOUND);
         }
@@ -57,7 +56,7 @@ export class VMSessionService {
 
         const expiresAt = addMinutes(new Date(), BASE_SESSION_MINUTES);
 
-        const session = await this.cyberRoomRepository.createSession({
+        const session = await this.labRepository.createSession({
             user: { connect: { id: userId } },
             room: { connect: { id: roomId } },
             status: "RUNNING",
@@ -73,7 +72,7 @@ export class VMSessionService {
     }
 
     async extendSession(sessionId: string, userId: string): Promise<VMSessionResponseDto> {
-        const session = await this.cyberRoomRepository.findSessionById(sessionId);
+        const session = await this.labRepository.findSessionById(sessionId);
         if (!session || session.userId !== userId || session.status !== "RUNNING") {
             throw new ApiError("Active session not found", StatusCodes.NOT_FOUND);
         }
@@ -92,7 +91,7 @@ export class VMSessionService {
 
         // Extend expiresAt
         const newExpiresAt = addMinutes(session.expiresAt, EXTENSION_MINUTES);
-        const updatedSession = await this.cyberRoomRepository.updateSession(sessionId, {
+        const updatedSession = await this.labRepository.updateSession(sessionId, {
             expiresAt: newExpiresAt
         });
 
@@ -102,7 +101,7 @@ export class VMSessionService {
     }
 
     async terminateSession(sessionId: string, userId: string): Promise<void> {
-        const session = await this.cyberRoomRepository.findSessionById(sessionId);
+        const session = await this.labRepository.findSessionById(sessionId);
         if (!session || session.userId !== userId) {
             throw new ApiError("Session not found", StatusCodes.NOT_FOUND);
         }
@@ -115,11 +114,10 @@ export class VMSessionService {
                 await axios.post(`${orchestratorUrl}/api/instances/${session.instanceId}/terminate`, {});
             } catch (error: any) {
                 logger.error(`Failed to terminate lab machine ${session.instanceId}:`, error?.response?.data || error.message);
-                // We don't throw an error here, we still want to mark the session as terminated in the DB
             }
         }
 
-        await this.cyberRoomRepository.updateSession(sessionId, {
+        await this.labRepository.updateSession(sessionId, {
             status: "TERMINATED",
             terminatedAt: new Date()
         });
@@ -128,7 +126,7 @@ export class VMSessionService {
     }
 
     async getActiveSession(userId: string, roomId: string): Promise<VMSessionResponseDto | null> {
-        const session = await this.cyberRoomRepository.findActiveSession(userId, roomId);
+        const session = await this.labRepository.findActiveSession(userId, roomId);
         if (!session) return null;
 
         return plainToInstance(VMSessionResponseDto, session, { excludeExtraneousValues: true });

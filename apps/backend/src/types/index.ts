@@ -109,14 +109,9 @@ export const TYPES = {
     LabRepository: Symbol.for("LabRepository"),
     LabService: Symbol.for("LabService"),
     LabController: Symbol.for("LabController"),
-
-    CyberRoomRepository: Symbol.for("CyberRoomRepository"),
-    CyberRoomService: Symbol.for("CyberRoomService"),
-    CyberRoomSyncService: Symbol.for("CyberRoomSyncService"),
-    CyberRoomController: Symbol.for("CyberRoomController"),
-
-    CTFService: Symbol.for("CTFService"),
-    VMSessionService: Symbol.for("VMSessionService"),
+    LabSyncService: Symbol.for("LabSyncService"),
+    LabCTFService: Symbol.for("LabCTFService"),
+    LabVMService: Symbol.for("LabVMService"),
 };
 
 export * from "./jwt";

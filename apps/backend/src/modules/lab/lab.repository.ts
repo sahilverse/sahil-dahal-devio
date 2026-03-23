@@ -90,7 +90,150 @@ export class LabRepository {
         });
     }
 
-    async updateEnrollment(id: string, data: Prisma.CyberRoomEnrollmentUpdateInput): Promise<CyberRoomEnrollment> {
+    async findChallengesByRoomId(roomId: string): Promise<any[]> {
+        return this.prisma.cTFChallenge.findMany({
+            where: { roomId },
+            orderBy: { order: "asc" }
+        });
+    }
+
+    async findChallengeById(id: string): Promise<any | null> {
+        return this.prisma.cTFChallenge.findUnique({
+            where: { id }
+        });
+    }
+
+    async findSubmission(challengeId: string, userId: string): Promise<any | null> {
+        return this.prisma.cTFSubmission.findFirst({
+            where: {
+                challengeId,
+                userId,
+                isCorrect: true
+            }
+        });
+    }
+
+    async createSubmission(data: Prisma.CTFSubmissionCreateInput): Promise<any> {
+        return this.prisma.cTFSubmission.create({ data });
+    }
+    
+    async countSolvedChallenges(userId: string, roomId: string): Promise<number> {
+        return this.prisma.cTFSubmission.count({
+            where: {
+                userId,
+                challenge: { roomId },
+                isCorrect: true
+            }
+        });
+    }
+
+    async countChallengesInRoom(roomId: string): Promise<number> {
+        return this.prisma.cTFChallenge.count({
+            where: { roomId }
+        });
+    }
+
+    async findActiveSession(userId: string, roomId: string): Promise<any | null> {
+        return this.prisma.vMSession.findFirst({
+            where: {
+                userId,
+                roomId,
+                status: "RUNNING",
+                expiresAt: {
+                    gt: new Date()
+                }
+            }
+        });
+    }
+
+    async createSession(data: Prisma.VMSessionCreateInput): Promise<any> {
+        return this.prisma.vMSession.create({ data });
+    }
+
+    async updateSession(id: string, data: Prisma.VMSessionUpdateInput): Promise<any> {
+        return this.prisma.vMSession.update({
+            where: { id },
+            data
+        });
+    }
+
+    async findSessionById(id: string): Promise<any | null> {
+        return this.prisma.vMSession.findUnique({
+            where: { id }
+        });
+    }
+
+    async syncRoomWithRelations(data: {
+        slug: string;
+        title: string;
+        difficulty: any;
+        description: string;
+        imageId: string;
+        estimatedTime: number | null;
+        pointsReward: number;
+        cipherReward: number;
+        isPublished: boolean;
+        challenges: Array<{
+            title: string;
+            description: string;
+            type: any;
+            flag: string;
+            points: number;
+            hints: string[];
+            order: number;
+        }>;
+    }) {
+        return this.prisma.$transaction(async (tx) => {
+            const room = await tx.cyberRoom.upsert({
+                where: { slug: data.slug },
+                create: {
+                    slug: data.slug,
+                    title: data.title,
+                    difficulty: data.difficulty,
+                    description: data.description,
+                    imageId: data.imageId,
+                    estimatedTime: data.estimatedTime,
+                    pointsReward: data.pointsReward,
+                    cipherReward: data.cipherReward,
+                    isPublished: data.isPublished
+                },
+                update: {
+                    title: data.title,
+                    difficulty: data.difficulty,
+                    description: data.description,
+                    imageId: data.imageId,
+                    estimatedTime: data.estimatedTime,
+                    pointsReward: data.pointsReward,
+                    cipherReward: data.cipherReward,
+                    isPublished: data.isPublished
+                }
+            });
+
+            // Delete existing challenges to avoid orphans
+            await tx.cTFChallenge.deleteMany({
+                where: { roomId: room.id }
+            });
+
+            if (data.challenges.length > 0) {
+                await tx.cTFChallenge.createMany({
+                    data: data.challenges.map(c => ({
+                        roomId: room.id,
+                        title: c.title,
+                        description: c.description,
+                        type: c.type,
+                        flag: c.flag,
+                        points: c.points,
+                        hints: c.hints,
+                        order: c.order
+                    }))
+                });
+            }
+
+            return room;
+        });
+    }
+
+    async updateEnrollment(id: string, data: Prisma.CyberRoomEnrollmentUpdateInput): Promise<any> {
         return this.prisma.cyberRoomEnrollment.update({
             where: { id },
             data

@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { CyberRoomRepository } from "./cyber-room.repository";
+import { LabRepository } from "./lab.repository";
 import { StorageService } from "../storage/storage.service";
 import { TYPES } from "../../types";
 import { logger, normalizeContent } from "../../utils";
@@ -7,9 +7,9 @@ import slugify from "slugify";
 import { Difficulty, CTFChallengeType } from "../../generated/prisma/client";
 
 @injectable()
-export class CyberRoomSyncService {
+export class LabSyncService {
     constructor(
-        @inject(TYPES.CyberRoomRepository) private roomRepository: CyberRoomRepository,
+        @inject(TYPES.LabRepository) private labRepository: LabRepository,
         @inject(TYPES.StorageService) private storageService: StorageService,
     ) { }
 
@@ -45,7 +45,7 @@ export class CyberRoomSyncService {
 
             const isPublished = !!structureData.publish;
 
-            await this.roomRepository.syncRoomWithRelations({
+            await this.labRepository.syncRoomWithRelations({
                 slug,
                 title: structureData.title,
                 difficulty: structureData.difficulty as Difficulty,
