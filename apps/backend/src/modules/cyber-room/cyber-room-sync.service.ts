@@ -53,6 +53,7 @@ export class CyberRoomSyncService {
                 imageId: structureData.imageId,
                 estimatedTime: structureData.estimatedTime || null,
                 pointsReward: structureData.pointsReward || 0,
+                cipherReward: structureData.cipherReward || 0,
                 isPublished,
                 challenges: challengesData
             });

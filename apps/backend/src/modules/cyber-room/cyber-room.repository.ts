@@ -55,6 +55,14 @@ export class CyberRoomRepository {
         });
     }
 
+    async getEnrollment(roomId: string, userId: string): Promise<any | null> {
+        return this.prisma.cyberRoomEnrollment.findUnique({
+            where: {
+                roomId_userId: { roomId, userId }
+            }
+        });
+    }
+
     async updateEnrollment(userId: string, roomId: string, data: Prisma.CyberRoomEnrollmentUpdateInput) {
         return this.prisma.cyberRoomEnrollment.update({
             where: {
@@ -102,6 +110,7 @@ export class CyberRoomRepository {
         imageId: string;
         estimatedTime: number | null;
         pointsReward: number;
+        cipherReward: number;
         isPublished: boolean;
         challenges: Array<{
             title: string;
@@ -124,6 +133,7 @@ export class CyberRoomRepository {
                     imageId: data.imageId,
                     estimatedTime: data.estimatedTime,
                     pointsReward: data.pointsReward,
+                    cipherReward: data.cipherReward,
                     isPublished: data.isPublished
                 },
                 update: {
@@ -133,6 +143,7 @@ export class CyberRoomRepository {
                     imageId: data.imageId,
                     estimatedTime: data.estimatedTime,
                     pointsReward: data.pointsReward,
+                    cipherReward: data.cipherReward,
                     isPublished: data.isPublished
                 }
             });

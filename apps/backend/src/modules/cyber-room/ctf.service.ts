@@ -6,14 +6,16 @@ import { ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { plainToInstance } from "class-transformer";
 
-import { ActivityType } from "../../generated/prisma/client";
+import { ActivityType, CipherReason } from "../../generated/prisma/client";
 import { ActivityService } from "../activity/activity.service";
+import { CipherService } from "../cipher";
 
 @injectable()
 export class CTFService {
     constructor(
         @inject(TYPES.CyberRoomRepository) private cyberRoomRepository: CyberRoomRepository,
         @inject(TYPES.ActivityService) private activityService: ActivityService,
+        @inject(TYPES.CipherService) private cipherService: CipherService,
         // @inject(TYPES.AuraService) private auraService: AuraService, // To be integrated
     ) { }
 
@@ -44,7 +46,10 @@ export class CTFService {
         });
 
         if (isCorrect) {
-            // Update user progress
+            // Update enrollment progress
+            const enrollment = await this.cyberRoomRepository.getEnrollment(challenge.roomId, userId);
+            if (!enrollment) throw new ApiError("Enrollment not found", StatusCodes.NOT_FOUND);
+
             const solvedCount = await this.cyberRoomRepository.countSolvedChallenges(userId, challenge.roomId);
             const totalChallenges = await this.cyberRoomRepository.countChallengesInRoom(challenge.roomId);
             
@@ -59,6 +64,23 @@ export class CTFService {
 
             // Log activity
             await this.activityService.logActivity(userId, ActivityType.CTF_CHALLENGE_SOLVED, timezoneOffset);
+
+            // Award Bounty if completed for the first time
+            if (isCompleted && (enrollment as any).awardBounty) {
+                const room = await this.cyberRoomRepository.findRoomById(challenge.roomId);
+                if (room && room.cipherReward > 0) {
+                    await this.cipherService.awardCipher(
+                        userId,
+                        room.cipherReward,
+                        CipherReason.PROBLEM_SOLVED_BOUNTY,
+                        room.id
+                    );
+                }
+                // Mark bounty as awarded
+                await this.cyberRoomRepository.updateEnrollment(userId, challenge.roomId, {
+                    awardBounty: false
+                });
+            }
 
             return plainToInstance(CTFSubmissionResponseDto, {
                 isCorrect: true,
