@@ -950,6 +950,7 @@ model CyberRoom {
   imageUrl      String? @map("image_url")
   estimatedTime Int?    @map("estimated_time")
   pointsReward  Int     @default(0) @map("points_reward")
+  cipherReward  Int     @default(0) @map("cipher_reward")
   imageId       String  @default("alpine:latest") @map("image_id")
 
   isPublished Boolean @default(false) @map("is_published")
@@ -1023,6 +1024,7 @@ model CyberRoomEnrollment {
 
   enrolledAt  DateTime  @default(now()) @map("enrolled_at")
   completedAt DateTime? @map("completed_at")
+  awardBounty Boolean   @default(true) @map("award_bounty")
 
   room CyberRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
