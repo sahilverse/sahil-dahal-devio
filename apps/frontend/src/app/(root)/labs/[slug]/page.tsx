@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useFetchLab, useFetchChallenges, useSubmitFlag, useFetchActiveSession, useStartSession, useExtendSession, useTerminateSession, useFetchEnrollment, useJoinRoom } from "@/hooks/useLabs";
+import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAppSelector } from "@/store/hooks";
 import { Shield, Lock, Unlock, Flag, Clock, HardDrive, TerminalSquare, AlertCircle, Play, Square, Plus, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +19,8 @@ export default function RoomDetailPage() {
     const params = useParams();
     const router = useRouter();
     const slug = params.slug as string;
+    const { openLogin } = useAuthModal();
+    const { user } = useAppSelector((state) => state.auth);
 
     const { data: room, isLoading: isLoadingRoom } = useFetchLab(slug);
     const { data: enrollment, isLoading: isLoadingEnrollment } = useFetchEnrollment(room?.id || "");
@@ -39,6 +43,10 @@ export default function RoomDetailPage() {
     const hasActiveMachine = activeSession && activeSession.status === "RUNNING";
 
     const handleJoin = () => {
+        if (!user) {
+            openLogin();
+            return;
+        }
         joinRoom.mutate(room.id);
     };
 
