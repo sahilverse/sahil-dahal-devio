@@ -271,6 +271,7 @@ enum ActivityType {
   COMMUNITY_CREATE
   POST_CREATE
   COMMENT_CREATE
+  CTF_CHALLENGE_SOLVED
 }
 
 model ActivityLog {

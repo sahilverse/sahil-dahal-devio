@@ -14,19 +14,28 @@ CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DEACTIVATED', 'ADMI
 CREATE TYPE "SessionType" AS ENUM ('AUTHENTICATION', 'PASSWORD_RESET');
 
 -- CreateEnum
-CREATE TYPE "AuraReason" AS ENUM ('POST_UPVOTED', 'POST_DOWNVOTED', 'COMMENT_UPVOTED', 'COMMENT_DOWNVOTED', 'PROBLEM_SOLVED', 'ANSWER_ACCEPTED', 'DAILY_LOGIN', 'STREAK_MILESTONE', 'PROFILE_COMPLETED');
+CREATE TYPE "ActivityType" AS ENUM ('PROBLEM_SOLVED', 'PROBLEM_ATTEMPT', 'EVENT_PARTICIPATION', 'COMMUNITY_CREATE', 'POST_CREATE', 'COMMENT_CREATE', 'CTF_CHALLENGE_SOLVED');
 
 -- CreateEnum
-CREATE TYPE "CipherReason" AS ENUM ('PROBLEM_SOLVED', 'DAILY_CHALLENGE', 'LAB_COMPLETED', 'CTF_ROOM_CLEARED', 'CONTEST_WIN', 'HACKATHON_PLACEMENT', 'ANSWER_ACCEPTED', 'ANSWER_UPVOTED', 'LEADERBOARD_REWARD', 'COURSE_DISCOUNT', 'PREMIUM_CONTENT_UNLOCK', 'LAB_TIME_EXTENSION', 'BOUNTY_CREATED', 'CONTEST_ENTRY', 'HINT_UNLOCK', 'FEATURE_TRIAL');
+CREATE TYPE "AuraReason" AS ENUM ('POST_UPVOTED', 'POST_DOWNVOTED', 'COMMENT_UPVOTED', 'COMMENT_DOWNVOTED', 'PROBLEM_SOLVED', 'ANSWER_ACCEPTED', 'DAILY_ACTIVITY', 'STREAK_MILESTONE');
+
+-- CreateEnum
+CREATE TYPE "CipherReason" AS ENUM ('CONTEST_WIN', 'ANSWER_ACCEPTED', 'PROBLEM_SOLVED_BOUNTY', 'LEADERBOARD_REWARD', 'COURSE_DISCOUNT', 'PREMIUM_CONTENT_UNLOCK', 'LAB_TIME_EXTENSION', 'BOUNTY_CREATED', 'CONTEST_ENTRY', 'HINT_UNLOCK', 'FEATURE_TRIAL');
 
 -- CreateEnum
 CREATE TYPE "JoinRequestStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "PostType" AS ENUM ('TEXT', 'IMAGE', 'LINK', 'QUESTION', 'POLL');
+CREATE TYPE "PostType" AS ENUM ('TEXT', 'LINK', 'QUESTION', 'POLL');
 
 -- CreateEnum
 CREATE TYPE "VoteType" AS ENUM ('UP', 'DOWN');
+
+-- CreateEnum
+CREATE TYPE "PostStatus" AS ENUM ('DRAFT', 'PUBLISHED');
+
+-- CreateEnum
+CREATE TYPE "PostVisibility" AS ENUM ('PUBLIC', 'PRIVATE');
 
 -- CreateEnum
 CREATE TYPE "MediaType" AS ENUM ('IMAGE', 'VIDEO', 'FILE');
@@ -35,7 +44,13 @@ CREATE TYPE "MediaType" AS ENUM ('IMAGE', 'VIDEO', 'FILE');
 CREATE TYPE "ConversationType" AS ENUM ('DIRECT', 'GROUP');
 
 -- CreateEnum
-CREATE TYPE "MessageType" AS ENUM ('TEXT', 'IMAGE', 'VOICE', 'FILE', 'LINK');
+CREATE TYPE "ConversationStatus" AS ENUM ('INVITE_PENDING', 'ACCEPTED', 'DECLINED');
+
+-- CreateEnum
+CREATE TYPE "MessageType" AS ENUM ('TEXT', 'IMAGE', 'VIDEO', 'FILE', 'LINK');
+
+-- CreateEnum
+CREATE TYPE "MessageStatus" AS ENUM ('SENT', 'DELIVERED', 'SEEN', 'FAILED');
 
 -- CreateEnum
 CREATE TYPE "Difficulty" AS ENUM ('EASY', 'MEDIUM', 'HARD');
@@ -44,7 +59,13 @@ CREATE TYPE "Difficulty" AS ENUM ('EASY', 'MEDIUM', 'HARD');
 CREATE TYPE "SubmissionStatus" AS ENUM ('PENDING', 'RUNNING', 'ACCEPTED', 'WRONG_ANSWER', 'TIME_LIMIT', 'MEMORY_LIMIT', 'RUNTIME_ERROR', 'COMPILE_ERROR');
 
 -- CreateEnum
+CREATE TYPE "ProblemSolutionStatus" AS ENUM ('UNSOLVED', 'ATTEMPTED', 'SOLVED');
+
+-- CreateEnum
 CREATE TYPE "VMStatus" AS ENUM ('PENDING', 'RUNNING', 'STOPPED', 'TERMINATED');
+
+-- CreateEnum
+CREATE TYPE "CTFChallengeType" AS ENUM ('INFO', 'FLAG', 'MULTIPLE_CHOICE');
 
 -- CreateEnum
 CREATE TYPE "EventType" AS ENUM ('HACKATHON', 'CTF', 'CONTEST', 'WORKSHOP', 'MEETUP');
@@ -54,6 +75,9 @@ CREATE TYPE "EventStatus" AS ENUM ('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'ON
 
 -- CreateEnum
 CREATE TYPE "ParticipantStatus" AS ENUM ('REGISTERED', 'CHECKED_IN', 'COMPLETED', 'DISQUALIFIED');
+
+-- CreateEnum
+CREATE TYPE "EventVisibility" AS ENUM ('PUBLIC', 'PRIVATE', 'UNLISTED');
 
 -- CreateEnum
 CREATE TYPE "AchievementCategory" AS ENUM ('PROBLEMS', 'CYBER_SECURITY', 'STREAKS', 'AURA', 'ENGAGEMENT', 'CONTRIBUTION');
@@ -68,6 +92,12 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED
 CREATE TYPE "PaymentType" AS ENUM ('COURSE_PURCHASE', 'CIPHER_PURCHASE');
 
 -- CreateEnum
+CREATE TYPE "CompanyVerificationTier" AS ENUM ('UNVERIFIED', 'DOMAIN_VERIFIED', 'OFFICIAL');
+
+-- CreateEnum
+CREATE TYPE "CompanyRole" AS ENUM ('OWNER', 'RECRUITER', 'MEMBER');
+
+-- CreateEnum
 CREATE TYPE "JobType" AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'FREELANCE', 'INTERNSHIP', 'REMOTE');
 
 -- CreateEnum
@@ -77,7 +107,7 @@ CREATE TYPE "JobWorkplace" AS ENUM ('ON_SITE', 'HYBRID', 'REMOTE');
 CREATE TYPE "ApplicationStatus" AS ENUM ('PENDING', 'REVIEWING', 'SHORTLISTED', 'REJECTED', 'ACCEPTED');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('SYSTEM', 'FOLLOW', 'UPVOTE', 'COMMENT', 'MENTION', 'ACHIEVEMENT_UNLOCKED', 'COURSE_ENROLLMENT', 'JOB_APPLICATION_UPDATE', 'COMMUNITY_INVITE');
+CREATE TYPE "NotificationType" AS ENUM ('SYSTEM', 'FOLLOW', 'COMMENT', 'MENTION', 'ACHIEVEMENT_UNLOCKED', 'COURSE_ENROLLMENT', 'JOB_APPLICATION_UPDATE', 'COMMUNITY_JOIN_REQUEST', 'COMMUNITY_MODERATOR_ASSIGNED', 'COMMUNITY_MODERATOR_REMOVED', 'EVENT_REGISTRATION', 'EVENT_UPDATE');
 
 -- CreateTable
 CREATE TABLE "Role" (
@@ -207,6 +237,7 @@ CREATE TABLE "UserStreak" (
 CREATE TABLE "ActivityLog" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
+    "type" "ActivityType" NOT NULL DEFAULT 'PROBLEM_SOLVED',
     "date" DATE NOT NULL,
     "count" INTEGER NOT NULL DEFAULT 1,
     "breakdown" JSONB,
@@ -244,7 +275,6 @@ CREATE TABLE "CipherTransaction" (
 CREATE TABLE "Community" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "display_name" TEXT NOT NULL,
     "description" TEXT,
     "icon_url" TEXT,
     "banner_url" TEXT,
@@ -252,8 +282,19 @@ CREATE TABLE "Community" (
     "created_by_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "rules" JSONB,
 
     CONSTRAINT "Community_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CommunityView" (
+    "id" TEXT NOT NULL,
+    "community_id" TEXT NOT NULL,
+    "user_id" TEXT,
+    "viewed_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "CommunityView_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -265,6 +306,7 @@ CREATE TABLE "CommunitySettings" (
     "require_post_approval" BOOLEAN NOT NULL DEFAULT false,
     "min_aura_to_post" INTEGER NOT NULL DEFAULT 0,
     "min_aura_to_comment" INTEGER NOT NULL DEFAULT 0,
+    "min_aura_to_join" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -311,8 +353,8 @@ CREATE TABLE "Post" (
     "bounty_expires_at" TIMESTAMP(3),
     "is_bounty_paid" BOOLEAN NOT NULL DEFAULT false,
     "deleted_at" TIMESTAMP(3),
-    "is_pinned" BOOLEAN NOT NULL DEFAULT false,
-    "is_locked" BOOLEAN NOT NULL DEFAULT false,
+    "status" "PostStatus" NOT NULL DEFAULT 'PUBLISHED',
+    "visibility" "PostVisibility" NOT NULL DEFAULT 'PUBLIC',
     "upvotes" INTEGER NOT NULL DEFAULT 0,
     "downvotes" INTEGER NOT NULL DEFAULT 0,
     "comment_count" INTEGER NOT NULL DEFAULT 0,
@@ -320,6 +362,28 @@ CREATE TABLE "Post" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SavePost" (
+    "id" TEXT NOT NULL,
+    "post_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SavePost_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PinnedPost" (
+    "id" TEXT NOT NULL,
+    "post_id" TEXT NOT NULL,
+    "user_id" TEXT,
+    "community_id" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PinnedPost_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -361,10 +425,31 @@ CREATE TABLE "CommentVote" (
 );
 
 -- CreateTable
+CREATE TABLE "PollOption" (
+    "id" TEXT NOT NULL,
+    "post_id" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "votes" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "PollOption_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PollVote" (
+    "id" TEXT NOT NULL,
+    "option_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+
+    CONSTRAINT "PollVote_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Media" (
     "id" TEXT NOT NULL,
     "post_id" TEXT,
     "comment_id" TEXT,
+    "message_id" TEXT,
     "url" TEXT NOT NULL,
     "type" "MediaType" NOT NULL,
     "file_name" TEXT,
@@ -380,11 +465,6 @@ CREATE TABLE "Topic" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "description" TEXT,
-    "post_count" INTEGER NOT NULL DEFAULT 0,
-    "community_count" INTEGER NOT NULL DEFAULT 0,
-    "course_count" INTEGER NOT NULL DEFAULT 0,
-    "job_count" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -414,6 +494,8 @@ CREATE TABLE "Conversation" (
     "id" TEXT NOT NULL,
     "type" "ConversationType" NOT NULL DEFAULT 'DIRECT',
     "name" TEXT,
+    "status" "ConversationStatus" NOT NULL DEFAULT 'ACCEPTED',
+    "invite_sender_id" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -428,6 +510,8 @@ CREATE TABLE "ConversationParticipant" (
     "is_admin" BOOLEAN NOT NULL DEFAULT false,
     "joined_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_read_at" TIMESTAMP(3),
+    "has_deleted" BOOLEAN NOT NULL DEFAULT false,
+    "messages_cleared_at" TIMESTAMP(3),
 
     CONSTRAINT "ConversationParticipant_pkey" PRIMARY KEY ("id")
 );
@@ -438,11 +522,9 @@ CREATE TABLE "Message" (
     "conversation_id" TEXT NOT NULL,
     "sender_id" TEXT NOT NULL,
     "type" "MessageType" NOT NULL DEFAULT 'TEXT',
+    "status" "MessageStatus" NOT NULL DEFAULT 'SENT',
     "content" TEXT,
-    "media_url" TEXT,
-    "file_name" TEXT,
-    "file_size" INTEGER,
-    "duration" INTEGER,
+    "deleted_by_participant_ids" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "deleted_at" TIMESTAMP(3),
     "edited_at" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -458,8 +540,9 @@ CREATE TABLE "Problem" (
     "difficulty" "Difficulty" NOT NULL,
     "description" TEXT NOT NULL,
     "storage_path" TEXT NOT NULL,
-    "test_case_count" INTEGER NOT NULL DEFAULT 0,
+    "cipher_reward" INTEGER NOT NULL DEFAULT 0,
     "is_published" BOOLEAN NOT NULL DEFAULT false,
+    "input_structure" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -467,12 +550,36 @@ CREATE TABLE "Problem" (
 );
 
 -- CreateTable
-CREATE TABLE "ProblemTag" (
+CREATE TABLE "TestCase" (
     "id" TEXT NOT NULL,
     "problem_id" TEXT NOT NULL,
-    "tag" TEXT NOT NULL,
+    "input_path" TEXT NOT NULL,
+    "output_path" TEXT NOT NULL,
+    "is_public" BOOLEAN NOT NULL DEFAULT false,
+    "order" INTEGER NOT NULL DEFAULT 0,
 
-    CONSTRAINT "ProblemTag_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "TestCase_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProblemTopic" (
+    "id" TEXT NOT NULL,
+    "problem_id" TEXT NOT NULL,
+    "topic_id" TEXT NOT NULL,
+
+    CONSTRAINT "ProblemTopic_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserProblemDraft" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "problem_id" TEXT NOT NULL,
+    "language" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "UserProblemDraft_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -485,6 +592,9 @@ CREATE TABLE "Submission" (
     "status" "SubmissionStatus" NOT NULL DEFAULT 'PENDING',
     "runtime" INTEGER,
     "memory" INTEGER,
+    "score" INTEGER NOT NULL DEFAULT 0,
+    "error" TEXT,
+    "event_id" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Submission_pkey" PRIMARY KEY ("id")
@@ -500,6 +610,7 @@ CREATE TABLE "CyberRoom" (
     "image_url" TEXT,
     "estimated_time" INTEGER,
     "points_reward" INTEGER NOT NULL DEFAULT 0,
+    "image_id" TEXT NOT NULL DEFAULT 'alpine:latest',
     "is_published" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -513,6 +624,7 @@ CREATE TABLE "CTFChallenge" (
     "room_id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
+    "type" "CTFChallengeType" NOT NULL DEFAULT 'FLAG',
     "flag" TEXT NOT NULL,
     "points" INTEGER NOT NULL DEFAULT 10,
     "order" INTEGER NOT NULL DEFAULT 0,
@@ -554,10 +666,13 @@ CREATE TABLE "VMSession" (
     "user_id" TEXT NOT NULL,
     "room_id" TEXT,
     "instance_id" TEXT,
+    "image_id" TEXT,
     "ip_address" TEXT,
     "status" "VMStatus" NOT NULL DEFAULT 'PENDING',
     "expires_at" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "started_at" TIMESTAMP(3),
+    "terminated_at" TIMESTAMP(3),
 
     CONSTRAINT "VMSession_pkey" PRIMARY KEY ("id")
 );
@@ -570,10 +685,12 @@ CREATE TABLE "Event" (
     "description" TEXT NOT NULL,
     "type" "EventType" NOT NULL,
     "status" "EventStatus" NOT NULL DEFAULT 'DRAFT',
+    "visibility" "EventVisibility" NOT NULL DEFAULT 'PUBLIC',
     "created_by_id" TEXT NOT NULL,
     "community_id" TEXT,
     "starts_at" TIMESTAMP(3) NOT NULL,
     "ends_at" TIMESTAMP(3) NOT NULL,
+    "registration_deadline" TIMESTAMP(3),
     "min_aura_points" INTEGER NOT NULL DEFAULT 0,
     "entry_cipher_cost" INTEGER NOT NULL DEFAULT 0,
     "max_participants" INTEGER,
@@ -583,6 +700,7 @@ CREATE TABLE "Event" (
     "requires_team" BOOLEAN NOT NULL DEFAULT false,
     "team_size" INTEGER,
     "external_url" TEXT,
+    "rules" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -594,6 +712,7 @@ CREATE TABLE "EventParticipant" (
     "id" TEXT NOT NULL,
     "event_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
+    "team_name" TEXT,
     "status" "ParticipantStatus" NOT NULL DEFAULT 'REGISTERED',
     "score" INTEGER NOT NULL DEFAULT 0,
     "rank" INTEGER,
@@ -610,7 +729,8 @@ CREATE TABLE "EventPrize" (
     "rank_to" INTEGER NOT NULL,
     "aura_reward" INTEGER NOT NULL DEFAULT 0,
     "cipher_reward" INTEGER NOT NULL DEFAULT 0,
-    "title" TEXT,
+    "prize" TEXT,
+    "description" TEXT,
 
     CONSTRAINT "EventPrize_pkey" PRIMARY KEY ("id")
 );
@@ -855,6 +975,18 @@ CREATE TABLE "UserSkill" (
 );
 
 -- CreateTable
+CREATE TABLE "CompanyMember" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "role" "CompanyRole" NOT NULL DEFAULT 'MEMBER',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "CompanyMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Company" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -865,6 +997,8 @@ CREATE TABLE "Company" (
     "location" TEXT,
     "size" TEXT,
     "is_verified" BOOLEAN NOT NULL DEFAULT false,
+    "verification_tier" "CompanyVerificationTier" NOT NULL DEFAULT 'UNVERIFIED',
+    "verified_domain" TEXT,
     "owner_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -941,6 +1075,29 @@ CREATE TABLE "Notification" (
     "actor_id" TEXT,
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EventProblem" (
+    "event_id" TEXT NOT NULL,
+    "problem_id" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "points" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "EventProblem_pkey" PRIMARY KEY ("event_id","problem_id")
+);
+
+-- CreateTable
+CREATE TABLE "UserProblemStatus" (
+    "user_id" TEXT NOT NULL,
+    "problem_id" TEXT NOT NULL,
+    "status" "ProblemSolutionStatus" NOT NULL DEFAULT 'ATTEMPTED',
+    "best_score" INTEGER NOT NULL DEFAULT 0,
+    "attempts" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "UserProblemStatus_pkey" PRIMARY KEY ("user_id","problem_id")
 );
 
 -- CreateIndex
@@ -1037,7 +1194,7 @@ CREATE INDEX "ActivityLog_user_id_idx" ON "ActivityLog"("user_id");
 CREATE INDEX "ActivityLog_date_idx" ON "ActivityLog"("date");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ActivityLog_user_id_date_key" ON "ActivityLog"("user_id", "date");
+CREATE UNIQUE INDEX "ActivityLog_user_id_date_type_key" ON "ActivityLog"("user_id", "date", "type");
 
 -- CreateIndex
 CREATE INDEX "AuraTransaction_user_id_idx" ON "AuraTransaction"("user_id");
@@ -1068,6 +1225,12 @@ CREATE INDEX "Community_visibility_idx" ON "Community"("visibility");
 
 -- CreateIndex
 CREATE INDEX "Community_created_by_id_idx" ON "Community"("created_by_id");
+
+-- CreateIndex
+CREATE INDEX "CommunityView_community_id_idx" ON "CommunityView"("community_id");
+
+-- CreateIndex
+CREATE INDEX "CommunityView_viewed_at_idx" ON "CommunityView"("viewed_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CommunitySettings_community_id_key" ON "CommunitySettings"("community_id");
@@ -1115,6 +1278,30 @@ CREATE INDEX "Post_createdAt_idx" ON "Post"("createdAt");
 CREATE INDEX "Post_deleted_at_idx" ON "Post"("deleted_at");
 
 -- CreateIndex
+CREATE INDEX "SavePost_post_id_idx" ON "SavePost"("post_id");
+
+-- CreateIndex
+CREATE INDEX "SavePost_user_id_idx" ON "SavePost"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SavePost_post_id_user_id_key" ON "SavePost"("post_id", "user_id");
+
+-- CreateIndex
+CREATE INDEX "PinnedPost_post_id_idx" ON "PinnedPost"("post_id");
+
+-- CreateIndex
+CREATE INDEX "PinnedPost_user_id_idx" ON "PinnedPost"("user_id");
+
+-- CreateIndex
+CREATE INDEX "PinnedPost_community_id_idx" ON "PinnedPost"("community_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PinnedPost_post_id_user_id_key" ON "PinnedPost"("post_id", "user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PinnedPost_post_id_community_id_key" ON "PinnedPost"("post_id", "community_id");
+
+-- CreateIndex
 CREATE INDEX "Comment_post_id_idx" ON "Comment"("post_id");
 
 -- CreateIndex
@@ -1145,10 +1332,25 @@ CREATE INDEX "CommentVote_user_id_idx" ON "CommentVote"("user_id");
 CREATE UNIQUE INDEX "CommentVote_comment_id_user_id_key" ON "CommentVote"("comment_id", "user_id");
 
 -- CreateIndex
+CREATE INDEX "PollOption_post_id_idx" ON "PollOption"("post_id");
+
+-- CreateIndex
+CREATE INDEX "PollVote_option_id_idx" ON "PollVote"("option_id");
+
+-- CreateIndex
+CREATE INDEX "PollVote_user_id_idx" ON "PollVote"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PollVote_option_id_user_id_key" ON "PollVote"("option_id", "user_id");
+
+-- CreateIndex
 CREATE INDEX "Media_post_id_idx" ON "Media"("post_id");
 
 -- CreateIndex
 CREATE INDEX "Media_comment_id_idx" ON "Media"("comment_id");
+
+-- CreateIndex
+CREATE INDEX "Media_message_id_idx" ON "Media"("message_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Topic_name_key" ON "Topic"("name");
@@ -1158,9 +1360,6 @@ CREATE UNIQUE INDEX "Topic_slug_key" ON "Topic"("slug");
 
 -- CreateIndex
 CREATE INDEX "Topic_slug_idx" ON "Topic"("slug");
-
--- CreateIndex
-CREATE INDEX "Topic_post_count_idx" ON "Topic"("post_count");
 
 -- CreateIndex
 CREATE INDEX "PostTopic_post_id_idx" ON "PostTopic"("post_id");
@@ -1182,6 +1381,9 @@ CREATE UNIQUE INDEX "CommunityTopic_community_id_topic_id_key" ON "CommunityTopi
 
 -- CreateIndex
 CREATE INDEX "Conversation_type_idx" ON "Conversation"("type");
+
+-- CreateIndex
+CREATE INDEX "Conversation_status_idx" ON "Conversation"("status");
 
 -- CreateIndex
 CREATE INDEX "Conversation_updatedAt_idx" ON "Conversation"("updatedAt");
@@ -1214,13 +1416,25 @@ CREATE INDEX "Problem_difficulty_idx" ON "Problem"("difficulty");
 CREATE INDEX "Problem_is_published_idx" ON "Problem"("is_published");
 
 -- CreateIndex
-CREATE INDEX "ProblemTag_problem_id_idx" ON "ProblemTag"("problem_id");
+CREATE INDEX "TestCase_problem_id_idx" ON "TestCase"("problem_id");
 
 -- CreateIndex
-CREATE INDEX "ProblemTag_tag_idx" ON "ProblemTag"("tag");
+CREATE INDEX "ProblemTopic_problem_id_idx" ON "ProblemTopic"("problem_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ProblemTag_problem_id_tag_key" ON "ProblemTag"("problem_id", "tag");
+CREATE INDEX "ProblemTopic_topic_id_idx" ON "ProblemTopic"("topic_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProblemTopic_problem_id_topic_id_key" ON "ProblemTopic"("problem_id", "topic_id");
+
+-- CreateIndex
+CREATE INDEX "UserProblemDraft_user_id_idx" ON "UserProblemDraft"("user_id");
+
+-- CreateIndex
+CREATE INDEX "UserProblemDraft_problem_id_idx" ON "UserProblemDraft"("problem_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserProblemDraft_user_id_problem_id_language_key" ON "UserProblemDraft"("user_id", "problem_id", "language");
 
 -- CreateIndex
 CREATE INDEX "Submission_problem_id_user_id_idx" ON "Submission"("problem_id", "user_id");
@@ -1448,6 +1662,15 @@ CREATE INDEX "UserSkill_user_id_idx" ON "UserSkill"("user_id");
 CREATE INDEX "UserSkill_skill_id_idx" ON "UserSkill"("skill_id");
 
 -- CreateIndex
+CREATE INDEX "CompanyMember_company_id_idx" ON "CompanyMember"("company_id");
+
+-- CreateIndex
+CREATE INDEX "CompanyMember_user_id_idx" ON "CompanyMember"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CompanyMember_company_id_user_id_key" ON "CompanyMember"("company_id", "user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Company_name_key" ON "Company"("name");
 
 -- CreateIndex
@@ -1498,6 +1721,21 @@ CREATE INDEX "Notification_user_id_idx" ON "Notification"("user_id");
 -- CreateIndex
 CREATE INDEX "Notification_actor_id_idx" ON "Notification"("actor_id");
 
+-- CreateIndex
+CREATE INDEX "EventProblem_event_id_idx" ON "EventProblem"("event_id");
+
+-- CreateIndex
+CREATE INDEX "EventProblem_problem_id_idx" ON "EventProblem"("problem_id");
+
+-- CreateIndex
+CREATE INDEX "UserProblemStatus_user_id_idx" ON "UserProblemStatus"("user_id");
+
+-- CreateIndex
+CREATE INDEX "UserProblemStatus_problem_id_idx" ON "UserProblemStatus"("problem_id");
+
+-- CreateIndex
+CREATE INDEX "UserProblemStatus_status_idx" ON "UserProblemStatus"("status");
+
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -1538,6 +1776,9 @@ ALTER TABLE "CipherTransaction" ADD CONSTRAINT "CipherTransaction_user_id_fkey" 
 ALTER TABLE "Community" ADD CONSTRAINT "Community_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "CommunityView" ADD CONSTRAINT "CommunityView_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "Community"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "CommunitySettings" ADD CONSTRAINT "CommunitySettings_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "Community"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1565,6 +1806,21 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_community_id_fkey" FOREIGN KEY ("communi
 ALTER TABLE "Post" ADD CONSTRAINT "Post_accepted_answer_id_fkey" FOREIGN KEY ("accepted_answer_id") REFERENCES "Comment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "SavePost" ADD CONSTRAINT "SavePost_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SavePost" ADD CONSTRAINT "SavePost_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PinnedPost" ADD CONSTRAINT "PinnedPost_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PinnedPost" ADD CONSTRAINT "PinnedPost_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PinnedPost" ADD CONSTRAINT "PinnedPost_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "Community"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1586,10 +1842,22 @@ ALTER TABLE "CommentVote" ADD CONSTRAINT "CommentVote_comment_id_fkey" FOREIGN K
 ALTER TABLE "CommentVote" ADD CONSTRAINT "CommentVote_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "PollOption" ADD CONSTRAINT "PollOption_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PollVote" ADD CONSTRAINT "PollVote_option_id_fkey" FOREIGN KEY ("option_id") REFERENCES "PollOption"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PollVote" ADD CONSTRAINT "PollVote_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Media" ADD CONSTRAINT "Media_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Media" ADD CONSTRAINT "Media_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Media" ADD CONSTRAINT "Media_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "Message"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostTopic" ADD CONSTRAINT "PostTopic_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1616,13 +1884,28 @@ ALTER TABLE "Message" ADD CONSTRAINT "Message_conversation_id_fkey" FOREIGN KEY 
 ALTER TABLE "Message" ADD CONSTRAINT "Message_sender_id_fkey" FOREIGN KEY ("sender_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProblemTag" ADD CONSTRAINT "ProblemTag_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TestCase" ADD CONSTRAINT "TestCase_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProblemTopic" ADD CONSTRAINT "ProblemTopic_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProblemTopic" ADD CONSTRAINT "ProblemTopic_topic_id_fkey" FOREIGN KEY ("topic_id") REFERENCES "Topic"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserProblemDraft" ADD CONSTRAINT "UserProblemDraft_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserProblemDraft" ADD CONSTRAINT "UserProblemDraft_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Submission" ADD CONSTRAINT "Submission_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Submission" ADD CONSTRAINT "Submission_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Submission" ADD CONSTRAINT "Submission_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "Event"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CTFChallenge" ADD CONSTRAINT "CTFChallenge_room_id_fkey" FOREIGN KEY ("room_id") REFERENCES "CyberRoom"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1742,6 +2025,12 @@ ALTER TABLE "UserSkill" ADD CONSTRAINT "UserSkill_user_id_fkey" FOREIGN KEY ("us
 ALTER TABLE "UserSkill" ADD CONSTRAINT "UserSkill_skill_id_fkey" FOREIGN KEY ("skill_id") REFERENCES "Skill"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "CompanyMember" ADD CONSTRAINT "CompanyMember_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CompanyMember" ADD CONSTRAINT "CompanyMember_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Company" ADD CONSTRAINT "Company_owner_id_fkey" FOREIGN KEY ("owner_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1776,3 +2065,15 @@ ALTER TABLE "Notification" ADD CONSTRAINT "Notification_user_id_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventProblem" ADD CONSTRAINT "EventProblem_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventProblem" ADD CONSTRAINT "EventProblem_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserProblemStatus" ADD CONSTRAINT "UserProblemStatus_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserProblemStatus" ADD CONSTRAINT "UserProblemStatus_problem_id_fkey" FOREIGN KEY ("problem_id") REFERENCES "Problem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
