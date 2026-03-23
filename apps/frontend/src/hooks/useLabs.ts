@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { LabService, LabsResponse, LabRoom, LabEnrollment, CTFChallenge, VMSession, CTFSubmissionResult } from "@/api/labService";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -9,6 +9,7 @@ export function useFetchLabs(params?: any) {
     return useQuery<LabsResponse>({
         queryKey: ["labs", params],
         queryFn: () => LabService.getRooms(params),
+        placeholderData: keepPreviousData,
     });
 }
 
