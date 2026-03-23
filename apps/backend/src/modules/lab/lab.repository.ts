@@ -178,6 +178,31 @@ export class LabRepository {
         });
     }
 
+    async findSessionsByUserIdToday(userId: string): Promise<any[]> {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return this.prisma.vMSession.findMany({
+            where: {
+                userId,
+                startedAt: {
+                    gte: today
+                }
+            }
+        });
+    }
+
+    async findExpiredRunningSessions(): Promise<any[]> {
+        return this.prisma.vMSession.findMany({
+            where: {
+                status: "RUNNING",
+                expiresAt: {
+                    lte: new Date()
+                }
+            }
+        });
+    }
+
     async syncRoomWithRelations(data: {
         slug: string;
         title: string;

@@ -48,4 +48,8 @@ export class CipherService {
     async getHistory(userId: string, limit: number = 20, offset: number = 0) {
         return this.cipherRepository.getTransactions(userId, limit, offset);
     }
+
+    async countExtensionsToday(userId: string): Promise<number> {
+        return this.cipherRepository.countExtensionsToday(userId);
+    }
 }

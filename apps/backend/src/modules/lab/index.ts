@@ -5,3 +5,4 @@ export * from "./lab.dto";
 export * from "./lab-sync.service";
 export * from "./lab-ctf.service";
 export * from "./lab-vm.service";
+export * from "./lab-vm-worker.service";

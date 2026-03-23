@@ -9,6 +9,7 @@ import { TYPES } from './types';
 import { RedisManager } from './config';
 import { PrismaClient } from './generated/prisma/client';
 import { EmailWorkerService } from './queue';
+import { LabVMWorkerService } from './modules/lab';
 import { SocketService } from './modules/socket';
 import { StorageService } from './modules/storage';
 
@@ -16,6 +17,7 @@ const server = createServer(app);
 const redisManager = container.get<RedisManager>(TYPES.RedisManager);
 const prismaClient = container.get<PrismaClient>(TYPES.PrismaClient);
 const emailWorkerService = container.get<EmailWorkerService>(TYPES.EmailWorkerService);
+const labVMWorkerService = container.get<LabVMWorkerService>(TYPES.LabVMWorkerService);
 const socketService = container.get<SocketService>(TYPES.SocketService);
 const storageService = container.get<StorageService>(TYPES.StorageService);
 
@@ -31,13 +33,13 @@ async function startServer() {
 
         socketService.init(server);
 
-
         server.listen(Number(PORT), '0.0.0.0', () => {
             logger.info(`Server is running on port ${PORT}`);
         });
 
         await emailWorkerService.registerAllWorkers();
-        logger.info("All workers registered");
+        await labVMWorkerService.init();
+        logger.info("All workers registered and initialized");
 
         process.on("SIGINT", shutdown);
         process.on("SIGTERM", shutdown);

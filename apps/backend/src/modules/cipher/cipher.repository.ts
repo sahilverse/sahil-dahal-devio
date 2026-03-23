@@ -55,6 +55,21 @@ export class CipherRepository {
         });
     }
 
+    async countExtensionsToday(userId: string): Promise<number> {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return this.prisma.cipherTransaction.count({
+            where: {
+                userId,
+                reason: CipherReason.LAB_TIME_EXTENSION,
+                createdAt: {
+                    gte: today
+                }
+            }
+        });
+    }
+
     async hasTransaction(userId: string, reason: CipherReason, sourceId: string): Promise<boolean> {
         const count = await this.prisma.cipherTransaction.count({
             where: {

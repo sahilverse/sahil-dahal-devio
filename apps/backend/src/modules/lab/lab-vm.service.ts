@@ -11,7 +11,7 @@ import { CipherReason } from "../../generated/prisma/client";
 import axios from "axios";
 import { LAB_ORCHESTRATOR_URL } from "../../config/constants";
 
-const BASE_SESSION_MINUTES = 30;
+const BASE_DAILY_MINUTES = 60;
 const EXTENSION_MINUTES = 30;
 const EXTENSION_COST = 50;
 
@@ -22,11 +22,34 @@ export class LabVMService {
         @inject(TYPES.CipherService) private cipherService: CipherService
     ) { }
 
+    private async calculateRemainingDailyTime(userId: string): Promise<number> {
+        const sessions = await this.labRepository.findSessionsByUserIdToday(userId);
+        const extensionCount = await this.cipherService.countExtensionsToday(userId);
+        
+        let usedSeconds = 0;
+        const now = new Date();
+        
+        for (const session of sessions) {
+            const start = new Date(session.startedAt);
+            const end = session.terminatedAt ? new Date(session.terminatedAt) : now;
+            usedSeconds += Math.max(0, Math.round((end.getTime() - start.getTime()) / 1000));
+        }
+        
+        const totalBudgetSeconds = (BASE_DAILY_MINUTES * 60) + (extensionCount * EXTENSION_MINUTES * 60);
+        return Math.max(0, totalBudgetSeconds - usedSeconds);
+    }
+
     async startSession(userId: string, roomId: string): Promise<VMSessionResponseDto> {
         // Check for active session
         const activeSession = await this.labRepository.findActiveSession(userId, roomId);
         if (activeSession) {
             return plainToInstance(VMSessionResponseDto, activeSession, { excludeExtraneousValues: true });
+        }
+
+        // Calculate remaining daily time
+        const remainingSeconds = await this.calculateRemainingDailyTime(userId);
+        if (remainingSeconds <= 0) {
+            throw new ApiError("Daily free VM limit reached (60 mins). You can extend your session for 50 Ciphers.", StatusCodes.PAYMENT_REQUIRED);
         }
 
         // Get room to get imageId
@@ -54,22 +77,7 @@ export class LabVMService {
             throw new ApiError("Failed to start lab environment. Please check if Lab Orchestrator is running.", StatusCodes.SERVICE_UNAVAILABLE);
         }
 
-        let expiresAt = addMinutes(new Date(), BASE_SESSION_MINUTES);
-
-        // Check for last terminated session to calculate remaining time
-        const lastTerminated = await this.labRepository.findLastTerminatedSession(userId, roomId);
-        if (lastTerminated && lastTerminated.terminatedAt) {
-            const lastExpiry = new Date(lastTerminated.expiresAt);
-            const lastTermination = new Date(lastTerminated.terminatedAt);
-
-            const remainingMs = lastExpiry.getTime() - lastTermination.getTime();
-            
-            // If there was remaining time (ended early), carry it over
-            if (remainingMs > 0) {
-                expiresAt = new Date(Date.now() + remainingMs);
-                logger.info(`Carrying forward ${Math.round(remainingMs / 1000 / 60)}m of remaining time for user ${userId} in room ${roomId}.`);
-            }
-        }
+        const expiresAt = new Date(Date.now() + (remainingSeconds * 1000));
 
         const session = await this.labRepository.createSession({
             user: { connect: { id: userId } },
@@ -81,7 +89,7 @@ export class LabVMService {
             ipAddress: ipAddress
         });
 
-        logger.info(`Started VM session ${session.id} for user ${userId} in room ${roomId}. Expires at ${expiresAt}`);
+        logger.info(`Started VM session ${session.id} for user ${userId} in room ${roomId}. Expires at ${expiresAt} (Daily Budget)`);
 
         return plainToInstance(VMSessionResponseDto, session, { excludeExtraneousValues: true });
     }
@@ -104,8 +112,8 @@ export class LabVMService {
             throw new ApiError(error.message || "Failed to extend session", StatusCodes.BAD_REQUEST);
         }
 
-        // Extend expiresAt
-        const newExpiresAt = addMinutes(session.expiresAt, EXTENSION_MINUTES);
+        // Extend expiresAt by 30 mins
+        const newExpiresAt = addMinutes(new Date(session.expiresAt), EXTENSION_MINUTES);
         const updatedSession = await this.labRepository.updateSession(sessionId, {
             expiresAt: newExpiresAt
         });

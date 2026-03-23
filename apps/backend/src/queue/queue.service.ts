@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { Queue, QueueOptions } from "bullmq";
+import { Queue, QueueOptions, JobsOptions } from "bullmq";
 import { TYPES } from "../types";
 import { RedisManager } from "../config";
 
@@ -30,8 +30,8 @@ export class QueueService {
         return this.queues.get(name)!;
     }
 
-    async addJob(queueName: string, jobName: string, data: Record<string, any>) {
+    async addJob(queueName: string, jobName: string, data: Record<string, any>, options?: JobsOptions) {
         const queue = this.createQueue(queueName);
-        await queue.add(jobName, data);
+        await queue.add(jobName, data, options);
     }
 }

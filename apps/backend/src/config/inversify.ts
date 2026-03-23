@@ -36,7 +36,7 @@ import { ConversationRepository, ConversationService, ConversationController } f
 import { ConversationSocketHandler } from "../modules/conversation/conversation.socket";
 import { EventRepository, EventService, EventController } from "../modules/event";
 import { EventSocketHandler } from "../modules/event/event.socket";
-import { LabRepository, LabService, LabController, LabSyncService, LabCTFService, LabVMService } from "../modules/lab";
+import { LabRepository, LabService, LabController, LabSyncService, LabCTFService, LabVMService, LabVMWorkerService } from "../modules/lab";
 
 
 const container = new Container();
@@ -157,6 +157,7 @@ container.bind<LabController>(TYPES.LabController).to(LabController).inSingleton
 container.bind<LabSyncService>(TYPES.LabSyncService).to(LabSyncService).inSingletonScope();
 container.bind<LabCTFService>(TYPES.LabCTFService).to(LabCTFService).inSingletonScope();
 container.bind<LabVMService>(TYPES.LabVMService).to(LabVMService).inSingletonScope();
+container.bind<LabVMWorkerService>(TYPES.LabVMWorkerService).to(LabVMWorkerService).inSingletonScope();
 
 
 export { container };
