@@ -113,6 +113,7 @@ export const TYPES = {
     LabCTFService: Symbol.for("LabCTFService"),
     LabVMService: Symbol.for("LabVMService"),
     LabVMWorkerService: Symbol.for("LabVMWorkerService"),
+    LabSocketHandler: Symbol.for("LabSocketHandler"),
 };
 
 export * from "./jwt";

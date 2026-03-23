@@ -361,7 +361,7 @@ export default function RoomDetailPage() {
                         <div className="w-full h-full flex flex-col">
                             {/* The Real Terminal */}
                             <div className="flex-1 bg-black">
-                                <LabTerminal instanceId={activeSession.instanceId || ""} />
+                                <LabTerminal instanceId={activeSession.instanceId || ""} roomId={room.id} />
                             </div>
 
                             {/* Help Footer */}

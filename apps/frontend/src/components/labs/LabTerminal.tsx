@@ -4,20 +4,21 @@ import React, { useEffect, useRef } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
-import { LAB_ORCHESTRATOR_URL } from "@/lib/constants";
+import { socketInstance } from "@/lib/socket";
 import { logger } from "@/lib/logger";
 
 interface LabTerminalProps {
     instanceId: string;
+    roomId: string;
 }
 
-export const LabTerminal: React.FC<LabTerminalProps> = ({ instanceId }) => {
+export const LabTerminal: React.FC<LabTerminalProps> = ({ instanceId, roomId }) => {
     const terminalRef = useRef<HTMLDivElement>(null);
     const xtermRef = useRef<Terminal | null>(null);
-    const wsRef = useRef<WebSocket | null>(null);
+    const wsRef = useRef<any>(null);
 
     useEffect(() => {
-        if (!terminalRef.current || !instanceId) return;
+        if (!terminalRef.current || !instanceId || !roomId) return;
 
         let isMounted = true;
         const container = terminalRef.current;
@@ -71,76 +72,68 @@ export const LabTerminal: React.FC<LabTerminalProps> = ({ instanceId }) => {
             }
         });
 
-        // Establish WebSocket connection
+        // Establish Socket.IO connection
+        const initSocket = async () => {
+            try {
+                const socket = await socketInstance.connectWithQuery("/lab", {
+                    instanceId,
+                    roomId
+                });
+                
+                wsRef.current = socket;
 
-        // TODO: Can this be connected to main backend instead of connecting directly to Lab Orchestrator? This way we can have better control and also send some metadata like auth token, user info etc.
-        const wsUrl = new URL(LAB_ORCHESTRATOR_URL || "http://localhost:5500");
-        wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
-        wsUrl.pathname = "/terminal";
-        wsUrl.searchParams.set("instanceId", instanceId);
+                if (!isMounted) {
+                    socket.disconnect();
+                    return;
+                }
 
-        const socket = new WebSocket(wsUrl.toString());
-        wsRef.current = socket;
-
-        socket.onopen = () => {
-            if (isMounted) {
-                logger.debug("Terminal WebSocket connected");
-                term.writeln("\x1b[32m[Connected to Devio Lab System]\x1b[0m");
+                logger.debug("Terminal Socket.IO connected");
                 
                 // Sync size after connection is established
                 setTimeout(() => {
-                    if (isMounted && socket.readyState === WebSocket.OPEN && term.cols > 0) {
+                    if (isMounted && socket.connected && term.cols > 0) {
                         try {
                             fitAddon.fit();
-                            const payload = JSON.stringify({
-                                type: "resize",
+                            socket.emit("resize", {
                                 cols: term.cols,
                                 rows: term.rows
                             });
-                            socket.send(payload);
-                        } catch (e) {
-                            // Ignore
-                        }
+                        } catch (e) {}
                     }
                 }, 300);
-            }
-        };
 
-        socket.onmessage = (event) => {
-            if (isMounted) {
-                if (event.data instanceof Blob) {
-                    event.data.arrayBuffer().then(buffer => {
-                        if (isMounted) {
-                            term.write(new Uint8Array(buffer));
+                socket.on("output", (data: any) => {
+                    if (isMounted) {
+                        if (data instanceof ArrayBuffer) {
+                            term.write(new Uint8Array(data));
+                        } else if (typeof data === "string") {
+                            term.write(data);
+                        } else {
+                            term.write(new Uint8Array(data));
                         }
-                    });
-                } else {
-                    term.write(event.data);
-                }
+                    }
+                });
+
+                socket.on("disconnect", () => {
+                    if (isMounted) {
+                        logger.info("Terminal Socket.IO closed");
+                    }
+                });
+
+                // Send data from xterm to WebSocket
+                term.onData((data) => {
+                    if (socket.connected) {
+                        socket.emit("data", data);
+                    }
+                });
+
+            } catch (error) {
+                logger.error(error, "Socket connect exception");
+                if (isMounted) term.writeln("\r\n\x1b[31m[Socket Connection Error]\x1b[0m\r\n");
             }
         };
 
-        socket.onclose = () => {
-            if (isMounted) {
-                logger.info("Terminal WebSocket closed");
-                term.writeln("\r\n\x1b[31m[Connection Closed]\x1b[0m\r\n");
-            }
-        };
-
-        socket.onerror = (error: any) => {
-            if (isMounted) {
-                logger.error(error, "Terminal WebSocket error:");
-                term.writeln("\r\n\x1b[31m[Connection Error]\x1b[0m\r\n");
-            }
-        };
-
-        // Send data from xterm to WebSocket
-        term.onData((data) => {
-            if (socket.readyState === WebSocket.OPEN) {
-                const payload = JSON.stringify({ type: "data", data });
-                socket.send(payload);
-            }
-        });
+        initSocket();
 
         // Handle resizing with ResizeObserver
         const handleResize = () => {
@@ -148,13 +141,11 @@ export const LabTerminal: React.FC<LabTerminalProps> = ({ instanceId }) => {
                 try {
                     if (term.element && (term as any)._core?._renderService?._renderer) {
                         fitAddon.fit();
-                        if (socket.readyState === WebSocket.OPEN) {
-                            const payload = JSON.stringify({
-                                type: "resize",
+                        if (wsRef.current?.connected) {
+                            wsRef.current.emit("resize", {
                                 cols: term.cols,
                                 rows: term.rows
                             });
-                            socket.send(payload);
                         }
                     }
                 } catch (e) {
@@ -177,11 +168,13 @@ export const LabTerminal: React.FC<LabTerminalProps> = ({ instanceId }) => {
             isMounted = false;
             cancelAnimationFrame(fitRaf);
             resizeObserver.disconnect();
-            socket.close();
+            if (wsRef.current) {
+                wsRef.current.disconnect();
+            }
             term.dispose();
             xtermRef.current = null;
         };
-    }, [instanceId]);
+    }, [instanceId, roomId]);
 
     return (
         <div className="w-full h-full min-h-[500px] bg-[#020617] overflow-hidden relative border border-slate-800/50 rounded-xl shadow-2xl">

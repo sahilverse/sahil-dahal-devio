@@ -67,4 +67,3 @@ export const JUDGE0_URL = process.env.JUDGE0_URL || "http://localhost:2358";
 
 // Lab Orchestrator
 export const LAB_ORCHESTRATOR_URL = process.env.LAB_ORCHESTRATOR_URL!;
-export const LAB_ORCHESTRATOR_SECRET = process.env.LAB_ORCHESTRATOR_SECRET!;

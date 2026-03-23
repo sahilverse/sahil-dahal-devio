@@ -7,7 +7,7 @@ import { ApiError, logger } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { plainToInstance } from "class-transformer";
 import { addMinutes } from "date-fns";
-import { CipherReason } from "../../generated/prisma/client";
+import { CipherReason, VMStatus } from "../../generated/prisma/client";
 import axios from "axios";
 import { LAB_ORCHESTRATOR_URL } from "../../config/constants";
 
@@ -25,16 +25,16 @@ export class LabVMService {
     private async calculateRemainingDailyTime(userId: string): Promise<number> {
         const sessions = await this.labRepository.findSessionsByUserIdToday(userId);
         const extensionCount = await this.cipherService.countExtensionsToday(userId);
-        
+
         let usedSeconds = 0;
         const now = new Date();
-        
+
         for (const session of sessions) {
             const start = new Date(session.startedAt);
             const end = session.terminatedAt ? new Date(session.terminatedAt) : now;
             usedSeconds += Math.max(0, Math.round((end.getTime() - start.getTime()) / 1000));
         }
-        
+
         const totalBudgetSeconds = (BASE_DAILY_MINUTES * 60) + (extensionCount * EXTENSION_MINUTES * 60);
         return Math.max(0, totalBudgetSeconds - usedSeconds);
     }
@@ -66,7 +66,7 @@ export class LabVMService {
             const response = await axios.post(`${LAB_ORCHESTRATOR_URL}/api/instances/provision`, {
                 roomId,
                 userId,
-                imageId: room.imageId || "alpine:latest"
+                imageId: room.imageId
             });
 
             const instance = response.data.result;
@@ -74,7 +74,7 @@ export class LabVMService {
             ipAddress = instance.ipAddress;
         } catch (error: any) {
             logger.error(error, `Failed to provision lab machine:`);
-            throw new ApiError("Failed to start lab environment. Please check if Lab Orchestrator is running.", StatusCodes.SERVICE_UNAVAILABLE);
+            throw new ApiError("Failed to start lab environment. Please try again later.", StatusCodes.SERVICE_UNAVAILABLE);
         }
 
         const expiresAt = new Date(Date.now() + (remainingSeconds * 1000));
@@ -82,11 +82,12 @@ export class LabVMService {
         const session = await this.labRepository.createSession({
             user: { connect: { id: userId } },
             room: { connect: { id: roomId } },
-            status: "RUNNING",
+            status: VMStatus.RUNNING,
             expiresAt,
             startedAt: new Date(),
             instanceId: instanceId,
-            ipAddress: ipAddress
+            ipAddress: ipAddress,
+            imageId: room.imageId
         });
 
         logger.info(`Started VM session ${session.id} for user ${userId} in room ${roomId}. Expires at ${expiresAt} (Daily Budget)`);
@@ -96,7 +97,7 @@ export class LabVMService {
 
     async extendSession(sessionId: string, userId: string): Promise<VMSessionResponseDto> {
         const session = await this.labRepository.findSessionById(sessionId);
-        if (!session || session.userId !== userId || session.status !== "RUNNING") {
+        if (!session || session.userId !== userId || session.status !== VMStatus.RUNNING) {
             throw new ApiError("Active session not found", StatusCodes.NOT_FOUND);
         }
 
@@ -109,7 +110,7 @@ export class LabVMService {
                 sessionId
             );
         } catch (error: any) {
-            throw new ApiError(error.message || "Failed to extend session", StatusCodes.BAD_REQUEST);
+            throw new ApiError("Failed to extend session. Please try again later.", StatusCodes.BAD_REQUEST);
         }
 
         // Extend expiresAt by 30 mins
@@ -131,17 +132,19 @@ export class LabVMService {
 
         if (session.instanceId) {
             try {
-                const orchestratorUrl = process.env.LAB_ORCHESTRATOR_URL || "http://localhost:5500";
-                const orchestratorSecret = process.env.LAB_ORCHESTRATOR_SECRET || "devio-secret-key";
-
+                const orchestratorUrl = process.env.LAB_ORCHESTRATOR_URL;
                 await axios.post(`${orchestratorUrl}/api/instances/${session.instanceId}/terminate`, {});
             } catch (error: any) {
-                logger.error(`Failed to terminate lab machine ${session.instanceId}:`, error?.response?.data || error.message);
+                const orchestratorErrbg = error?.response?.data;
+                const extractMsg = orchestratorErrbg?.errorMessage;
+
+                logger.error(`Failed to terminate lab machine ${session.instanceId}:`, extractMsg);
+                throw new ApiError(`Machine termination failed`, StatusCodes.INTERNAL_SERVER_ERROR);
             }
         }
 
         await this.labRepository.updateSession(sessionId, {
-            status: "TERMINATED",
+            status: VMStatus.TERMINATED,
             terminatedAt: new Date()
         });
 
