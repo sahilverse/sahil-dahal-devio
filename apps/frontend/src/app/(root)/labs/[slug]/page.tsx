@@ -14,6 +14,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { LabTerminal } from "@/components/labs/LabTerminal";
+import { ConfirmModal } from "@/components/ui/modals/ConfirmModal";
 
 export default function RoomDetailPage() {
     const params = useParams();
@@ -35,6 +36,7 @@ export default function RoomDetailPage() {
 
     const [flagAnswers, setFlagAnswers] = useState<Record<string, string>>({});
     const [isFocused, setIsFocused] = useState(false);
+    const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
 
     if (isLoadingRoom) return <div className="p-10 text-center animate-pulse">Loading Room...</div>;
     if (!room) return <div className="p-10 text-center text-red-500">Room not found.</div>;
@@ -53,6 +55,13 @@ export default function RoomDetailPage() {
     const handleSubmitFlag = (challengeId: string) => {
         if (!flagAnswers[challengeId]) return;
         submitFlag.mutate({ challengeId, answer: flagAnswers[challengeId] });
+    };
+
+    const handleConfirmExtend = () => {
+        if (activeSession) {
+            extendSession.mutate(activeSession.id);
+        }
+        setIsExtendModalOpen(false);
     };
 
     return (
@@ -252,7 +261,7 @@ export default function RoomDetailPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => extendSession.mutate(activeSession.id)}
+                                            onClick={() => setIsExtendModalOpen(true)}
                                             disabled={extendSession.isPending}
                                             className="h-8 rounded-md text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-emerald-500/10 hover:text-emerald-400 px-2"
                                         >
@@ -335,6 +344,26 @@ export default function RoomDetailPage() {
                     )}
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={isExtendModalOpen}
+                onClose={() => setIsExtendModalOpen(false)}
+                onConfirm={handleConfirmExtend}
+                title="Extend Session"
+                description={
+                    <div className="space-y-3">
+                        <p>Are you sure you want to extend your lab session by <span className="text-foreground font-bold">30 minutes</span>?</p>
+                        <div className="p-3 bg-brand-primary/10 border border-brand-primary/20 rounded-lg flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-brand-primary">Cost</span>
+                            <span className="font-black text-brand-primary text-xl">50 Ciphers</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground italic">This action will deduct ciphers from your balance and cannot be undone.</p>
+                    </div>
+                }
+                confirmText="Extend"
+                variant="brand"
+                isPending={extendSession.isPending}
+            />
         </div>
     );
 }

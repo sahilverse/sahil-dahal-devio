@@ -48,7 +48,7 @@ export function ConfirmModal({
                     </DialogTitle>
                 </DialogHeader>
                 <div className="p-4 md:p-6">
-                    <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
+                    <DialogDescription asChild className="text-sm text-muted-foreground leading-relaxed">
                         {description}
                     </DialogDescription>
                 </div>
