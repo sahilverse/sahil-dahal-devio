@@ -190,18 +190,17 @@ export default function RoomDetailPage() {
                                                 </div>
 
                                                 {/* Hints Section */}
-                                                {challenge.hints && challenge.hints.length > 0 && (
+                                                {challenge.hints && challenge.hints.length > 0 && !isSolved && (
                                                     <div className="mt-4 mb-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
+                                                        <div
+                                                            role="button"
                                                             onClick={() => toggleHint(challenge.id)}
-                                                            className="p-0 h-auto text-[10px] font-black uppercase tracking-widest text-brand-primary hover:text-brand-primary/80 hover:bg-transparent flex items-center gap-1"
+                                                            className="w-fit p-0 h-auto text-[10px] font-black uppercase tracking-widest text-brand-primary flex items-center gap-1 -ml-0.5 cursor-pointer select-none"
                                                         >
                                                             <Lightbulb className="w-3 h-3" />
                                                             {expandedHints[challenge.id] ? "Hide Hint" : "Need a Hint?"}
                                                             {expandedHints[challenge.id] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                                        </Button>
+                                                        </div>
 
                                                         {expandedHints[challenge.id] && (
                                                             <div className="mt-3 p-4 bg-brand-primary/5 border border-brand-primary/10 rounded-xl space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
