@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useFetchLab, useFetchChallenges, useSubmitFlag, useFetchActiveSession, useStartSession, useExtendSession, useTerminateSession, useFetchEnrollment, useJoinRoom } from "@/hooks/useLabs";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAppSelector } from "@/store/hooks";
-import { Shield, Lock, Unlock, Flag, Clock, HardDrive, TerminalSquare, AlertCircle, Play, Square, Plus, Maximize2, Minimize2 } from "lucide-react";
+import { Shield, Lock, Unlock, Flag, Clock, HardDrive, TerminalSquare, AlertCircle, Play, Square, Plus, Maximize2, Minimize2, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ export default function RoomDetailPage() {
     const [flagAnswers, setFlagAnswers] = useState<Record<string, string>>({});
     const [isFocused, setIsFocused] = useState(false);
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+    const [expandedHints, setExpandedHints] = useState<Record<string, boolean>>({});
 
     if (isLoadingRoom) return <div className="p-10 text-center animate-pulse">Loading Room...</div>;
     if (!room) return <div className="p-10 text-center text-red-500">Room not found.</div>;
@@ -55,6 +56,13 @@ export default function RoomDetailPage() {
     const handleSubmitFlag = (challengeId: string) => {
         if (!flagAnswers[challengeId]) return;
         submitFlag.mutate({ challengeId, answer: flagAnswers[challengeId] });
+    };
+
+    const toggleHint = (challengeId: string) => {
+        setExpandedHints(prev => ({
+            ...prev,
+            [challengeId]: !prev[challengeId]
+        }));
     };
 
     const handleConfirmExtend = () => {
@@ -180,6 +188,35 @@ export default function RoomDetailPage() {
                                                 <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mb-4">
                                                     <ReactMarkdown>{challenge.description}</ReactMarkdown>
                                                 </div>
+
+                                                {/* Hints Section */}
+                                                {challenge.hints && challenge.hints.length > 0 && (
+                                                    <div className="mt-4 mb-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => toggleHint(challenge.id)}
+                                                            className="p-0 h-auto text-[10px] font-black uppercase tracking-widest text-brand-primary hover:text-brand-primary/80 hover:bg-transparent flex items-center gap-1"
+                                                        >
+                                                            <Lightbulb className="w-3 h-3" />
+                                                            {expandedHints[challenge.id] ? "Hide Hint" : "Need a Hint?"}
+                                                            {expandedHints[challenge.id] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                                        </Button>
+
+                                                        {expandedHints[challenge.id] && (
+                                                            <div className="mt-3 p-4 bg-brand-primary/5 border border-brand-primary/10 rounded-xl space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                                {challenge.hints.map((hint, i) => (
+                                                                    <div key={i} className="flex gap-2">
+                                                                        <span className="text-brand-primary font-bold text-[10px] mt-0.5">•</span>
+                                                                        <p className="text-[11px] leading-relaxed text-muted-foreground italic font-medium">
+                                                                            {hint}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                                 {/* Flag Submission */}
                                                 {challenge.type === "FLAG" && !isSolved && (
