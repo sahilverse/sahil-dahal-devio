@@ -48,26 +48,16 @@ export class PaymentRepository {
         });
     }
 
-    async findPromoCode(code: string) {
-        return this.prisma.promoCode.findUnique({
-            where: { code, isActive: true }
-        });
-    }
-
-    async incrementPromoCodeUsage(promoCodeId: string) {
-        return this.prisma.promoCode.update({
-            where: { id: promoCodeId },
-            data: { usedCount: { increment: 1 } }
-        });
-    }
-
-    async getUserPayments(userId: string, limit: number = 20, offset: number = 0) {
+    async getUserPayments(userId: string, limit: number = 20, cursor?: string) {
         return this.prisma.payment.findMany({
             where: { userId },
             include: { package: true },
             orderBy: { createdAt: "desc" },
             take: limit,
-            skip: offset
+            ...(cursor && {
+                skip: 1,
+                cursor: { id: cursor }
+            })
         });
     }
 }

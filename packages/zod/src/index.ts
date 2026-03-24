@@ -17,4 +17,5 @@ export * from "./chat.schema";
 export * from "./event.schema";
 export * from "./company.schema";
 export * from "./utils";
-
+export * from "./payment.schema";
+export * from "./promo.schema";

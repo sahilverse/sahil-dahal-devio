@@ -4,6 +4,7 @@ import { PaymentRepository } from "./payment.repository";
 import { CipherService } from "../cipher/cipher.service";
 import { NotificationService } from "../notification/notification.service";
 import { MailService } from "../mail/mail.service";
+import { PromoCodeService } from "../promo-code/promo-code.service";
 import { logger, ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { PaymentStatus, PaymentType, PaymentProvider, CipherReason, NotificationType } from "../../generated/prisma/client";
@@ -23,15 +24,13 @@ export class PaymentService {
         @inject(TYPES.PaymentRepository) private paymentRepository: PaymentRepository,
         @inject(TYPES.CipherService) private cipherService: CipherService,
         @inject(TYPES.NotificationService) private notificationService: NotificationService,
-        @inject(TYPES.MailService) private mailService: MailService
+        @inject(TYPES.MailService) private mailService: MailService,
+        @inject(TYPES.PromoCodeService) private promoCodeService: PromoCodeService
     ) { }
 
     // ─── Initiate Payment ──────────────────────────────────────
     async initiatePayment(userId: string, packageId: string, promoCode?: string) {
-        const pkg = await this.paymentRepository.findPackageById(packageId);
-        if (!pkg) {
-            throw new ApiError("Package not found or is inactive", StatusCodes.NOT_FOUND);
-        }
+        const pkg = await this.cipherService.getPackageById(packageId);
 
         let totalAmount = Number(pkg.price);
         let discountAmount = 0;
@@ -39,7 +38,7 @@ export class PaymentService {
 
         // Apply promo code if provided
         if (promoCode) {
-            const promo = await this.validatePromoCode(promoCode, PaymentType.CIPHER_PURCHASE, packageId);
+            const promo = await this.promoCodeService.validatePromoCode(promoCode, PaymentType.CIPHER_PURCHASE, packageId);
             discountAmount = Number(((totalAmount * promo.discount) / 100).toFixed(2));
             promoCodeId = promo.id;
         }
@@ -129,7 +128,7 @@ export class PaymentService {
 
             // Increment promo code usage if used
             if (payment.promoCodeId) {
-                await this.paymentRepository.incrementPromoCodeUsage(payment.promoCodeId);
+                await this.promoCodeService.incrementUsage(payment.promoCodeId);
             }
 
             // Send real-time notification
@@ -178,53 +177,9 @@ export class PaymentService {
         };
     }
 
-    // ─── Get Packages ──────────────────────────────────────────
-    async getPackages() {
-        return this.paymentRepository.findActivePackages();
-    }
-
     // ─── Get Payment History ───────────────────────────────────
-    async getPaymentHistory(userId: string, limit: number, offset: number) {
-        return this.paymentRepository.getUserPayments(userId, limit, offset);
-    }
-
-    // ─── Validate Promo Code ───────────────────────────────────
-    async validatePromoCode(code: string, applicableType?: PaymentType, packageId?: string, courseId?: string) {
-        const promo = await this.paymentRepository.findPromoCode(code);
-        if (!promo) {
-            throw new ApiError("Invalid or expired promo code", StatusCodes.NOT_FOUND);
-        }
-
-        const now = new Date();
-        if (promo.validFrom && now < promo.validFrom) {
-            throw new ApiError("Promo code is not yet active", StatusCodes.BAD_REQUEST);
-        }
-        if (promo.validUntil && now > promo.validUntil) {
-            throw new ApiError("Promo code has expired", StatusCodes.BAD_REQUEST);
-        }
-        if (promo.maxUses && promo.usedCount >= promo.maxUses) {
-            throw new ApiError("Promo code usage limit reached", StatusCodes.BAD_REQUEST);
-        }
-        if (applicableType && promo.applicableType && promo.applicableType !== applicableType) {
-            throw new ApiError(`Promo code is not applicable for ${applicableType}`, StatusCodes.BAD_REQUEST);
-        }
-        if (packageId && promo.applicablePackageId && promo.applicablePackageId !== packageId) {
-            throw new ApiError(`Promo code is strictly applicable for a different package`, StatusCodes.BAD_REQUEST);
-        }
-        if (courseId && promo.applicableCourseId && promo.applicableCourseId !== courseId) {
-            throw new ApiError(`Promo code is strictly applicable for a different course`, StatusCodes.BAD_REQUEST);
-        }
-
-        return {
-            id: promo.id,
-            code: promo.code,
-            discount: Number(promo.discount),
-            maxUses: promo.maxUses,
-            usedCount: promo.usedCount,
-            applicableType: promo.applicableType,
-            applicablePackageId: promo.applicablePackageId,
-            applicableCourseId: promo.applicableCourseId
-        };
+    async getPaymentHistory(userId: string, limit: number, cursor?: string) {
+        return this.paymentRepository.getUserPayments(userId, limit, cursor);
     }
 
     // ─── eSewa Signature Helper ────────────────────────────────

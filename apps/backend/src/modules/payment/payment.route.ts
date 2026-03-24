@@ -5,33 +5,12 @@ import { PaymentController } from "./payment.controller";
 import { AuthMiddleware } from "../../middlewares/auth";
 import { container } from "../../config/inversify";
 import { validateRequest } from "../../middlewares/validation";
+import { InitiatePaymentSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const paymentController = container.get<PaymentController>(TYPES.PaymentController);
 const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 
-const InitiatePaymentSchema = z.object({
-    packageId: z.string().min(1, "Package ID is required"),
-    promoCode: z.string().optional(),
-});
-
-const ValidatePromoSchema = z.object({
-    code: z.string().min(1, "Promo code is required"),
-    packageId: z.string().optional(),
-    courseId: z.string().optional(),
-});
-
-/**
- * @swagger
- * /payments/packages:
- *   get:
- *     summary: Get all available Cipher packages
- *     tags: [Payments]
- *     responses:
- *       200:
- *         description: List of active cipher packages
- */
-router.get("/packages", paymentController.getPackages);
 
 /**
  * @swagger
@@ -76,7 +55,7 @@ router.post("/initiate", authMiddleware.guard, validateRequest(InitiatePaymentSc
  *       200:
  *         description: Payment verified successfully
  */
-router.get("/verify", paymentController.verifyPayment);
+router.get("/verify", authMiddleware.guard, paymentController.verifyPayment);
 
 /**
  * @swagger
@@ -92,37 +71,14 @@ router.get("/verify", paymentController.verifyPayment);
  *         schema:
  *           type: integer
  *       - in: query
- *         name: offset
+ *         name: cursor
  *         schema:
- *           type: integer
+ *           type: string
+ *         description: Cursor for pagination (ID of the last item)
  *     responses:
  *       200:
  *         description: Payment history list
  */
 router.get("/history", authMiddleware.guard, paymentController.getPaymentHistory);
-
-/**
- * @swagger
- * /payments/promo/validate:
- *   post:
- *     summary: Validate a promo code
- *     tags: [Payments]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [code]
- *             properties:
- *               code:
- *                 type: string
- *     responses:
- *       200:
- *         description: Promo code is valid
- */
-router.post("/promo/validate", authMiddleware.guard, validateRequest(ValidatePromoSchema), paymentController.validatePromoCode);
 
 export { router };

@@ -118,6 +118,10 @@ export const TYPES = {
     PaymentRepository: Symbol.for("PaymentRepository"),
     PaymentService: Symbol.for("PaymentService"),
     PaymentController: Symbol.for("PaymentController"),
+
+    PromoCodeRepository: Symbol.for("PromoCodeRepository"),
+    PromoCodeService: Symbol.for("PromoCodeService"),
+    PromoCodeController: Symbol.for("PromoCodeController"),
 };
 
 export * from "./jwt";

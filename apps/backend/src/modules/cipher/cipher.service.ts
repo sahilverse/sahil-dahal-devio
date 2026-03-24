@@ -45,11 +45,23 @@ export class CipherService {
         return this.cipherRepository.getBalance(userId);
     }
 
-    async getHistory(userId: string, limit: number = 20, offset: number = 0) {
-        return this.cipherRepository.getTransactions(userId, limit, offset);
+    async getHistory(userId: string, limit: number = 20, cursor?: string) {
+        return this.cipherRepository.getTransactions(userId, limit, cursor);
     }
 
     async countExtensionsToday(userId: string): Promise<number> {
         return this.cipherRepository.countExtensionsToday(userId);
+    }
+
+    async getPackages() {
+        return this.cipherRepository.findActivePackages();
+    }
+
+    async getPackageById(packageId: string) {
+        const pkg = await this.cipherRepository.findPackageById(packageId);
+        if (!pkg) {
+            throw new ApiError("Cipher package not found", StatusCodes.NOT_FOUND);
+        }
+        return pkg;
     }
 }

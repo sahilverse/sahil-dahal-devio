@@ -15,12 +15,23 @@ export class CipherController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Balance fetched successfully", { balance });
     });
 
-    getHistory = asyncHandler(async (req: Request, res: Response) => {
+    history = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user!.id;
         const limit = Number(req.query.limit) || 20;
-        const offset = Number(req.query.offset) || 0;
+        const cursor = req.query.cursor as string;
 
-        const history = await this.cipherService.getHistory(userId, limit, offset);
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "History fetched successfully", { history });
+        const history = await this.cipherService.getHistory(userId, limit, cursor);
+        const lastItem = history[history.length - 1];
+        const nextCursor = (history.length === limit && lastItem) ? lastItem.id : null;
+
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "History fetched successfully", { 
+            history,
+            nextCursor 
+        });
+    });
+
+    getPackages = asyncHandler(async (req: Request, res: Response) => {
+        const packages = await this.cipherService.getPackages();
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Cipher packages fetched successfully", { packages });
     });
 }

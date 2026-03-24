@@ -38,6 +38,7 @@ import { EventRepository, EventService, EventController } from "../modules/event
 import { EventSocketHandler } from "../modules/event/event.socket";
 import { LabRepository, LabService, LabController, LabSyncService, LabCTFService, LabVMService, LabVMWorkerService, LabSocketHandler } from "../modules/lab";
 import { PaymentRepository, PaymentService, PaymentController } from "../modules/payment";
+import { PromoCodeRepository, PromoCodeService, PromoCodeController } from "../modules/promo-code";
 
 
 const container = new Container();
@@ -165,6 +166,10 @@ container.bind<ISocketHandler>(TYPES.SocketHandler).to(LabSocketHandler).inSingl
 container.bind<PaymentRepository>(TYPES.PaymentRepository).to(PaymentRepository).inSingletonScope();
 container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService).inSingletonScope();
 container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController).inSingletonScope();
+
+container.bind<PromoCodeRepository>(TYPES.PromoCodeRepository).to(PromoCodeRepository).inSingletonScope();
+container.bind<PromoCodeService>(TYPES.PromoCodeService).to(PromoCodeService).inSingletonScope();
+container.bind<PromoCodeController>(TYPES.PromoCodeController).to(PromoCodeController).inSingletonScope();
 
 
 export { container };

@@ -46,12 +46,15 @@ export class CipherRepository {
         return user?.cipherBalance || 0;
     }
 
-    async getTransactions(userId: string, limit: number, offset: number) {
+    async getTransactions(userId: string, limit: number, cursor?: string) {
         return this.prisma.cipherTransaction.findMany({
             where: { userId },
             orderBy: { createdAt: "desc" },
             take: limit,
-            skip: offset
+            ...(cursor && {
+                skip: 1,
+                cursor: { id: cursor }
+            })
         });
     }
 
@@ -79,5 +82,18 @@ export class CipherRepository {
             }
         });
         return count > 0;
+    }
+
+    async findPackageById(packageId: string) {
+        return this.prisma.cipherPackage.findUnique({
+            where: { id: packageId, isActive: true }
+        });
+    }
+
+    async findActivePackages() {
+        return this.prisma.cipherPackage.findMany({
+            where: { isActive: true },
+            orderBy: { price: "asc" }
+        });
     }
 }

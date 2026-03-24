@@ -38,15 +38,26 @@ router.get("/balance", authMiddleware.guard, cipherController.getBalance);
  *           type: integer
  *         description: Number of items per page
  *       - in: query
- *         name: offset
+ *         name: cursor
  *         schema:
- *           type: integer
- *         description: Offset for pagination
+ *           type: string
+ *         description: Cursor for pagination (ID of the last item from previous page)
  *     responses:
  *       200:
  *         description: Transaction list
  */
-router.get("/history", authMiddleware.guard, cipherController.getHistory);
+router.get("/history", authMiddleware.guard, cipherController.history);
 
+/**
+ * @swagger
+ * /cipher/packages:
+ *   get:
+ *     summary: Get all available Cipher packages
+ *     tags: [Cipher]
+ *     responses:
+ *       200:
+ *         description: List of active cipher packages
+ */
+router.get("/packages", cipherController.getPackages);
 
 export { router };
