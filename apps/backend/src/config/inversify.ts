@@ -37,6 +37,7 @@ import { ConversationSocketHandler } from "../modules/conversation/conversation.
 import { EventRepository, EventService, EventController } from "../modules/event";
 import { EventSocketHandler } from "../modules/event/event.socket";
 import { LabRepository, LabService, LabController, LabSyncService, LabCTFService, LabVMService, LabVMWorkerService, LabSocketHandler } from "../modules/lab";
+import { PaymentRepository, PaymentService, PaymentController } from "../modules/payment";
 
 
 const container = new Container();
@@ -160,6 +161,10 @@ container.bind<LabVMService>(TYPES.LabVMService).to(LabVMService).inSingletonSco
 container.bind<LabVMWorkerService>(TYPES.LabVMWorkerService).to(LabVMWorkerService).inSingletonScope();
 container.bind<LabSocketHandler>(TYPES.LabSocketHandler).to(LabSocketHandler).inSingletonScope();
 container.bind<ISocketHandler>(TYPES.SocketHandler).to(LabSocketHandler).inSingletonScope();
+
+container.bind<PaymentRepository>(TYPES.PaymentRepository).to(PaymentRepository).inSingletonScope();
+container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService).inSingletonScope();
+container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController).inSingletonScope();
 
 
 export { container };

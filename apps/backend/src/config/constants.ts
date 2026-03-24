@@ -67,3 +67,8 @@ export const JUDGE0_URL = process.env.JUDGE0_URL || "http://localhost:2358";
 
 // Lab Orchestrator
 export const LAB_ORCHESTRATOR_URL = process.env.LAB_ORCHESTRATOR_URL!;
+
+// eSewa
+export const ESEWA_SECRET_KEY = process.env.ESEWA_SECRET_KEY!;
+export const ESEWA_PRODUCT_CODE = process.env.ESEWA_PRODUCT_CODE!;
+export const ESEWA_GATEWAY_URL = process.env.ESEWA_GATEWAY_URL!;
