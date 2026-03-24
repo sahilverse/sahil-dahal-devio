@@ -144,6 +144,53 @@ async function main() {
 
     console.log(`✅ Achievements seeded: ${achievements.length} achievements`);
 
+    // ─── Cipher Packages ───────────────────────────────────────
+    const cipherPackages = [
+        { name: "Starter Pack", description: "Perfect for getting started", points: 100, price: 150, isFeatured: false },
+        { name: "Popular Pack", description: "Best value for regular users", points: 500, price: 700, isFeatured: true },
+        { name: "Pro Pack", description: "For power users and pros", points: 1000, price: 1350, isFeatured: false },
+        { name: "Whale Pack", description: "Maximum ciphers, maximum savings", points: 5000, price: 6000, isFeatured: true },
+    ];
+
+    for (const pkg of cipherPackages) {
+        await prisma.cipherPackage.upsert({
+            where: { id: toSlug(pkg.name) },
+            update: {},
+            create: {
+                id: toSlug(pkg.name),
+                name: pkg.name,
+                description: pkg.description,
+                points: pkg.points,
+                price: pkg.price,
+                isFeatured: pkg.isFeatured,
+            },
+        });
+    }
+
+    console.log(`✅ Cipher packages seeded: ${cipherPackages.length} packages`);
+
+    // ─── Promo Codes ───────────────────────────────────────────
+    const promoCodes = [
+        { code: "WELCOME10", discount: 10, maxUses: 500, applicableType: "CIPHER_PURCHASE" },
+        { code: "HACKER20", discount: 20, maxUses: 200, applicableType: "CIPHER_PURCHASE" },
+        { code: "CYBER50", discount: 50, maxUses: 50, applicableType: "CIPHER_PURCHASE" },
+    ];
+
+    for (const promo of promoCodes) {
+        await prisma.promoCode.upsert({
+            where: { code: promo.code },
+            update: {},
+            create: {
+                code: promo.code,
+                discount: promo.discount,
+                maxUses: promo.maxUses,
+                applicableType: promo.applicableType as any,
+            },
+        });
+    }
+
+    console.log(`✅ Promo codes seeded: ${promoCodes.length} codes`);
+
     console.log("🌱 Database seeding completed!");
 }
 
