@@ -3,6 +3,7 @@ import { TYPES } from "../../types";
 import { PaymentRepository } from "./payment.repository";
 import { CipherService } from "../cipher/cipher.service";
 import { NotificationService } from "../notification/notification.service";
+import { MailService } from "../mail/mail.service";
 import { logger, ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { PaymentStatus, PaymentType, PaymentProvider, CipherReason, NotificationType } from "../../generated/prisma/client";
@@ -21,7 +22,8 @@ export class PaymentService {
     constructor(
         @inject(TYPES.PaymentRepository) private paymentRepository: PaymentRepository,
         @inject(TYPES.CipherService) private cipherService: CipherService,
-        @inject(TYPES.NotificationService) private notificationService: NotificationService
+        @inject(TYPES.NotificationService) private notificationService: NotificationService,
+        @inject(TYPES.MailService) private mailService: MailService
     ) { }
 
     // ─── Initiate Payment ──────────────────────────────────────
@@ -140,6 +142,33 @@ export class PaymentService {
             });
 
             logger.info(`Transferred ${payment.package.points} ciphers to user ${payment.userId} for payment ${payment.id}`);
+
+            // Send email receipt
+            try {
+                const user = (payment as any).user;
+                if (user && user.email) {
+                    await this.mailService.sendPaymentReceiptEmail(user.email, {
+                        userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
+                        transactionId: payment.providerTxId || payment.id,
+                        date: new Date().toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        }),
+                        packageName: payment.package.name,
+                        ciphers: payment.package.points.toString(),
+                        amount: payment.cashAmount.toString(),
+                        currency: payment.package.currency,
+                        dashboardUrl: `${CLIENT_URL}/dashboard`,
+                    });
+                    logger.info(`Payment receipt sent to ${user.email} for payment ${payment.id}`);
+                }
+            } catch (error: any) {
+                logger.error(`Failed to send payment receipt: ${error.message}`);
+                // Don't throw error here to avoid rolling back the transaction
+            }
         }
 
         return {

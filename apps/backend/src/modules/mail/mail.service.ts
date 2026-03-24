@@ -27,6 +27,30 @@ export class MailService {
 
     }
 
+    async sendPaymentReceiptEmail(to: string, data: {
+        userName: string;
+        transactionId: string;
+        date: string;
+        packageName: string;
+        ciphers: string;
+        amount: string;
+        currency: string;
+        dashboardUrl: string;
+    }): Promise<void> {
+        const template = this.loadTemplate("payment-receipt", {
+            USER_NAME: data.userName,
+            TRANSACTION_ID: data.transactionId,
+            DATE: data.date,
+            PACKAGE_NAME: data.packageName,
+            CIPHERS: data.ciphers,
+            AMOUNT: data.amount,
+            CURRENCY: data.currency,
+            DASHBOARD_URL: data.dashboardUrl,
+        });
+        await this.sendMail(to, `Payment Receipt — ${data.packageName}`, template);
+    }
+
+
     private loadTemplate(templateName: string, variables: Record<string, string> = {}): string {
         const filePath = path.join(process.cwd(), "src/modules/mail/templates", `${templateName}.html`);
         let template = fs.readFileSync(filePath, "utf-8");

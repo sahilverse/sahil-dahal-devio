@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Devio — Payment Receipt</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f7f7f8;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #334155;
+    }
+
+    .header {
+      background: #0f172a;
+      padding: 40px 28px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    .header p {
+      margin: 8px 0 0 0;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 32px 28px;
+    }
+
+    .greeting {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 24px;
+    }
+
+    .receipt-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .receipt-row:last-child {
+      margin-bottom: 0;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 16px;
+    }
+
+    .label {
+      color: #64748b;
+    }
+
+    .value {
+      font-weight: 600;
+      color: #334155;
+      text-align: right;
+    }
+
+    .cipher-badge {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      padding: 24px 28px;
+      background: #fafafa;
+      color: #94a3b8;
+      font-size: 12px;
+      text-align: center;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .btn {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      padding: 14px 24px;
+      border-radius: 8px;
+      background: #0b6ef6;
+      color: #fff;
+      font-weight: 600;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 480px) {
+      .pad {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Dev.io</h1>
+      <p>Payment Receipt</p>
+    </div>
+    <div class="content">
+      <div class="greeting">Thank you for your purchase, {{USER_NAME}}!</div>
+      <p>Your transaction has been completed successfully. Your ciphers have been added to your account instantly.</p>
+
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span class="label">Transaction ID</span>
+          <span class="value">{{TRANSACTION_ID}}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Date</span>
+          <span class="value">{{DATE}}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Package</span>
+          <span class="value">{{PACKAGE_NAME}}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Ciphers Awarded</span>
+          <span class="value text-blue"><span class="cipher-badge">{{CIPHERS}} Ciphers</span></span>
+        </div>
+        <div class="receipt-row">
+          <span class="label">Total Amount</span>
+          <span class="value">{{AMOUNT}} {{CURRENCY}}</span>
+        </div>
+      </div>
+
+      <p style="margin-top: 32px; font-size: 13px; color: #94a3b8;">
+        If you have any questions, please contact our support team at <a href="mailto:support@devio.com"
+          style="color: #0b6ef6; text-decoration: none;">support@devio.com</a>.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p style="margin: 0">© 2026 DevIO Platform. All rights reserved.</p>
+      <p style="margin: 4px 0 0 0">This is an automated receipt — no reply is necessary.</p>
+    </div>
+  </div>
+</body>
+
+</html>
