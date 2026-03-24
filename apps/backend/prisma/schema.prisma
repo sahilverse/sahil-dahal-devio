@@ -322,6 +322,7 @@ model AuraTransaction {
 }
 
 enum CipherReason {
+  PURCHASE
   CONTEST_WIN
   ANSWER_ACCEPTED
   PROBLEM_SOLVED_BOUNTY
@@ -1256,7 +1257,8 @@ model CipherPackage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  payments Payment[]
+  payments             Payment[]
+  applicablePromoCodes PromoCode[]
 
   @@index([isActive])
 }
@@ -1266,6 +1268,13 @@ model PromoCode {
   code     String  @unique
   discount Decimal @db.Decimal(10, 2)
   isActive Boolean @default(true) @map("is_active")
+
+  applicableType PaymentType? @map("applicable_type")
+
+  applicablePackageId String?        @map("applicable_package_id")
+  applicablePackage   CipherPackage? @relation(fields: [applicablePackageId], references: [id])
+  applicableCourseId  String?        @map("applicable_course_id")
+  applicableCourse    Course?        @relation(fields: [applicableCourseId], references: [id])
 
   validFrom  DateTime? @map("valid_from")
   validUntil DateTime? @map("valid_until")
@@ -1292,9 +1301,10 @@ model Course {
   authorId String @map("author_id")
   author   User   @relation("course_author", fields: [authorId], references: [id])
 
-  modules     CourseModule[]
-  enrollments Enrollment[]
-  payments    Payment[]
+  modules              CourseModule[]
+  enrollments          Enrollment[]
+  payments             Payment[]
+  applicablePromoCodes PromoCode[]
 
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
