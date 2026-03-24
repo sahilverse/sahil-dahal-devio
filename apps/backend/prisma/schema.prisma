@@ -952,7 +952,7 @@ model CyberRoom {
   estimatedTime Int?    @map("estimated_time")
   pointsReward  Int     @default(0) @map("points_reward")
   cipherReward  Int     @default(0) @map("cipher_reward")
-  imageId       String  @default("alpine:latest") @map("image_id")
+  imageId       String  @map("image_id")
 
   isPublished Boolean @default(false) @map("is_published")
 
