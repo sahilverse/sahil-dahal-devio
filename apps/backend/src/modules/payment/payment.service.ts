@@ -139,7 +139,7 @@ export class PaymentService {
                 actionUrl: "/payments/history"
             });
 
-            logger.info(`Awarded ${payment.package.points} ciphers to user ${payment.userId} for payment ${payment.id}`);
+            logger.info(`Transferred ${payment.package.points} ciphers to user ${payment.userId} for payment ${payment.id}`);
         }
 
         return {
