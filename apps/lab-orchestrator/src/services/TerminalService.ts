@@ -35,7 +35,6 @@ export class TerminalService {
                         logger.warn(`Initial resize failed: ${e}`);
                     }
 
-                    // If we got here, the shell likely exists. We bridge this stream.
                     this.bridgeStream(ws, testStream, exec, containerId);
                     return; // Success!
                 } catch (error: any) {
@@ -70,7 +69,6 @@ export class TerminalService {
                     stream.write(msg.data);
                 }
             } catch (e) {
-                // Fallback for raw data (if any old frontend version connects or for simple text)
                 stream.write(data.toString());
             }
         });
