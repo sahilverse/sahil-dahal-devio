@@ -35,5 +35,5 @@ export interface IPaymentGateway {
      * @param data - Raw data from the gateway callback (query params, body, etc.)
      * @returns Verification result with success status and metadata.
      */
-    verify(data: unknown): Promise<PaymentVerificationResult>;
+    verify(data: string): Promise<PaymentVerificationResult>;
 }

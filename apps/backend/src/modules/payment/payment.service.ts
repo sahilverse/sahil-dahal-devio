@@ -95,11 +95,11 @@ export class PaymentService {
         };
     }
 
-    async verifyPayment(provider: PaymentProvider, rawData: unknown) {
+    async verifyPayment(provider: PaymentProvider, encodedData: string) {
         const gateway = this.getGateway(provider);
 
         // Delegate gateway-specific verification
-        const result = await gateway.verify(rawData);
+        const result = await gateway.verify(encodedData);
 
         // Extract transaction_uuid from the raw response to find the payment
         const txId = this.extractTransactionId(provider, result.rawResponse);
@@ -180,29 +180,28 @@ export class PaymentService {
             });
 
             // Send email receipt
-            try {
-                const user = (payment as any).user;
-                if (user && user.email) {
-                    await this.mailService.sendPaymentReceiptEmail(user.email, {
-                        userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
-                        transactionId: payment.providerTxId || payment.id,
-                        date: new Date().toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }),
-                        packageName: payment.package.name,
-                        ciphers: payment.package.points.toString(),
-                        amount: payment.totalAmount.toString(),
-                        currency: payment.currency,
-                        dashboardUrl: `${CLIENT_URL}/${user.username}`,
-                    });
+            const user = (payment as any).user;
+            if (user && user.email) {
+                this.mailService.sendPaymentReceiptEmail(user.email, {
+                    userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username,
+                    transactionId: payment.providerTxId || payment.id,
+                    date: new Date().toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    }),
+                    packageName: payment.package.name,
+                    ciphers: payment.package.points.toString(),
+                    amount: payment.totalAmount.toString(),
+                    currency: payment.currency,
+                    dashboardUrl: `${CLIENT_URL}/${user.username}`,
+                }).then(() => {
                     logger.info(`Payment receipt sent to ${user.email} for payment ${payment.id}`);
-                }
-            } catch (error: any) {
-                logger.error(`Failed to send payment receipt: ${error.message}`);
+                }).catch((error: any) => {
+                    logger.error(`Failed to send payment receipt: ${error.message}`);
+                });
             }
         }
     }

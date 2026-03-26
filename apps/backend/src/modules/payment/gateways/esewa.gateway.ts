@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import crypto from "crypto";
 import { PaymentProvider } from "../../../generated/prisma/client";
-import { ApiError } from "../../../utils";
+import { ApiError, logger } from "../../../utils";
 import { StatusCodes } from "http-status-codes";
 import {
     ESEWA_SECRET_KEY,
@@ -20,7 +20,14 @@ export class EsewaGateway implements IPaymentGateway {
     readonly provider = PaymentProvider.ESEWA;
 
     initiate(totalAmount: number, transactionUuid: string): PaymentInitiationResult {
-        const signature = this.generateSignature(totalAmount, transactionUuid);
+        const fields = "total_amount,transaction_uuid,product_code";
+        const data = {
+            total_amount: String(totalAmount),
+            transaction_uuid: transactionUuid,
+            product_code: ESEWA_PRODUCT_CODE,
+        };
+
+        const signature = this.generateSignature(data, fields);
 
         return {
             gatewayConfig: {
@@ -33,38 +40,32 @@ export class EsewaGateway implements IPaymentGateway {
                 product_delivery_charge: 0,
                 success_url: `${CLIENT_URL}/payments/verify`,
                 failure_url: `${CLIENT_URL}/payments/failed`,
-                signed_field_names: "total_amount,transaction_uuid,product_code",
+                signed_field_names: fields,
                 signature,
             },
             gatewayUrl: ESEWA_GATEWAY_URL,
         };
     }
 
-    async verify(encodedData: unknown): Promise<PaymentVerificationResult> {
-        if (typeof encodedData !== "string") {
-            throw new ApiError("Invalid eSewa response data", StatusCodes.BAD_REQUEST);
-        }
+    async verify(encodedData: string): Promise<PaymentVerificationResult> {
 
         const decodedData = JSON.parse(
             Buffer.from(encodedData, "base64").toString("utf-8")
         );
+
+
         const {
-            transaction_uuid,
-            total_amount,
+            signature: receivedSignature,
+            signed_field_names: fields,
             status,
             ref_id,
-            signature: receivedSignature,
         } = decodedData;
 
-        if (!transaction_uuid || !total_amount || !status) {
+        if (!fields || !receivedSignature) {
             throw new ApiError("Invalid eSewa response data", StatusCodes.BAD_REQUEST);
         }
 
-        // Verify signature integrity
-        const expectedSignature = this.generateSignature(
-            Number(total_amount),
-            transaction_uuid
-        );
+        const expectedSignature = this.generateSignature(decodedData, fields);
 
         if (receivedSignature !== expectedSignature) {
             return {
@@ -89,8 +90,12 @@ export class EsewaGateway implements IPaymentGateway {
         };
     }
 
-    private generateSignature(totalAmount: number, transactionUuid: string): string {
-        const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${ESEWA_PRODUCT_CODE}`;
+    private generateSignature(data: Record<string, any>, fields: string): string {
+        const message = fields
+            .split(",")
+            .map((field) => `${field}=${data[field]}`)
+            .join(",");
+
         return crypto
             .createHmac("sha256", ESEWA_SECRET_KEY)
             .update(message)
