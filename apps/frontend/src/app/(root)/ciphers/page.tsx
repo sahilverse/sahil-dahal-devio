@@ -28,6 +28,8 @@ import { useInitiatePayment } from "@/hooks/usePayment";
 import { useValidatePromo } from "@/hooks/usePromo";
 import type { CipherPackage } from "@/api/cipherService";
 import { PaymentSession } from "@/lib/payment-session";
+import { useAppSelector } from "@/store/hooks";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 
 // Icon mapping by index for visual differentiation
 const TIER_ICONS = [Zap, Coins, ShieldCheck, Sparkles];
@@ -39,6 +41,9 @@ const TIER_COLORS = [
 ];
 
 export default function CipherStorePage() {
+    const { user } = useAppSelector((state) => state.auth);
+    const { openLogin } = useAuthModal();
+
     const { data: packages, isLoading, error } = useCipherPackages();
     const initiatePayment = useInitiatePayment();
     const validatePromo = useValidatePromo();
@@ -48,6 +53,11 @@ export default function CipherStorePage() {
     const [isRedirecting, setIsRedirecting] = useState(false);
 
     const handleBuyNow = (pkg: CipherPackage) => {
+        if (!user) {
+            openLogin();
+            return;
+        }
+
         setSelectedItem({
             id: pkg.id,
             name: pkg.name,

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, Settings, LogOut, Sun, Moon, Monitor, Trophy, LucideIcon } from "lucide-react";
+import { FileText, Settings, LogOut, Sun, Moon, Monitor, Trophy, ShoppingBag, LucideIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setTheme } from "@/slices/theme";
 import { AuthUser } from "@/slices/auth/authTypes";
@@ -30,6 +30,7 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
+    { icon: ShoppingBag, label: "Cipher Store", href: "/ciphers" },
     { icon: FileText, label: "Drafts", href: "/drafts" },
     { icon: Trophy, label: "Achievements", href: "/achievements" },
     { icon: Settings, label: "Settings", href: "/settings" },

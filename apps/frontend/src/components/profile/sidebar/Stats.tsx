@@ -57,7 +57,8 @@ export default function Stats({ profile, isCurrentUser }: StatsProps) {
                 {isCurrentUser && (
                     <StatCard
                         label="Cipher"
-                        value={(profile.cipherBalance ?? 0).toLocaleString()}
+                        value={Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(profile.cipherBalance ?? 0)}
+                        title={`${(profile.cipherBalance ?? 0).toLocaleString()} Ciphers`}
                     />
                 )}
             </div>

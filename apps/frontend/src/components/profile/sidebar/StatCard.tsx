@@ -1,7 +1,8 @@
-export default function StatCard({ label, value, onClick, isInteractive }: { label: string; value: string | number; onClick?: () => void; isInteractive?: boolean }) {
+export default function StatCard({ label, value, onClick, isInteractive, title }: { label: string; value: string | number; onClick?: () => void; isInteractive?: boolean; title?: string }) {
     return (
         <div
             onClick={onClick}
+            title={title}
             className={`
                 flex flex-col 
                 ${isInteractive ? "cursor-pointer hover:opacity-75 transition-opacity" : "cursor-default"}
