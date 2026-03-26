@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { z } from "zod";
 import { TYPES } from "../../types";
 import { PaymentController } from "./payment.controller";
 import { AuthMiddleware } from "../../middlewares/auth";
@@ -14,9 +13,21 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 
 /**
  * @swagger
+ * /payments/providers:
+ *   get:
+ *     summary: Get supported payment providers
+ *     tags: [Payments]
+ *     responses:
+ *       200:
+ *         description: List of supported payment providers
+ */
+router.get("/providers", paymentController.getProviders);
+
+/**
+ * @swagger
  * /payments/initiate:
  *   post:
- *     summary: Initiate a cipher purchase via eSewa
+ *     summary: Initiate a cipher purchase
  *     tags: [Payments]
  *     security:
  *       - bearerAuth: []
@@ -26,21 +37,24 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [packageId]
+ *             required: [packageId, provider]
  *             properties:
  *               packageId:
  *                 type: string
+ *               provider:
+ *                 type: string
+ *                 enum: [ESEWA, KHALTI]
  *               promoCode:
  *                 type: string
  *     responses:
  *       200:
- *         description: Payment initiation data with eSewa form config
+ *         description: Payment initiation data with gateway config
  */
 router.post("/initiate", authMiddleware.guard, validateRequest(InitiatePaymentSchema), paymentController.initiatePurchase);
 
 /**
  * @swagger
- * /payments/verify:
+ * /payments/verify/esewa:
  *   get:
  *     summary: Verify eSewa payment callback
  *     tags: [Payments]
@@ -55,7 +69,7 @@ router.post("/initiate", authMiddleware.guard, validateRequest(InitiatePaymentSc
  *       200:
  *         description: Payment verified successfully
  */
-router.get("/verify", authMiddleware.guard, paymentController.verifyPayment);
+router.get("/verify/esewa", authMiddleware.guard, paymentController.verifyEsewa);
 
 /**
  * @swagger

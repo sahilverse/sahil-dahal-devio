@@ -118,6 +118,7 @@ export const TYPES = {
     PaymentRepository: Symbol.for("PaymentRepository"),
     PaymentService: Symbol.for("PaymentService"),
     PaymentController: Symbol.for("PaymentController"),
+    EsewaGateway: Symbol.for("EsewaGateway"),
 
     PromoCodeRepository: Symbol.for("PromoCodeRepository"),
     PromoCodeService: Symbol.for("PromoCodeService"),

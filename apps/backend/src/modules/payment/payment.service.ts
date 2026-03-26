@@ -7,32 +7,51 @@ import { MailService } from "../mail/mail.service";
 import { PromoCodeService } from "../promo-code/promo-code.service";
 import { logger, ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
-import { PaymentStatus, PaymentType, PaymentProvider, CipherReason, NotificationType } from "../../generated/prisma/client";
-import crypto from "crypto";
+import { PaymentStatus, PaymentType, PaymentProvider, CipherReason, NotificationType, Prisma } from "../../generated/prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import {
-    ESEWA_SECRET_KEY,
-    ESEWA_PRODUCT_CODE,
-    ESEWA_GATEWAY_URL,
-    CLIENT_URL
-} from "../../config/constants";
-
-
-//TODO: FIX Payment Service. 
-
+import { CLIENT_URL } from "../../config/constants";
+import type { IPaymentGateway } from "./gateways/payment-gateway.interface";
 
 @injectable()
 export class PaymentService {
+    private gateways: Map<PaymentProvider, IPaymentGateway> = new Map();
+
     constructor(
         @inject(TYPES.PaymentRepository) private paymentRepository: PaymentRepository,
         @inject(TYPES.CipherService) private cipherService: CipherService,
         @inject(TYPES.NotificationService) private notificationService: NotificationService,
         @inject(TYPES.MailService) private mailService: MailService,
-        @inject(TYPES.PromoCodeService) private promoCodeService: PromoCodeService
-    ) { }
+        @inject(TYPES.PromoCodeService) private promoCodeService: PromoCodeService,
+        @inject(TYPES.EsewaGateway) esewaGateway: IPaymentGateway
+    ) {
+        this.registerGateway(esewaGateway);
+    }
 
-    // ─── Initiate Payment ──────────────────────────────────────
-    async initiatePayment(userId: string, packageId: string, promoCode?: string, ipAddress?: string, userAgent?: string) {
+    private registerGateway(gateway: IPaymentGateway) {
+        this.gateways.set(gateway.provider, gateway);
+    }
+
+    private getGateway(provider: PaymentProvider): IPaymentGateway {
+        const gateway = this.gateways.get(provider);
+        if (!gateway) {
+            throw new ApiError(`Payment provider '${provider}' is not supported`, StatusCodes.BAD_REQUEST);
+        }
+        return gateway;
+    }
+
+    getSupportedProviders(): PaymentProvider[] {
+        return Array.from(this.gateways.keys());
+    }
+
+    async initiatePayment(
+        userId: string,
+        packageId: string,
+        provider: PaymentProvider,
+        promoCode?: string,
+        ipAddress?: string,
+        userAgent?: string
+    ) {
+        const gateway = this.getGateway(provider);
         const pkg = await this.cipherService.getPackageById(packageId);
 
         const subtotal = Number(pkg.price);
@@ -59,45 +78,33 @@ export class PaymentService {
             totalAmount,
             ipAddress,
             userAgent,
-            provider: PaymentProvider.ESEWA,
+            provider,
             status: PaymentStatus.PENDING,
             providerTxId: transactionUuid,
             ...(promoCodeId && { promoCode: { connect: { id: promoCodeId } } })
         });
 
-        // Generate eSewa HMAC SHA256 signature
-        const signature = this.generateEsewaSignature(totalAmount, transactionUuid);
+        // Delegate gateway-specific initiation
+        const { gatewayConfig, gatewayUrl } = gateway.initiate(totalAmount, transactionUuid);
 
         return {
             paymentId: payment.id,
-            esewaConfig: {
-                amount: totalAmount,
-                tax_amount: 0,
-                total_amount: totalAmount,
-                transaction_uuid: transactionUuid,
-                product_code: ESEWA_PRODUCT_CODE,
-                product_service_charge: 0,
-                product_delivery_charge: 0,
-                success_url: `${CLIENT_URL}/payments/verify`,
-                failure_url: `${CLIENT_URL}/payments/failed`,
-                signed_field_names: "total_amount,transaction_uuid,product_code",
-                signature,
-            },
-            esewaGatewayUrl: ESEWA_GATEWAY_URL
+            provider,
+            gatewayConfig,
+            gatewayUrl,
         };
     }
 
-    // ─── Verify Payment ────────────────────────────────────────
-    async verifyPayment(encodedData: string) {
-        const decodedData = JSON.parse(Buffer.from(encodedData, "base64").toString("utf-8"));
-        const { transaction_uuid, total_amount, status, ref_id, signature: receivedSignature } = decodedData;
+    async verifyPayment(provider: PaymentProvider, rawData: unknown) {
+        const gateway = this.getGateway(provider);
 
-        if (!transaction_uuid || !total_amount || !status) {
-            throw new ApiError("Invalid payment response data", StatusCodes.BAD_REQUEST);
-        }
+        // Delegate gateway-specific verification
+        const result = await gateway.verify(rawData);
 
-        // Find the payment record
-        const payment = await this.paymentRepository.findPaymentByTxId(transaction_uuid);
+        // Extract transaction_uuid from the raw response to find the payment
+        const txId = this.extractTransactionId(provider, result.rawResponse);
+
+        const payment = await this.paymentRepository.findPaymentByTxId(txId);
         if (!payment) {
             throw new ApiError("Payment record not found", StatusCodes.NOT_FOUND);
         }
@@ -106,31 +113,50 @@ export class PaymentService {
             throw new ApiError("Payment already verified", StatusCodes.CONFLICT);
         }
 
-        // Verify signature integrity
-        const expectedSignature = this.generateEsewaSignature(Number(total_amount), transaction_uuid);
-        if (receivedSignature !== expectedSignature) {
-            logger.error(`eSewa signature mismatch for txn ${transaction_uuid}`);
+        if (!result.success) {
+            logger.error(`Payment verification failed for txn ${txId}: ${result.failureReason}`);
             await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.FAILED, {
-                failureReason: "eSewa signature mismatch"
+                failureReason: result.failureReason,
+                metadata: result.rawResponse as Prisma.InputJsonValue,
             });
-            throw new ApiError("Payment verification failed: signature mismatch", StatusCodes.BAD_REQUEST);
-        }
-
-        if (status !== "COMPLETE") {
-            await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.FAILED, {
-                failureReason: `eSewa returned status: ${status}`
-            });
-            throw new ApiError("Payment was not completed", StatusCodes.BAD_REQUEST);
+            throw new ApiError(`Payment verification failed: ${result.failureReason}`, StatusCodes.BAD_REQUEST);
         }
 
         // Mark payment as COMPLETED
         await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.COMPLETED, {
             verifiedAt: new Date(),
-            providerRefId: ref_id,
-            metadata: decodedData
+            providerRefId: result.providerRefId,
+            metadata: result.rawResponse as Prisma.InputJsonValue,
         });
 
-        // Award ciphers to the user
+        // Post-payment processing (award ciphers, notifications, email)
+        await this.processSuccessfulPayment(payment);
+
+        return {
+            paymentId: payment.id,
+            status: "COMPLETED",
+            ciphersAwarded: payment.package?.points || 0,
+        };
+    }
+
+    async getPaymentHistory(userId: string, limit: number, cursor?: string) {
+        return this.paymentRepository.getUserPayments(userId, limit, cursor);
+    }
+
+    private extractTransactionId(provider: PaymentProvider, rawResponse: Record<string, unknown>): string {
+        switch (provider) {
+            case PaymentProvider.ESEWA:
+                return rawResponse.transaction_uuid as string;
+            case PaymentProvider.KHALTI:
+                return rawResponse.pidx as string || rawResponse.transaction_id as string;
+            default:
+                throw new ApiError("Could not extract transaction ID from provider response", StatusCodes.BAD_REQUEST);
+        }
+    }
+
+    private async processSuccessfulPayment(payment: Awaited<ReturnType<PaymentRepository["findPaymentByTxId"]>>) {
+        if (!payment) return;
+
         if (payment.type === PaymentType.CIPHER_PURCHASE && payment.package) {
             await this.cipherService.awardCipher(
                 payment.userId,
@@ -170,7 +196,7 @@ export class PaymentService {
                         packageName: payment.package.name,
                         ciphers: payment.package.points.toString(),
                         amount: payment.totalAmount.toString(),
-                        currency: payment.package.currency,
+                        currency: payment.currency,
                         dashboardUrl: `${CLIENT_URL}/${user.username}`,
                     });
                     logger.info(`Payment receipt sent to ${user.email} for payment ${payment.id}`);
@@ -179,23 +205,5 @@ export class PaymentService {
                 logger.error(`Failed to send payment receipt: ${error.message}`);
             }
         }
-
-        return {
-            paymentId: payment.id,
-            status: "COMPLETED",
-            ciphersAwarded: payment.package?.points || 0
-        };
-    }
-
-    // ─── Get Payment History ───────────────────────────────────
-    async getPaymentHistory(userId: string, limit: number, cursor?: string) {
-        return this.paymentRepository.getUserPayments(userId, limit, cursor);
-    }
-
-    // ─── eSewa Signature Helper ────────────────────────────────
-    private generateEsewaSignature(totalAmount: number, transactionUuid: string): string {
-        const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${ESEWA_PRODUCT_CODE}`;
-        const hash = crypto.createHmac("sha256", ESEWA_SECRET_KEY).update(message).digest("base64");
-        return hash;
     }
 }

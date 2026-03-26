@@ -35,18 +35,6 @@ export class PaymentRepository {
         });
     }
 
-    async findPackageById(packageId: string) {
-        return this.prisma.cipherPackage.findUnique({
-            where: { id: packageId, isActive: true }
-        });
-    }
-
-    async findActivePackages() {
-        return this.prisma.cipherPackage.findMany({
-            where: { isActive: true },
-            orderBy: { price: "asc" }
-        });
-    }
 
     async getUserPayments(userId: string, limit: number = 20, cursor?: string) {
         return this.prisma.payment.findMany({

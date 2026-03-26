@@ -38,6 +38,7 @@ import { EventRepository, EventService, EventController } from "../modules/event
 import { EventSocketHandler } from "../modules/event/event.socket";
 import { LabRepository, LabService, LabController, LabSyncService, LabCTFService, LabVMService, LabVMWorkerService, LabSocketHandler } from "../modules/lab";
 import { PaymentRepository, PaymentService, PaymentController } from "../modules/payment";
+import { EsewaGateway } from "../modules/payment/gateways";
 import { PromoCodeRepository, PromoCodeService, PromoCodeController } from "../modules/promo-code";
 
 
@@ -164,6 +165,7 @@ container.bind<LabSocketHandler>(TYPES.LabSocketHandler).to(LabSocketHandler).in
 container.bind<ISocketHandler>(TYPES.SocketHandler).to(LabSocketHandler).inSingletonScope();
 
 container.bind<PaymentRepository>(TYPES.PaymentRepository).to(PaymentRepository).inSingletonScope();
+container.bind<EsewaGateway>(TYPES.EsewaGateway).to(EsewaGateway).inSingletonScope();
 container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService).inSingletonScope();
 container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController).inSingletonScope();
 
