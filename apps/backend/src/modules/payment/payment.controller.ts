@@ -12,8 +12,10 @@ export class PaymentController {
     initiatePurchase = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user!.id;
         const { packageId, promoCode } = req.body;
+        const ipAddress = req.ip;
+        const userAgent = req.get("User-Agent");
 
-        const result = await this.paymentService.initiatePayment(userId, packageId, promoCode);
+        const result = await this.paymentService.initiatePayment(userId, packageId, promoCode, ipAddress, userAgent);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Payment initiated successfully", result);
     });
 

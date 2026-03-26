@@ -18,6 +18,9 @@ import {
 } from "../../config/constants";
 
 
+//TODO: FIX Payment Service. 
+
+
 @injectable()
 export class PaymentService {
     constructor(
@@ -29,21 +32,21 @@ export class PaymentService {
     ) { }
 
     // ─── Initiate Payment ──────────────────────────────────────
-    async initiatePayment(userId: string, packageId: string, promoCode?: string) {
+    async initiatePayment(userId: string, packageId: string, promoCode?: string, ipAddress?: string, userAgent?: string) {
         const pkg = await this.cipherService.getPackageById(packageId);
 
-        let totalAmount = Number(pkg.price);
+        const subtotal = Number(pkg.price);
         let discountAmount = 0;
         let promoCodeId: string | undefined;
 
         // Apply promo code if provided
         if (promoCode) {
             const promo = await this.promoCodeService.validatePromoCode(promoCode, PaymentType.CIPHER_PURCHASE, packageId);
-            discountAmount = Number(((totalAmount * promo.discount) / 100).toFixed(2));
+            discountAmount = Number(((subtotal * promo.discount) / 100).toFixed(2));
             promoCodeId = promo.id;
         }
 
-        const cashAmount = Number((totalAmount - discountAmount).toFixed(2));
+        const totalAmount = Number((subtotal - discountAmount).toFixed(2));
         const transactionUuid = uuidv4();
 
         // Create PENDING payment record
@@ -51,9 +54,11 @@ export class PaymentService {
             user: { connect: { id: userId } },
             type: PaymentType.CIPHER_PURCHASE,
             package: { connect: { id: packageId } },
-            totalAmount,
+            subtotal,
             discountAmount,
-            cashAmount,
+            totalAmount,
+            ipAddress,
+            userAgent,
             provider: PaymentProvider.ESEWA,
             status: PaymentStatus.PENDING,
             providerTxId: transactionUuid,
@@ -61,14 +66,14 @@ export class PaymentService {
         });
 
         // Generate eSewa HMAC SHA256 signature
-        const signature = this.generateEsewaSignature(cashAmount, transactionUuid);
+        const signature = this.generateEsewaSignature(totalAmount, transactionUuid);
 
         return {
             paymentId: payment.id,
             esewaConfig: {
-                amount: cashAmount,
+                amount: totalAmount,
                 tax_amount: 0,
-                total_amount: cashAmount,
+                total_amount: totalAmount,
                 transaction_uuid: transactionUuid,
                 product_code: ESEWA_PRODUCT_CODE,
                 product_service_charge: 0,
@@ -85,7 +90,7 @@ export class PaymentService {
     // ─── Verify Payment ────────────────────────────────────────
     async verifyPayment(encodedData: string) {
         const decodedData = JSON.parse(Buffer.from(encodedData, "base64").toString("utf-8"));
-        const { transaction_uuid, total_amount, status, signature: receivedSignature } = decodedData;
+        const { transaction_uuid, total_amount, status, ref_id, signature: receivedSignature } = decodedData;
 
         if (!transaction_uuid || !total_amount || !status) {
             throw new ApiError("Invalid payment response data", StatusCodes.BAD_REQUEST);
@@ -105,17 +110,25 @@ export class PaymentService {
         const expectedSignature = this.generateEsewaSignature(Number(total_amount), transaction_uuid);
         if (receivedSignature !== expectedSignature) {
             logger.error(`eSewa signature mismatch for txn ${transaction_uuid}`);
-            await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.FAILED);
+            await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.FAILED, {
+                failureReason: "eSewa signature mismatch"
+            });
             throw new ApiError("Payment verification failed: signature mismatch", StatusCodes.BAD_REQUEST);
         }
 
         if (status !== "COMPLETE") {
-            await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.FAILED);
+            await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.FAILED, {
+                failureReason: `eSewa returned status: ${status}`
+            });
             throw new ApiError("Payment was not completed", StatusCodes.BAD_REQUEST);
         }
 
         // Mark payment as COMPLETED
-        await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.COMPLETED);
+        await this.paymentRepository.updatePaymentStatus(payment.id, PaymentStatus.COMPLETED, {
+            verifiedAt: new Date(),
+            providerRefId: ref_id,
+            metadata: decodedData
+        });
 
         // Award ciphers to the user
         if (payment.type === PaymentType.CIPHER_PURCHASE && payment.package) {
@@ -140,8 +153,6 @@ export class PaymentService {
                 actionUrl: "/payments/history"
             });
 
-            logger.info(`Transferred ${payment.package.points} ciphers to user ${payment.userId} for payment ${payment.id}`);
-
             // Send email receipt
             try {
                 const user = (payment as any).user;
@@ -158,15 +169,14 @@ export class PaymentService {
                         }),
                         packageName: payment.package.name,
                         ciphers: payment.package.points.toString(),
-                        amount: payment.cashAmount.toString(),
+                        amount: payment.totalAmount.toString(),
                         currency: payment.package.currency,
-                        dashboardUrl: `${CLIENT_URL}/dashboard`,
+                        dashboardUrl: `${CLIENT_URL}/${user.username}`,
                     });
                     logger.info(`Payment receipt sent to ${user.email} for payment ${payment.id}`);
                 }
             } catch (error: any) {
                 logger.error(`Failed to send payment receipt: ${error.message}`);
-                // Don't throw error here to avoid rolling back the transaction
             }
         }
 
@@ -185,8 +195,7 @@ export class PaymentService {
     // ─── eSewa Signature Helper ────────────────────────────────
     private generateEsewaSignature(totalAmount: number, transactionUuid: string): string {
         const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${ESEWA_PRODUCT_CODE}`;
-        const hmac = crypto.createHmac("sha256", ESEWA_SECRET_KEY);
-        hmac.update(message);
-        return hmac.digest("base64");
+        const hash = crypto.createHmac("sha256", ESEWA_SECRET_KEY).update(message).digest("base64");
+        return hash;
     }
 }

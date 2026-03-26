@@ -160,13 +160,8 @@ model VerificationToken {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt        DateTime          @default(now())
-  expiresAt        DateTime
-  userAchievements UserAchievement[]
-  courses          Course[]
-  enrollments      Enrollment[]
-  lessonProgresses LessonProgress[]
-  payments         Payment[]
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 
   @@index([userId])
   @@index([expiresAt])
@@ -1215,10 +1210,8 @@ model UserAchievement {
 
   unlockedAt DateTime @default(now()) @map("unlocked_at")
 
-  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  achievement         Achievement        @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
-  verificationTokenId String?
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
 
   @@unique([userId, achievementId])
   @@index([userId])
@@ -1236,6 +1229,8 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+  EXPIRED
+  CANCELLED
 }
 
 enum PaymentType {
@@ -1306,11 +1301,9 @@ model Course {
   payments             Payment[]
   applicablePromoCodes PromoCode[]
 
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
-  verificationTokenId String?
-  courseTopics        CourseTopic[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  courseTopics CourseTopic[]
 
   @@index([authorId])
   @@index([isPublished])
@@ -1369,10 +1362,8 @@ model Enrollment {
 
   enrolledAt DateTime @default(now()) @map("enrolled_at")
 
-  user                User               @relation("student_enrollments", fields: [userId], references: [id], onDelete: Cascade)
-  course              Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
-  verificationTokenId String?
+  user   User   @relation("student_enrollments", fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -1387,10 +1378,8 @@ model LessonProgress {
   isCompleted Boolean   @default(false) @map("is_completed")
   completedAt DateTime? @map("completed_at")
 
-  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson              Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
-  verificationTokenId String?
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
   @@index([userId])
@@ -1406,35 +1395,37 @@ model Payment {
   courseId  String? @map("course_id")
   packageId String? @map("package_id")
 
-  totalAmount    Decimal @db.Decimal(10, 2)
-  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  subtotal       Decimal @map("subtotal") @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  totalAmount    Decimal @map("total_amount") @db.Decimal(10, 2)
 
-  cipherUsed          Int     @default(0) @map("cipher_used")
-  cipherMonetaryValue Decimal @default(0) @map("cipher_monetary_value") @db.Decimal(10, 2)
+  currency String @default("NPR")
 
-  cashAmount Decimal @map("cash_amount") @db.Decimal(10, 2)
-  currency   String  @default("NPR")
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+  verifiedAt DateTime? @map("verified_at")
 
-  provider     PaymentProvider?
-  status       PaymentStatus    @default(PENDING)
-  providerTxId String?          @unique @map("provider_tx_id")
-  metadata     Json?
+  provider      PaymentProvider?
+  status        PaymentStatus    @default(PENDING)
+  providerTxId  String?          @unique @map("provider_tx_id")
+  providerRefId String?          @unique @map("provider_ref_id")
+  failureReason String?          @map("failure_reason")
+  metadata      Json?
 
   promoCodeId String? @map("promo_code_id")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user                User               @relation(fields: [userId], references: [id])
-  course              Course?            @relation(fields: [courseId], references: [id])
-  package             CipherPackage?     @relation(fields: [packageId], references: [id])
-  promoCode           PromoCode?         @relation(fields: [promoCodeId], references: [id])
-  verificationToken   VerificationToken? @relation(fields: [verificationTokenId], references: [id])
-  verificationTokenId String?
+  user      User           @relation(fields: [userId], references: [id])
+  course    Course?        @relation(fields: [courseId], references: [id])
+  package   CipherPackage? @relation(fields: [packageId], references: [id])
+  promoCode PromoCode?     @relation(fields: [promoCodeId], references: [id])
 
   @@index([userId])
   @@index([status])
   @@index([providerTxId])
+  @@index([providerRefId])
   @@index([type])
 }
 

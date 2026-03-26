@@ -25,12 +25,12 @@ export class PaymentRepository {
         });
     }
 
-    async updatePaymentStatus(id: string, status: PaymentStatus, providerTxId?: string) {
+    async updatePaymentStatus(id: string, status: PaymentStatus, data?: Partial<Prisma.PaymentUpdateInput>) {
         return this.prisma.payment.update({
             where: { id },
             data: {
                 status,
-                ...(providerTxId && { providerTxId })
+                ...data
             }
         });
     }
