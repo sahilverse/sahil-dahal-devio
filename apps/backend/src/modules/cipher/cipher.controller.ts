@@ -24,14 +24,14 @@ export class CipherController {
         const lastItem = history[history.length - 1];
         const nextCursor = (history.length === limit && lastItem) ? lastItem.id : null;
 
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "History fetched successfully", { 
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "History fetched successfully", {
             history,
-            nextCursor 
+            nextCursor
         });
     });
 
     getPackages = asyncHandler(async (req: Request, res: Response) => {
         const packages = await this.cipherService.getPackages();
-        ResponseHandler.sendResponse(res, StatusCodes.OK, "Cipher packages fetched successfully", { packages });
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Cipher packages fetched successfully", packages);
     });
 }
