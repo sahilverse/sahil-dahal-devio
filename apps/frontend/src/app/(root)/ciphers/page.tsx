@@ -27,6 +27,7 @@ import { useCipherPackages } from "@/hooks/useCipher";
 import { useInitiatePayment } from "@/hooks/usePayment";
 import { useValidatePromo } from "@/hooks/usePromo";
 import type { CipherPackage } from "@/api/cipherService";
+import { PaymentSession } from "@/lib/payment-session";
 
 // Icon mapping by index for visual differentiation
 const TIER_ICONS = [Zap, Coins, ShieldCheck, Sparkles];
@@ -44,6 +45,7 @@ export default function CipherStorePage() {
 
     const [selectedItem, setSelectedItem] = useState<CheckoutItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const handleBuyNow = (pkg: CipherPackage) => {
         setSelectedItem({
@@ -86,11 +88,14 @@ export default function CipherStorePage() {
                 });
 
                 document.body.appendChild(form);
+
+                PaymentSession.start(result.gatewayConfig.transaction_uuid);
+
+                setIsRedirecting(true);
                 form.submit();
             } catch (error: any) {
                 console.error("Payment initiation failed:", error);
-                // The error toast is already handled by the hook, 
-                // but we add this for extra visibility in case of logic errors
+                setIsRedirecting(false);
             }
         },
         [initiatePayment]
@@ -155,8 +160,8 @@ export default function CipherStorePage() {
                             >
                                 <Card
                                     className={`relative overflow-hidden group transition-all hover:border-brand-primary/50 h-full flex flex-col ${pkg.isFeatured
-                                            ? "ring-2 ring-brand-primary/20 border-brand-primary/30"
-                                            : ""
+                                        ? "ring-2 ring-brand-primary/20 border-brand-primary/30"
+                                        : ""
                                         } ${idx === packages.length - 1
                                             ? "bg-gradient-to-br from-card to-brand-primary/5"
                                             : ""
@@ -227,13 +232,16 @@ export default function CipherStorePage() {
             {/* Checkout Modal */}
             <CheckoutModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setIsRedirecting(false);
+                }}
                 item={selectedItem}
                 title="Complete Purchase"
                 icon={<Coins className="w-6 h-6 text-brand-primary" />}
                 confirmLabel="Proceed"
                 promoEnabled
-                isLoading={initiatePayment.isPending}
+                isLoading={initiatePayment.isPending || isRedirecting}
                 onConfirm={handleConfirm}
                 onValidatePromo={handleValidatePromo}
             />

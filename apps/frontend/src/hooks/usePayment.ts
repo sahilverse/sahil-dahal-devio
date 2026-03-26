@@ -31,5 +31,6 @@ export function useVerifyPayment(encodedData: string | null) {
         staleTime: Infinity,
         gcTime: 1000 * 60 * 10,
         retry: false,
+        throwOnError: true,
     });
 }

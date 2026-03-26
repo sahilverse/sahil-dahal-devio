@@ -23,7 +23,6 @@ export interface CheckoutItem {
     description?: string;
     price: number;
     currency?: string;
-    /** Extra display data, e.g., cipher points */
     meta?: { label: string; value: string };
 }
 
@@ -31,19 +30,12 @@ interface CheckoutModalProps {
     isOpen: boolean;
     onClose: () => void;
     item: CheckoutItem | null;
-    /** Title for the dialog header */
     title?: string;
-    /** Icon element rendered next to the title */
     icon?: React.ReactNode;
-    /** Label for the confirm button */
     confirmLabel?: string;
-    /** Whether to show the promo code section */
     promoEnabled?: boolean;
-    /** Whether the confirm action is currently loading */
     isLoading?: boolean;
-    /** Called with (item, promoCode?) when the user clicks confirm */
     onConfirm: (item: CheckoutItem, promoCode?: string) => void;
-    /** Called to validate a promo code. Should return discount % or throw. */
     onValidatePromo?: (code: string, itemId: string) => Promise<{ discount: number }>;
 }
 
