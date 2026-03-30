@@ -44,6 +44,16 @@ export class CourseController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Course fetched successfully", result);
     });
 
+    getMyEnrollments = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user!.id;
+        const { cursor, limit } = req.query as any;
+        const result = await this.courseService.getMyEnrollments(userId, {
+            cursor,
+            limit
+        });
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Enrolled courses fetched successfully", result);
+    });
+
     // ─── Enrollment ───────────────────────────────────────
 
     enrollInCourse = asyncHandler(async (req: Request, res: Response) => {

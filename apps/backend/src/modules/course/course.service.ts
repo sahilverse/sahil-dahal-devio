@@ -21,6 +21,7 @@ import type {
     CreateReviewInput,
     UpdateReviewInput,
     CourseQueryInput,
+    EnrollmentQueryInput,
 } from "@devio/zod-utils";
 
 @injectable()
@@ -143,6 +144,25 @@ export class CourseService {
         }
 
         return plainToInstance(CourseDetailDto, course, { excludeExtraneousValues: true });
+    }
+
+    async getMyEnrollments(userId: string, query: EnrollmentQueryInput) {
+        const { limit, cursor } = query;
+        const enrollments = await this.courseRepository.findEnrollmentsByUser(userId, limit, cursor);
+
+        let nextCursor: string | undefined = undefined;
+        if (enrollments.length > limit) {
+            const nextItem = enrollments.pop();
+            nextCursor = nextItem?.id;
+        }
+
+        const items = enrollments.map((e: any) => ({
+            ...plainToInstance(CourseListItemDto, e.course, { excludeExtraneousValues: true }),
+            enrollmentStatus: e.status,
+            enrolledAt: e.createdAt,
+        }));
+
+        return { items, nextCursor };
     }
 
     // ─── Enrollment ───────────────────────────────────────

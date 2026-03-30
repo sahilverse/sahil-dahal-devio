@@ -15,6 +15,7 @@ import {
     lessonQuerySchema,
     createLessonCommentSchema,
     lessonCommentQuerySchema,
+    enrollmentQuerySchema,
 } from "@devio/zod-utils";
 import { courseAdminRouter } from "./course.admin.route";
 
@@ -153,6 +154,34 @@ router.get(
  *         description: Reviews fetched successfully
  */
 router.get("/:courseId/reviews", courseController.getReviews);
+
+/**
+ * @swagger
+ * /courses/my-enrollments:
+ *   get:
+ *     summary: Get my enrollments
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: My enrollments fetched successfully
+ */
+router.get(
+    "/my-enrollments",
+    authMiddleware.guard,
+    validateQuery(enrollmentQuerySchema),
+    courseController.getMyEnrollments
+);
 
 /**
  * @swagger

@@ -102,7 +102,7 @@ export class CourseRepository {
         return this.prisma.course.findMany({
             where,
             orderBy,
-            take: limit + 1,
+            take: (Number(limit) || 10) + 1,
             ...(cursor && {
                 skip: 1,
                 cursor: { id: cursor },
@@ -150,6 +150,33 @@ export class CourseRepository {
             where: { userId_courseId: { userId, courseId } },
             data,
         });
+    }
+
+    async findEnrollmentsByUser(userId: string, limit: number, cursor?: string) {
+        const enrollments = await this.prisma.enrollment.findMany({
+            where: { userId },
+            take: (Number(limit) || 12) + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            skip: cursor ? 1 : 0,
+            include: {
+                course: {
+                    include: {
+                        author: {
+                            select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
+                        },
+                        _count: {
+                            select: {
+                                enrollments: true,
+                                reviews: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: { enrolledAt: "desc" },
+        });
+
+        return enrollments;
     }
 
     // ─── Reviews ───────────────────────────────────────────
