@@ -136,3 +136,10 @@ export const lessonCommentQuerySchema = z.object({
 });
 
 export type LessonCommentQueryInput = z.infer<typeof lessonCommentQuerySchema>;
+
+export const enrollmentQuerySchema = z.object({
+    cursor: z.string().optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(12),
+});
+
+export type EnrollmentQueryInput = z.infer<typeof enrollmentQuerySchema>;
