@@ -99,15 +99,17 @@ export class LessonService {
 
     // ─── Lesson Comments ──────────────────────────────────
 
-    async createComment(userId: string, lessonId: string, data: { content: string; parentId?: string }) {
+    async createComment(userId: string, roleId: number | null | undefined, lessonId: string, data: { content: string; parentId?: string }) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
-        const courseId = lesson.module.course.id;
-        const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
-        
-        if (!enrollment) {
-            throw new ApiError("You must be enrolled to comment on this lesson", StatusCodes.FORBIDDEN);
+        if (roleId !== 1) {
+            const courseId = lesson.module.course.id;
+            const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
+
+            if (!enrollment) {
+                throw new ApiError("You must be enrolled to comment on this lesson", StatusCodes.FORBIDDEN);
+            }
         }
 
         if (data.parentId) {
@@ -120,11 +122,11 @@ export class LessonService {
         return plainToInstance(LessonCommentResponseDto, comment, { excludeExtraneousValues: true });
     }
 
-    async getComments(userId: string | undefined, lessonId: string, query: { limit: number; cursor?: string; parentId?: string }) {
+    async getComments(userId: string | undefined, roleId: number | null | undefined, lessonId: string, query: { limit: number; cursor?: string; parentId?: string }) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
-        if (!lesson.isPreview && userId) {
+        if (!lesson.isPreview && userId && roleId !== 1) {
             const courseId = lesson.module.course.id;
             const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
             if (!enrollment) throw new ApiError("You must be enrolled to view comments", StatusCodes.FORBIDDEN);
