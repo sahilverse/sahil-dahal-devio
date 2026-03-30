@@ -5,8 +5,9 @@ import { EventGrid } from "@/components/events/EventGrid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Filter, Plus, Trophy, Users, Info } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 
 const EVENT_TYPES = [
     { label: "All Types", value: undefined },
@@ -24,9 +25,19 @@ const EVENT_STATUSES = [
 ];
 
 export default function EventsPage() {
+    const router = useRouter();
     const { user } = useAppSelector((state) => state.auth);
+    const { openLogin } = useAuthModal();
     const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
     const [selectedStatus, setSelectedStatus] = useState<string>("PUBLISHED");
+
+    const handleCreateEventClick = () => {
+        if (user) {
+            router.push("/events/create");
+        } else {
+            openLogin();
+        }
+    };
 
     return (
         <div className="space-y-6 lg:pr-50">
@@ -47,11 +58,12 @@ export default function EventsPage() {
                 </div>
 
                 <div className="relative z-10 flex gap-2">
-                    <Link href="/events/create">
-                        <Button className="font-bold shadow-lg shadow-primary/20">
-                            <Plus className="mr-2 h-4 w-4" /> Create Event
-                        </Button>
-                    </Link>
+                    <Button 
+                        className="font-bold shadow-lg shadow-primary/20"
+                        onClick={handleCreateEventClick}
+                    >
+                        <Plus className="mr-2 h-4 w-4" /> Create Event
+                    </Button>
                 </div>
             </div>
 

@@ -6,10 +6,23 @@ import { useSearchParams } from "next/navigation";
 import { ChevronLeft, Info, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/store/hooks";
+import { useEffect } from "react";
 
 const CreateEventContent: React.FC = () => {
+    const router = useRouter();
+    const { user } = useAppSelector((state) => state.auth);
     const searchParams = useSearchParams();
     const communityId = searchParams.get("communityId") || undefined;
+
+    useEffect(() => {
+        if (!user) {
+            router.replace("/events");
+        }
+    }, [user, router]);
+
+    if (!user) return null;
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20">

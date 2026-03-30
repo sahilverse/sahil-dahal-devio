@@ -17,7 +17,8 @@ import {
     Menu,
     SquareTerminal,
     Building2,
-    Building
+    Building,
+    GraduationCap
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -66,7 +67,7 @@ export default function Sidebar() {
         { name: "Cyber Labs", href: "/labs", icon: Shield },
         { name: "Events", href: "/events", icon: Calendar },
         { name: "Jobs", href: "/jobs", icon: Briefcase },
-        { name: "Learn", href: "/learn", icon: BookOpen },
+        { name: "Learn", href: "/learn", icon: GraduationCap },
     ];
 
     return (
