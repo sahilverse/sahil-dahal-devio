@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import type { User, PrismaClient, AccountStatusHistory, Community } from "../../generated/prisma/client";
+import type { User, PrismaClient, AccountStatusHistory, Community, Role } from "../../generated/prisma/client";
 import type {
     CreateUserPayload,
     AccountStatusPayload,
@@ -118,9 +118,10 @@ export class UserRepository {
         });
     }
 
-    async findById(id: string): Promise<User | null> {
+    async findById(id: string): Promise<(User & { role?: any }) | null> {
         return await this.prisma.user.findUnique({
             where: { id },
+            include: { role: true }
         });
     }
 

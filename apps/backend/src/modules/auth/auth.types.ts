@@ -17,10 +17,15 @@ export interface CreateSessionPayload {
     type?: SessionType;
 }
 
+export enum ROLES {
+    ADMIN = 'ADMIN',
+    USER = 'USER'
+}
+
 export interface ReqUser {
     id: string;
     email: string;
-    roleId: number | null;
+    role: string | null;
     username: string | null;
     accountStatus: AccountStatus
     emailVerified: Date | null;

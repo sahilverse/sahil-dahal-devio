@@ -7,6 +7,7 @@ import { CreateLessonInput, UpdateLessonInput, LessonQueryInput } from "@devio/z
 import { plainToInstance } from "class-transformer";
 import { LessonContentDto, CourseProgressDto, LessonSummaryDto, LessonCommentResponseDto, LessonCommentListDto } from "../course.dto";
 import { CourseRepository } from "../course.repository";
+import { ROLES } from "../../auth/auth.types";
 
 @injectable()
 export class LessonService {
@@ -99,11 +100,11 @@ export class LessonService {
 
     // ─── Lesson Comments ──────────────────────────────────
 
-    async createComment(userId: string, roleId: number | null | undefined, lessonId: string, data: { content: string; parentId?: string }) {
+    async createComment(userId: string, roleName: string | null | undefined, lessonId: string, data: { content: string; parentId?: string }) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
-        if (roleId !== 1) {
+        if (roleName !== ROLES.ADMIN) {
             const courseId = lesson.module.course.id;
             const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
 
@@ -122,11 +123,11 @@ export class LessonService {
         return plainToInstance(LessonCommentResponseDto, comment, { excludeExtraneousValues: true });
     }
 
-    async getComments(userId: string | undefined, roleId: number | null | undefined, lessonId: string, query: { limit: number; cursor?: string; parentId?: string }) {
+    async getComments(userId: string | undefined, roleName: string | null | undefined, lessonId: string, query: { limit: number; cursor?: string; parentId?: string }) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
-        if (!lesson.isPreview && userId && roleId !== 1) {
+        if (!lesson.isPreview && userId && roleName !== ROLES.ADMIN) {
             const courseId = lesson.module.course.id;
             const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
             if (!enrollment) throw new ApiError("You must be enrolled to view comments", StatusCodes.FORBIDDEN);

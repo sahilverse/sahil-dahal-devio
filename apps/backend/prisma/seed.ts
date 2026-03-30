@@ -8,7 +8,7 @@ async function main() {
         update: {},
         create: {
             id: 0,
-            name: "user",
+            name: "USER",
             description: "Default user role with standard permissions",
         },
     });
@@ -18,7 +18,7 @@ async function main() {
         update: {},
         create: {
             id: 1,
-            name: "admin",
+            name: "ADMIN",
             description: "Administrator role with full permissions",
         },
     });

@@ -9,6 +9,7 @@ import { RedisManager } from '../config';
 import { ReqUser } from '../modules/auth';
 import { JwtPayload } from 'jsonwebtoken';
 import { AccountStatus } from '../generated/prisma/enums';
+import { ROLES } from '../modules/auth/auth.types';
 
 
 @injectable()
@@ -47,7 +48,7 @@ export class AuthMiddleware {
             req.user = {
                 id: user.id,
                 email: user.email,
-                roleId: user.roleId,
+                role: user.role?.name || null,
                 username: user.username,
                 accountStatus: user.accountStatus,
                 emailVerified: user.emailVerified,
@@ -96,7 +97,7 @@ export class AuthMiddleware {
                 req.user = {
                     id: user.id,
                     email: user.email,
-                    roleId: user.roleId,
+                    role: user.role?.name || null,
                     username: user.username,
                     accountStatus: user.accountStatus,
                     emailVerified: user.emailVerified,
@@ -138,17 +139,17 @@ export class AuthMiddleware {
         }
     };
 
-    checkRole = (allowedRoleIds: number[]) => {
+    checkRole = (allowedRoles: string[]) => {
         return (req: Request, res: Response, next: NextFunction) => {
             const user = req.user as ReqUser;
-            if (!user || user.roleId === null || !allowedRoleIds.includes(user.roleId)) {
+            if (!user || !user.role || !allowedRoles.includes(user.role)) {
                 return ResponseHandler.sendError(res, StatusCodes.FORBIDDEN, 'Insufficient permissions');
             }
             next();
         };
     }
 
-    adminOnly = this.checkRole([1]);
+    adminOnly = this.checkRole([ROLES.ADMIN]);
 
     private extractTokenFromHeader(authHeader?: Request['headers']['authorization']): string | null {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {

@@ -58,19 +58,19 @@ export class LessonController {
 
     createComment = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user!.id;
-        const roleId = req.user!.roleId;
+        const roleName = req.user!.role;
         const { lessonId } = req.params as { lessonId: string };
-        const result = await this.lessonService.createComment(userId, roleId, lessonId, req.body);
+        const result = await this.lessonService.createComment(userId, roleName, lessonId, req.body);
         ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Comment posted successfully", result);
     });
 
     getComments = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user?.id;
-        const roleId = req.user?.roleId;
+        const roleName = req.user?.role;
         const { lessonId } = req.params as { lessonId: string };
         const query = req.query as any;
 
-        const result = await this.lessonService.getComments(userId, roleId, lessonId, query);
+        const result = await this.lessonService.getComments(userId, roleName, lessonId, query);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Comments fetched successfully", result);
     });
 }
