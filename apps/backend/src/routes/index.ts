@@ -23,6 +23,7 @@ import { router as jobApplicationRoutes } from "../modules/job-application/job-a
 import { router as labRoutes } from "../modules/lab/lab.route";
 import { router as paymentRoutes } from "../modules/payment/payment.route";
 import { router as promoCodeRoutes } from "../modules/promo-code/promo-code.route";
+import { router as courseRoutes } from "../modules/course/course.route";
 
 const router: Router = Router();
 
@@ -48,5 +49,6 @@ router.use("/jobs", jobRoutes);
 router.use("/labs", labRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/promo-codes", promoCodeRoutes);
+router.use("/courses", courseRoutes);
 
 export default router;

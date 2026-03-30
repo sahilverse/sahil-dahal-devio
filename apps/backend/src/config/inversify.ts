@@ -40,6 +40,9 @@ import { LabRepository, LabService, LabController, LabSyncService, LabCTFService
 import { PaymentRepository, PaymentService, PaymentController } from "../modules/payment";
 import { EsewaGateway } from "../modules/payment/gateways";
 import { PromoCodeRepository, PromoCodeService, PromoCodeController } from "../modules/promo-code";
+import { CourseRepository, CourseService, CourseController } from "../modules/course";
+import { ModuleRepository, ModuleService, ModuleController } from "../modules/course/modules";
+import { LessonRepository, LessonService, LessonController } from "../modules/course/lessons";
 
 
 const container = new Container();
@@ -172,6 +175,18 @@ container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController)
 container.bind<PromoCodeRepository>(TYPES.PromoCodeRepository).to(PromoCodeRepository).inSingletonScope();
 container.bind<PromoCodeService>(TYPES.PromoCodeService).to(PromoCodeService).inSingletonScope();
 container.bind<PromoCodeController>(TYPES.PromoCodeController).to(PromoCodeController).inSingletonScope();
+
+container.bind<CourseRepository>(TYPES.CourseRepository).to(CourseRepository).inSingletonScope();
+container.bind<CourseService>(TYPES.CourseService).to(CourseService).inSingletonScope();
+container.bind<CourseController>(TYPES.CourseController).to(CourseController).inSingletonScope();
+
+container.bind<ModuleRepository>(TYPES.ModuleRepository).to(ModuleRepository).inSingletonScope();
+container.bind<ModuleService>(TYPES.ModuleService).to(ModuleService).inSingletonScope();
+container.bind<ModuleController>(TYPES.ModuleController).to(ModuleController).inSingletonScope();
+
+container.bind<LessonRepository>(TYPES.LessonRepository).to(LessonRepository).inSingletonScope();
+container.bind<LessonService>(TYPES.LessonService).to(LessonService).inSingletonScope();
+container.bind<LessonController>(TYPES.LessonController).to(LessonController).inSingletonScope();
 
 
 export { container };

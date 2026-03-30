@@ -19,3 +19,4 @@ export * from "./company.schema";
 export * from "./utils";
 export * from "./payment.schema";
 export * from "./promo.schema";
+export * from "./course.schema";

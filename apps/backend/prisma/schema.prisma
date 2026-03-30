@@ -110,6 +110,7 @@ model User {
   authoredCourses   Course[]         @relation("course_author")
   courseEnrollments Enrollment[]     @relation("student_enrollments")
   lessonProgress    LessonProgress[]
+  courseReviews     CourseReview[]
   payments          Payment[]
 
   // Professional Profile
@@ -1304,9 +1305,30 @@ model Course {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   courseTopics CourseTopic[]
+  reviews      CourseReview[]
 
   @@index([authorId])
   @@index([isPublished])
+}
+
+model CourseReview {
+  id       String @id @default(cuid())
+  courseId  String @map("course_id")
+  userId   String @map("user_id")
+
+  rating  Int
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([courseId])
+  @@index([userId])
+  @@index([rating])
 }
 
 model CourseTopic {

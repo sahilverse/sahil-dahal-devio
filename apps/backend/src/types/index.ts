@@ -123,6 +123,18 @@ export const TYPES = {
     PromoCodeRepository: Symbol.for("PromoCodeRepository"),
     PromoCodeService: Symbol.for("PromoCodeService"),
     PromoCodeController: Symbol.for("PromoCodeController"),
+
+    CourseRepository: Symbol.for("CourseRepository"),
+    CourseService: Symbol.for("CourseService"),
+    CourseController: Symbol.for("CourseController"),
+
+    ModuleRepository: Symbol.for("ModuleRepository"),
+    ModuleService: Symbol.for("ModuleService"),
+    ModuleController: Symbol.for("ModuleController"),
+
+    LessonRepository: Symbol.for("LessonRepository"),
+    LessonService: Symbol.for("LessonService"),
+    LessonController: Symbol.for("LessonController"),
 };
 
 export * from "./jwt";

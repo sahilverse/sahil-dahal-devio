@@ -21,7 +21,7 @@ export class PaymentRepository {
     async findPaymentByTxId(providerTxId: string) {
         return this.prisma.payment.findUnique({
             where: { providerTxId },
-            include: { package: true, user: true }
+            include: { package: true, course: true, user: true }
         });
     }
 

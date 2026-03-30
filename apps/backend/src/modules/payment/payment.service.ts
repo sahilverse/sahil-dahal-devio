@@ -5,6 +5,7 @@ import { CipherService } from "../cipher/cipher.service";
 import { NotificationService } from "../notification/notification.service";
 import { MailService } from "../mail/mail.service";
 import { PromoCodeService } from "../promo-code/promo-code.service";
+import { CourseRepository } from "../course/course.repository";
 import { logger, ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 import { PaymentStatus, PaymentType, PaymentProvider, CipherReason, NotificationType, Prisma } from "../../generated/prisma/client";
@@ -22,6 +23,7 @@ export class PaymentService {
         @inject(TYPES.NotificationService) private notificationService: NotificationService,
         @inject(TYPES.MailService) private mailService: MailService,
         @inject(TYPES.PromoCodeService) private promoCodeService: PromoCodeService,
+        @inject(TYPES.CourseRepository) private courseRepository: CourseRepository,
         @inject(TYPES.EsewaGateway) esewaGateway: IPaymentGateway
     ) {
         this.registerGateway(esewaGateway);
@@ -95,6 +97,97 @@ export class PaymentService {
         };
     }
 
+    async initiateCoursePayment(
+        userId: string,
+        courseId: string,
+        provider: PaymentProvider,
+        promoCode?: string,
+        cipherAmount?: number,
+        ipAddress?: string,
+        userAgent?: string
+    ) {
+        const gateway = this.getGateway(provider);
+        const course = await this.courseRepository.findById(courseId);
+        if (!course) throw new ApiError("Course not found", StatusCodes.NOT_FOUND);
+        if (course.isFree) throw new ApiError("This course is free — no payment required", StatusCodes.BAD_REQUEST);
+
+        // Check if already enrolled
+        const existing = await this.courseRepository.findEnrollment(userId, courseId);
+        if (existing) throw new ApiError("You are already enrolled in this course", StatusCodes.CONFLICT);
+
+        const subtotal = Number(course.price);
+        let discountAmount = 0;
+        let promoCodeId: string | undefined;
+        let cipherSpent = 0;
+
+        // Apply promo code if provided
+        if (promoCode) {
+            const promo = await this.promoCodeService.validatePromoCode(promoCode, PaymentType.COURSE_PURCHASE, undefined, courseId);
+            discountAmount = Number(((subtotal * promo.discount) / 100).toFixed(2));
+            promoCodeId = promo.id;
+        }
+
+        // Apply cipher coin discount (elective)
+        if (cipherAmount && cipherAmount > 0) {
+            const maxCipherDiscount = course.maxCipherDiscount ?? subtotal;
+            const afterPromo = subtotal - discountAmount;
+            cipherSpent = Math.min(cipherAmount, maxCipherDiscount, afterPromo);
+            discountAmount += cipherSpent;
+        }
+
+        const totalAmount = Number((subtotal - discountAmount).toFixed(2));
+
+        if (totalAmount <= 0) {
+            // Fully covered by discounts — enroll directly
+            if (cipherSpent > 0) {
+                await this.cipherService.spendCipher(userId, cipherSpent, CipherReason.COURSE_DISCOUNT, courseId);
+            }
+            if (promoCodeId) {
+                await this.promoCodeService.incrementUsage(promoCodeId);
+            }
+            await this.courseRepository.createEnrollment(userId, courseId);
+
+            await this.notificationService.notify({
+                userId,
+                type: NotificationType.COURSE_ENROLLMENT,
+                title: "Enrollment Successful! 🎓",
+                message: `You have been enrolled in "${course.title}".`,
+                actionUrl: `/courses/${course.slug}`,
+            });
+
+            return { enrolled: true, courseSlug: course.slug };
+        }
+
+        const transactionUuid = uuidv4();
+
+        // Create PENDING payment record
+        const payment = await this.paymentRepository.createPayment({
+            user: { connect: { id: userId } },
+            type: PaymentType.COURSE_PURCHASE,
+            course: { connect: { id: courseId } },
+            subtotal,
+            discountAmount,
+            totalAmount,
+            ipAddress,
+            userAgent,
+            provider,
+            status: PaymentStatus.PENDING,
+            providerTxId: transactionUuid,
+            metadata: cipherSpent > 0 ? { cipherSpent } as any : undefined,
+            ...(promoCodeId && { promoCode: { connect: { id: promoCodeId } } })
+        });
+
+        const { gatewayConfig, gatewayUrl } = gateway.initiate(totalAmount, transactionUuid);
+
+        return {
+            enrolled: false,
+            paymentId: payment.id,
+            provider,
+            gatewayConfig,
+            gatewayUrl,
+        };
+    }
+
     async verifyPayment(provider: PaymentProvider, encodedData: string) {
         const gateway = this.getGateway(provider);
 
@@ -157,6 +250,11 @@ export class PaymentService {
     private async processSuccessfulPayment(payment: Awaited<ReturnType<PaymentRepository["findPaymentByTxId"]>>) {
         if (!payment) return;
 
+        // Increment promo code usage if used
+        if (payment.promoCodeId) {
+            await this.promoCodeService.incrementUsage(payment.promoCodeId);
+        }
+
         if (payment.type === PaymentType.CIPHER_PURCHASE && payment.package) {
             await this.cipherService.awardCipher(
                 payment.userId,
@@ -165,12 +263,6 @@ export class PaymentService {
                 payment.id
             );
 
-            // Increment promo code usage if used
-            if (payment.promoCodeId) {
-                await this.promoCodeService.incrementUsage(payment.promoCodeId);
-            }
-
-            // Send real-time notification
             await this.notificationService.notify({
                 userId: payment.userId,
                 type: NotificationType.SYSTEM,
@@ -179,7 +271,6 @@ export class PaymentService {
                 actionUrl: "/payments/history"
             });
 
-            // Send email receipt
             const user = (payment as any).user;
             if (user && user.email) {
                 this.mailService.sendPaymentReceiptEmail(user.email, {
@@ -203,6 +294,31 @@ export class PaymentService {
                     logger.error(`Failed to send payment receipt: ${error.message}`);
                 });
             }
+        }
+
+        if (payment.type === PaymentType.COURSE_PURCHASE && payment.courseId) {
+            // Spend cipher coins if metadata indicates it
+            const metadata = payment.metadata as any;
+            if (metadata?.cipherSpent && metadata.cipherSpent > 0) {
+                await this.cipherService.spendCipher(
+                    payment.userId,
+                    metadata.cipherSpent,
+                    CipherReason.COURSE_DISCOUNT,
+                    payment.courseId
+                );
+            }
+
+            // Create enrollment
+            await this.courseRepository.createEnrollment(payment.userId, payment.courseId);
+
+            const course = (payment as any).course;
+            await this.notificationService.notify({
+                userId: payment.userId,
+                type: NotificationType.COURSE_ENROLLMENT,
+                title: "Enrollment Successful! 🎓",
+                message: `You have been enrolled in "${course?.title || 'your course'}". Start learning now!`,
+                actionUrl: `/courses/${course?.slug || ''}`,
+            });
         }
     }
 }

@@ -148,6 +148,8 @@ export class AuthMiddleware {
         };
     }
 
+    adminOnly = this.checkRole([1]);
+
     private extractTokenFromHeader(authHeader?: Request['headers']['authorization']): string | null {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return null;
