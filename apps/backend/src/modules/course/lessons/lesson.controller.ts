@@ -55,4 +55,20 @@ export class LessonController {
         const result = await this.lessonService.getCourseProgress(userId, courseId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Progress fetched successfully", result);
     });
+
+    createComment = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user!.id;
+        const { lessonId } = req.params as { lessonId: string };
+        const result = await this.lessonService.createComment(userId, lessonId, req.body);
+        ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Comment posted successfully", result);
+    });
+
+    getComments = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?.id;
+        const { lessonId } = req.params as { lessonId: string };
+        const query = req.query as any;
+
+        const result = await this.lessonService.getComments(userId, lessonId, query);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Comments fetched successfully", result);
+    });
 }

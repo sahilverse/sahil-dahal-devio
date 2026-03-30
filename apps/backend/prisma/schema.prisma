@@ -107,11 +107,12 @@ model User {
 
   userAchievements UserAchievement[]
 
-  authoredCourses   Course[]         @relation("course_author")
-  courseEnrollments Enrollment[]     @relation("student_enrollments")
-  lessonProgress    LessonProgress[]
-  courseReviews     CourseReview[]
-  payments          Payment[]
+  authoredCourses    Course[]            @relation("course_author")
+  courseEnrollments  Enrollment[]        @relation("student_enrollments")
+  lessonProgress     LessonProgress[]
+  courseReviews      CourseReview[]
+  lessonComments     LessonComment[]
+  payments           Payment[]
 
   // Professional Profile
   experiences    UserExperience[]
@@ -1302,8 +1303,8 @@ model Course {
   payments             Payment[]
   applicablePromoCodes PromoCode[]
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   courseTopics CourseTopic[]
   reviews      CourseReview[]
 
@@ -1313,7 +1314,7 @@ model Course {
 
 model CourseReview {
   id       String @id @default(cuid())
-  courseId  String @map("course_id")
+  courseId String @map("course_id")
   userId   String @map("user_id")
 
   rating  Int
@@ -1370,9 +1371,35 @@ model Lesson {
 
   module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
+  comments LessonComment[]
 
   @@index([moduleId])
   @@index([order])
+}
+
+model LessonComment {
+  id       String  @id @default(cuid())
+  lessonId String  @map("lesson_id")
+  userId   String  @map("user_id")
+  parentId String? @map("parent_id")
+
+  content String
+
+  upvotes   Int @default(0)
+  downvotes Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lesson  Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  LessonComment?  @relation("lesson_comment_replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies LessonComment[] @relation("lesson_comment_replies")
+
+  @@index([lessonId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([createdAt])
 }
 
 model Enrollment {

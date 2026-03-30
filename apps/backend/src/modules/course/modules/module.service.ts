@@ -12,13 +12,15 @@ export class ModuleService {
     constructor(@inject(TYPES.ModuleRepository) private moduleRepository: ModuleRepository) { }
 
     async createModule(courseId: string, data: CreateModuleInput) {
-        return this.moduleRepository.create(courseId, data.title, data.order || 0);
+        const mod = await this.moduleRepository.create(courseId, data.title, data.order || 0);
+        return plainToInstance(ModuleSummaryDto, mod, { excludeExtraneousValues: true });
     }
 
     async updateModule(moduleId: string, data: UpdateModuleInput) {
         const mod = await this.moduleRepository.findById(moduleId);
         if (!mod) throw new ApiError("Module not found", StatusCodes.NOT_FOUND);
-        return this.moduleRepository.update(moduleId, data);
+        const updated = await this.moduleRepository.update(moduleId, data);
+        return plainToInstance(ModuleSummaryDto, updated, { excludeExtraneousValues: true });
     }
 
     async deleteModule(moduleId: string) {

@@ -59,7 +59,7 @@ export type CreateLessonInput = z.infer<typeof createLessonSchema>;
 export const updateLessonSchema = z.object({
     title: z.string().min(1).max(200).trim().optional(),
     content: z.string().max(50000).optional(),
-    videoUrl: z.string().url("Invalid video URL").optional().nullable(),
+    videoUrl: z.url("Invalid video URL").optional().nullable(),
     duration: z.number().int().min(0).optional(),
     order: z.number().int().min(0).optional(),
     isPreview: z.boolean().optional(),
@@ -120,3 +120,19 @@ export const lessonQuerySchema = z.object({
 });
 
 export type LessonQueryInput = z.infer<typeof lessonQuerySchema>;
+
+// ─── Lesson Comment ────────────────────────────────────
+
+export const createLessonCommentSchema = z.object({
+    content: z.string().min(1, "Comment cannot be empty").max(2000, "Comment must be less than 2000 characters").trim(),
+    parentId: z.cuid("Invalid parent comment ID").optional(),
+});
+
+export type CreateLessonCommentInput = z.infer<typeof createLessonCommentSchema>;
+
+export const lessonCommentQuerySchema = z.object({
+    cursor: z.string().optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export type LessonCommentQueryInput = z.infer<typeof lessonCommentQuerySchema>;

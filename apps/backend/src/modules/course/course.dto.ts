@@ -210,3 +210,41 @@ export class GetCoursesDto {
     @Expose() search?: string;
     @Expose() sortBy?: string;
 }
+
+// ─── Lesson Comments ──────────────────────────────────
+
+@Exclude()
+export class LessonCommentAuthorDto {
+    @Expose() id!: string;
+    @Expose() username!: string;
+    @Expose() firstName!: string;
+    @Expose() lastName!: string;
+    @Expose() avatarUrl!: string;
+}
+
+@Exclude()
+export class LessonCommentResponseDto {
+    @Expose() id!: string;
+    @Expose() lessonId!: string;
+    @Expose() parentId!: string | null;
+    @Expose() content!: string;
+    @Expose() createdAt!: Date;
+    @Expose() updatedAt!: Date;
+
+    @Expose()
+    @Type(() => LessonCommentAuthorDto)
+    user!: LessonCommentAuthorDto;
+
+    @Expose()
+    @Transform(({ obj }) => obj._count?.replies || 0)
+    replyCount!: number;
+}
+
+@Exclude()
+export class LessonCommentListDto {
+    @Expose()
+    @Type(() => LessonCommentResponseDto)
+    items!: LessonCommentResponseDto[];
+
+    @Expose() nextCursor?: string | null;
+}

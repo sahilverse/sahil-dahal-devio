@@ -13,6 +13,8 @@ import {
     courseQuerySchema,
     moduleQuerySchema,
     lessonQuerySchema,
+    createLessonCommentSchema,
+    lessonCommentQuerySchema,
 } from "@devio/zod-utils";
 import { courseAdminRouter } from "./course.admin.route";
 
@@ -278,6 +280,83 @@ router.post(
     "/lessons/:lessonId/progress",
     authMiddleware.guard,
     lessonController.updateProgress
+);
+
+/**
+ * @swagger
+ * /courses/lessons/{lessonId}/comments:
+ *   get:
+ *     summary: Get comments for a lesson
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: parentId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comments fetched successfully
+ */
+router.get(
+    "/lessons/:lessonId/comments",
+    authMiddleware.extractUser,
+    validateQuery(lessonCommentQuerySchema),
+    lessonController.getComments
+);
+
+/**
+ * @swagger
+ * /courses/lessons/{lessonId}/comments:
+ *   post:
+ *     summary: Post a comment on a lesson (enrolled users only)
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [content]
+ *             properties:
+ *               content:
+ *                 type: string
+ *               parentId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Comment posted
+ *       403:
+ *         description: Not enrolled
+ */
+router.post(
+    "/lessons/:lessonId/comments",
+    authMiddleware.guard,
+    authMiddleware.verifiedOnly,
+    validateRequest(createLessonCommentSchema),
+    lessonController.createComment
 );
 
 /**

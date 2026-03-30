@@ -75,4 +75,58 @@ export class LessonRepository {
             percentage: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
         };
     }
+
+    // ─── Lesson Comments ──────────────────────────────────
+
+    async createComment(lessonId: string, userId: string, data: { content: string; parentId?: string }) {
+        return this.prisma.lessonComment.create({
+            data: {
+                lessonId,
+                userId,
+                content: data.content,
+                parentId: data.parentId,
+            },
+            include: {
+                user: true,
+                _count: {
+                    select: { replies: true }
+                }
+            }
+        });
+    }
+
+    async findCommentById(id: string) {
+        return this.prisma.lessonComment.findUnique({
+            where: { id },
+        });
+    }
+
+    async findComments(lessonId: string, limit: number, cursor?: string, parentId?: string | null) {
+        const whereClause: any = { lessonId };
+        if (parentId !== undefined) {
+            whereClause.parentId = parentId;
+        }
+
+        return this.prisma.lessonComment.findMany({
+            where: whereClause,
+            take: limit + 1,
+            ...(cursor && {
+                skip: 1,
+                cursor: { id: cursor },
+            }),
+            orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+            include: {
+                user: true,
+                _count: {
+                    select: { replies: true }
+                }
+            }
+        });
+    }
+
+    async deleteComment(id: string) {
+        return this.prisma.lessonComment.delete({
+            where: { id },
+        });
+    }
 }

@@ -5,7 +5,7 @@ import { ApiError } from "../../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { CreateLessonInput, UpdateLessonInput, LessonQueryInput } from "@devio/zod-utils";
 import { plainToInstance } from "class-transformer";
-import { LessonContentDto, CourseProgressDto, LessonSummaryDto } from "../course.dto";
+import { LessonContentDto, CourseProgressDto, LessonSummaryDto, LessonCommentResponseDto, LessonCommentListDto } from "../course.dto";
 import { CourseRepository } from "../course.repository";
 
 @injectable()
@@ -16,13 +16,15 @@ export class LessonService {
     ) { }
 
     async createLesson(moduleId: string, data: CreateLessonInput) {
-        return this.lessonRepository.create(moduleId, data);
+        const lesson = await this.lessonRepository.create(moduleId, data);
+        return plainToInstance(LessonContentDto, lesson, { excludeExtraneousValues: true });
     }
 
     async updateLesson(lessonId: string, data: UpdateLessonInput) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
-        return this.lessonRepository.update(lessonId, data);
+        const updated = await this.lessonRepository.update(lessonId, data);
+        return plainToInstance(LessonContentDto, updated, { excludeExtraneousValues: true });
     }
 
     async deleteLesson(lessonId: string) {
@@ -93,5 +95,54 @@ export class LessonService {
 
         const progress = await this.lessonRepository.getUserCourseProgress(userId, courseId);
         return plainToInstance(CourseProgressDto, progress, { excludeExtraneousValues: true });
+    }
+
+    // ─── Lesson Comments ──────────────────────────────────
+
+    async createComment(userId: string, lessonId: string, data: { content: string; parentId?: string }) {
+        const lesson = await this.lessonRepository.findById(lessonId);
+        if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
+
+        const courseId = lesson.module.course.id;
+        const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
+        
+        if (!enrollment) {
+            throw new ApiError("You must be enrolled to comment on this lesson", StatusCodes.FORBIDDEN);
+        }
+
+        if (data.parentId) {
+            const parent = await this.lessonRepository.findCommentById(data.parentId);
+            if (!parent) throw new ApiError("Parent comment not found", StatusCodes.NOT_FOUND);
+            if (parent.lessonId !== lessonId) throw new ApiError("Parent comment belongs to a different lesson", StatusCodes.BAD_REQUEST);
+        }
+
+        const comment = await this.lessonRepository.createComment(lessonId, userId, data);
+        return plainToInstance(LessonCommentResponseDto, comment, { excludeExtraneousValues: true });
+    }
+
+    async getComments(userId: string | undefined, lessonId: string, query: { limit: number; cursor?: string; parentId?: string }) {
+        const lesson = await this.lessonRepository.findById(lessonId);
+        if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
+
+        if (!lesson.isPreview && userId) {
+            const courseId = lesson.module.course.id;
+            const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
+            if (!enrollment) throw new ApiError("You must be enrolled to view comments", StatusCodes.FORBIDDEN);
+        }
+
+        const parentIdFilter = query.parentId === undefined ? null : query.parentId;
+
+        const comments = await this.lessonRepository.findComments(lessonId, query.limit, query.cursor, parentIdFilter);
+
+        let nextCursor: string | null = null;
+        if (comments.length > query.limit) {
+            const nextItem = comments.pop();
+            nextCursor = nextItem?.id || null;
+        }
+
+        return plainToInstance(LessonCommentListDto, {
+            items: comments,
+            nextCursor,
+        }, { excludeExtraneousValues: true });
     }
 }
