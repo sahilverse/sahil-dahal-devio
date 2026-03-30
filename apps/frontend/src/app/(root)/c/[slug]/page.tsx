@@ -256,7 +256,7 @@ function CompanyNotFound() {
                 The organization you're looking for doesn't exist or has been removed from our records.
             </p>
             <Button asChild className="rounded-xl">
-                <Link href="/j">Return to Job Board</Link>
+                <Link href="/jobs">Return to Job Board</Link>
             </Button>
         </div>
     );
