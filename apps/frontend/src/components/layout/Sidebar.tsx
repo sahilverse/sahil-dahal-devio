@@ -29,6 +29,7 @@ import { useEffect } from "react";
 import { useJoinedCommunities } from "@/hooks/useCommunities";
 import { useFetchUserCompanies } from "@/hooks/useCompanies";
 import UserAvatar from "@/components/navbar/UserAvatar";
+import { ShoppingBag } from "lucide-react";
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -58,7 +59,8 @@ export default function Sidebar() {
     ];
 
     const resources = [
-        ...(isAuthenticated ? [] : [{ name: "About Devio", href: "/about", icon: BookOpen }]),
+        { name: "About Devio", href: "/about", icon: BookOpen },
+        ...(!isAuthenticated ? [{ name: "Cipher Store", href: "/ciphers", icon: ShoppingBag }] : []),
         { name: "Code Playground", href: "/code", icon: SquareTerminal },
         { name: "Problems", href: "/problems", icon: Code },
         { name: "Cyber Labs", href: "/labs", icon: Shield },
@@ -249,8 +251,8 @@ export default function Sidebar() {
                                 {isSidebarOpen ? (
                                     <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex justify-between items-center group">
                                         <span>Organizations</span>
-                                        <Link href="/c/new" className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-brand-primary">
-                                            Manage All
+                                        <Link href="/companies" className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-brand-primary">
+                                            Manage
                                         </Link>
                                     </div>
                                 ) : null}

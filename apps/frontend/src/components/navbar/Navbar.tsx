@@ -11,7 +11,6 @@ import { useAuthModal } from "@/contexts/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
 import MobileSearchButton from "./MobileSearchButton";
 import UserMenu from "./UserMenu";
-import CipherStoreButton from "./CipherBalanceButton";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import { useUnreadChatCount } from "@/hooks/useConversation";
 import Image from "next/image";
@@ -107,8 +106,6 @@ export default function Navbar() {
                             )}
                         </Link>
 
-                        <CipherStoreButton />
-
                         <Link href="/create" className="flex items-center gap-1.5 bg-brand-primary text-white px-3 lg:px-4 py-1.5 rounded-full hover:bg-brand-pressed transition-colors font-medium text-sm cursor-pointer">
                             <Plus className="w-4 h-4" />
                             <span className="hidden lg:inline">Create</span>
@@ -118,12 +115,8 @@ export default function Navbar() {
                     </>
                 ) : (
                     <>
-                        <div className="hidden lg:flex items-center gap-4">
+                        <div className="hidden lg:flex items-center gap-1">
                             <ThemeToggle />
-                            <Link href="/ciphers" className="text-sm font-semibold text-foreground transition-colors flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-muted/50 border border-transparent">
-                                <ShoppingBag className="w-4 h-4" />
-                                Store
-                            </Link>
                             <button
                                 onClick={openLogin}
                                 className="bg-brand-primary text-white px-6 py-2 rounded-md hover:bg-brand-pressed transition-colors cursor-pointer text-md"
@@ -142,7 +135,7 @@ export default function Navbar() {
                                 <DropdownMenuContent align="end" className="w-56 p-2 space-y-1 bg-card">
                                     <DropdownMenuItem className="cursor-pointer py-2.5 px-3 rounded-lg" asChild>
                                         <Link href="/ciphers">
-                                            <ShoppingBag className="mr-3 h-4 w-4 text-brand-primary" />
+                                            <ShoppingBag className="mr-3 h-4 w-4" />
                                             <span className="text-sm font-semibold">Cipher Store</span>
                                         </Link>
                                     </DropdownMenuItem>
