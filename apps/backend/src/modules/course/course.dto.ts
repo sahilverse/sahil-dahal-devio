@@ -22,6 +22,7 @@ export class CourseTopicDto {
 export class LessonSummaryDto {
     @Expose() id!: string;
     @Expose() title!: string;
+    @Expose() videoStatus!: string;
     @Expose() duration!: number;
     @Expose() order!: number;
     @Expose() isPreview!: boolean;
@@ -167,6 +168,7 @@ export class LessonContentDto {
     @Expose() title!: string;
     @Expose() content!: string;
     @Expose() videoUrl!: string;
+    @Expose() videoStatus!: string;
     @Expose() duration!: number;
     @Expose() order!: number;
     @Expose() isPreview!: boolean;
