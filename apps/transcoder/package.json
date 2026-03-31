@@ -1,0 +1,33 @@
+{
+    "name": "@devio/transcoder",
+    "version": "1.0.0",
+    "description": "Video transcoder microservice for HLS processing",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "lint": "eslint . --ext .ts",
+        "clean": "rm -rf dist"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.983.0",
+        "bullmq": "^5.63.2",
+        "dotenv": "^17.2.3",
+        "fluent-ffmpeg": "^2.1.3",
+        "ioredis": "^5.8.2",
+        "pino": "^10.1.0",
+        "pino-pretty": "^13.1.2"
+    },
+    "devDependencies": {
+        "@devio/typescript-config": "workspace:*",
+        "@types/fluent-ffmpeg": "^2.1.27",
+        "@types/node": "^22.19.1",
+        "tsx": "^4.20.6",
+        "typescript": "^5.9.2"
+    }
+}
