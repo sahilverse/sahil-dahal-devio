@@ -4,7 +4,7 @@ import { PaymentController } from "./payment.controller";
 import { AuthMiddleware } from "../../middlewares/auth";
 import { container } from "../../config/inversify";
 import { validateRequest } from "../../middlewares/validation";
-import { InitiatePaymentSchema } from "@devio/zod-utils";
+import { InitiateCipherPaymentSchema, InitiateCoursePaymentSchema } from "@devio/zod-utils";
 
 const router: Router = Router();
 const paymentController = container.get<PaymentController>(TYPES.PaymentController);
@@ -25,9 +25,9 @@ router.get("/providers", paymentController.getProviders);
 
 /**
  * @swagger
- * /payments/initiate:
+ * /payments/initiate/cipher:
  *   post:
- *     summary: Initiate a cipher purchase
+ *     summary: Initiate a cipher package purchase
  *     tags: [Payments]
  *     security:
  *       - bearerAuth: []
@@ -50,7 +50,39 @@ router.get("/providers", paymentController.getProviders);
  *       200:
  *         description: Payment initiation data with gateway config
  */
-router.post("/initiate", authMiddleware.guard, validateRequest(InitiatePaymentSchema), paymentController.initiatePurchase);
+router.post("/initiate/cipher", authMiddleware.guard, validateRequest(InitiateCipherPaymentSchema), paymentController.initiateCipherPurchase);
+
+/**
+ * @swagger
+ * /payments/initiate/course:
+ *   post:
+ *     summary: Initiate a course purchase (supports optional elective cipher discount)
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [courseId, provider]
+ *             properties:
+ *               courseId:
+ *                 type: string
+ *               provider:
+ *                 type: string
+ *                 enum: [ESEWA, KHALTI]
+ *               promoCode:
+ *                 type: string
+ *               cipherAmount:
+ *                 type: integer
+ *                 description: Amount of ciphers to spend for discount
+ *     responses:
+ *       200:
+ *         description: Payment initiation data (or direct enrollment if fully covered)
+ */
+router.post("/initiate/course", authMiddleware.guard, validateRequest(InitiateCoursePaymentSchema), paymentController.initiateCoursePurchase);
 
 /**
  * @swagger

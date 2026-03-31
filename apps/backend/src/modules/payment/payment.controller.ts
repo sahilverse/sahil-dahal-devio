@@ -10,7 +10,7 @@ import { PaymentProvider } from "../../generated/prisma/client";
 export class PaymentController {
     constructor(@inject(TYPES.PaymentService) private paymentService: PaymentService) { }
 
-    initiatePurchase = asyncHandler(async (req: Request, res: Response) => {
+    initiateCipherPurchase = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user!.id;
         const { packageId, promoCode, provider } = req.body;
         const ipAddress = req.ip;
@@ -26,6 +26,25 @@ export class PaymentController {
         );
 
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Payment initiated successfully", result);
+    });
+
+    initiateCoursePurchase = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user!.id;
+        const { courseId, promoCode, provider, cipherAmount } = req.body;
+        const ipAddress = req.ip;
+        const userAgent = req.get("User-Agent");
+
+        const result = await this.paymentService.initiateCoursePayment(
+            userId,
+            courseId,
+            provider as PaymentProvider,
+            promoCode,
+            cipherAmount,
+            ipAddress,
+            userAgent
+        );
+
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Course payment initiated successfully", result);
     });
 
     verifyEsewa = asyncHandler(async (req: Request, res: Response) => {
