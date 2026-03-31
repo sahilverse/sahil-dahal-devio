@@ -8,7 +8,7 @@ import { container } from './config';
 import { TYPES } from './types';
 import { RedisManager } from './config';
 import { PrismaClient } from './generated/prisma/client';
-import { EmailWorkerService } from './queue';
+import { EmailWorkerService, VideoObserverService } from './queue';
 import { LabVMWorkerService } from './modules/lab';
 import { SocketService } from './modules/socket';
 import { StorageService } from './modules/storage';
@@ -17,6 +17,7 @@ const server = createServer(app);
 const redisManager = container.get<RedisManager>(TYPES.RedisManager);
 const prismaClient = container.get<PrismaClient>(TYPES.PrismaClient);
 const emailWorkerService = container.get<EmailWorkerService>(TYPES.EmailWorkerService);
+const videoObserverService = container.get<VideoObserverService>(TYPES.VideoObserverService);
 const labVMWorkerService = container.get<LabVMWorkerService>(TYPES.LabVMWorkerService);
 const socketService = container.get<SocketService>(TYPES.SocketService);
 const storageService = container.get<StorageService>(TYPES.StorageService);
@@ -38,6 +39,7 @@ async function startServer() {
         });
 
         await emailWorkerService.registerAllWorkers();
+        await videoObserverService.init();
         await labVMWorkerService.init();
         logger.info("All workers registered and initialized");
 
@@ -55,6 +57,7 @@ async function shutdown() {
         await prismaClient.$disconnect();
         logger.info("Disconnected from the database");
 
+        await videoObserverService.stop();
         await redisManager.disconnect();
 
         server.close(async () => {

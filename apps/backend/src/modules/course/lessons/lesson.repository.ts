@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient } from "../../../generated/prisma/client";
+import { PrismaClient, VideoStatus } from "../../../generated/prisma/client";
 import { TYPES } from "../../../types";
 import { CreateLessonInput, UpdateLessonInput } from "@devio/zod-utils";
 
@@ -27,6 +27,13 @@ export class LessonRepository {
         return this.prisma.lesson.update({
             where: { id },
             data,
+        });
+    }
+
+    async updateVideoStatus(id: string, status: VideoStatus) {
+        return this.prisma.lesson.update({
+            where: { id },
+            data: { videoStatus: status },
         });
     }
 

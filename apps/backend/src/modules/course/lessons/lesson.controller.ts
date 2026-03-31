@@ -27,6 +27,35 @@ export class LessonController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Lesson deleted successfully");
     });
 
+    uploadVideo = asyncHandler(async (req: Request, res: Response) => {
+        const { lessonId } = req.params as { lessonId: string };
+        const file = req.file;
+
+        if (!file) {
+            return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, "No video file provided");
+        }
+
+        const result = await this.lessonService.uploadLessonVideo(lessonId, file);
+        ResponseHandler.sendResponse(res, StatusCodes.ACCEPTED, "Video upload started", result);
+    });
+
+    streamVideo = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user!.id;
+        const { lessonId } = req.params as { lessonId: string };
+        const filePath = (req.params as any).path || "master.m3u8";
+
+        const { stream, contentType, contentLength } = await this.lessonService.getLessonVideoStreaming(
+            userId,
+            lessonId,
+            filePath
+        );
+
+        if (contentType) res.setHeader("Content-Type", contentType);
+        if (contentLength) res.setHeader("Content-Length", contentLength);
+
+        stream.pipe(res);
+    });
+
     getLessons = asyncHandler(async (req: Request, res: Response) => {
         const { moduleId } = req.params as { moduleId: string };
         const query = req.query as any;

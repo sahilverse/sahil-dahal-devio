@@ -254,6 +254,32 @@ router.post(
 
 /**
  * @swagger
+ * /courses/lessons/{lessonId}/stream/*:
+ *   get:
+ *     summary: Securely stream lesson video content (HLS)
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Video stream chunk
+ *       403:
+ *         description: Not enrolled or no access
+ */
+router.get(
+    "/lessons/:lessonId/stream/*path",
+    authMiddleware.guard,
+    lessonController.streamVideo
+);
+
+/**
+ * @swagger
  * /courses/lessons/{lessonId}/content:
  *   get:
  *     summary: Get full lesson content (requires enrollment)

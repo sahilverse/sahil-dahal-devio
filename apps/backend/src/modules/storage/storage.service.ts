@@ -30,22 +30,36 @@ export class StorageService {
     }
 
     async init(): Promise<void> {
-        const buckets = [
+        const publicBuckets = [
             MINIO_BUCKET_UPLOADS,
             MINIO_BUCKET_PROBLEMS,
+        ];
+        const privateBuckets = [
             MINIO_BUCKET_LABS,
             MINIO_BUCKET_VIDEOS
         ];
 
-        for (const bucket of buckets) {
-            try {
-                await this.s3Client.send(new HeadBucketCommand({ Bucket: bucket }));
-                logger.debug(`Bucket "${bucket}" already exists.`);
-            } catch (error: any) {
-                if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
-                    logger.info(`Creating bucket "${bucket}"...`);
-                    await this.s3Client.send(new CreateBucketCommand({ Bucket: bucket }));
+        // Initialize Public Buckets
+        for (const bucket of publicBuckets) {
+            await this.ensureBucketExists(bucket, true);
+        }
 
+        // Initialize Private Buckets
+        for (const bucket of privateBuckets) {
+            await this.ensureBucketExists(bucket, false);
+        }
+    }
+
+    private async ensureBucketExists(bucket: string, isPublic: boolean): Promise<void> {
+        try {
+            await this.s3Client.send(new HeadBucketCommand({ Bucket: bucket }));
+            logger.debug(`Bucket "${bucket}" already exists.`);
+        } catch (error: any) {
+            if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
+                logger.info(`Creating bucket "${bucket}"...`);
+                await this.s3Client.send(new CreateBucketCommand({ Bucket: bucket }));
+
+                if (isPublic) {
                     const policy = {
                         Version: "2012-10-17",
                         Statement: [{
@@ -61,11 +75,13 @@ export class StorageService {
                         Bucket: bucket,
                         Policy: JSON.stringify(policy),
                     }));
-
                     logger.info(`Bucket "${bucket}" initialized with public-read policy.`);
                 } else {
-                    logger.error(`Storage initialization failed for "${bucket}": ${error.message}`);
+                    logger.info(`Bucket "${bucket}" initialized as PRIVATE.`);
                 }
+            } else {
+                logger.error(`Storage initialization failed for "${bucket}": ${error.message}`);
+                throw error;
             }
         }
     }
@@ -92,14 +108,33 @@ export class StorageService {
         }
     }
 
-    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string): Promise<string> {
+    async getObjectStream(path: string, bucketName: string) {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: bucketName,
+                Key: path,
+            });
+
+            const response = await this.s3Client.send(command);
+            return {
+                stream: response.Body as any,
+                contentType: response.ContentType,
+                contentLength: response.ContentLength,
+            };
+        } catch (error: any) {
+            logger.error(`Failed to get object stream from MinIO: ${error.message}`);
+            throw new ApiError(`Failed to get object: ${error.message}`, StatusCodes.NOT_FOUND);
+        }
+    }
+
+    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string, isPublic: boolean = true): Promise<string> {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
                 Key: path,
                 Body: buffer,
                 ContentType: mimetype,
-                ACL: "public-read" as ObjectCannedACL,
+                ACL: isPublic ? ("public-read" as ObjectCannedACL) : ("private" as ObjectCannedACL),
             });
 
             await this.s3Client.send(command);
@@ -110,14 +145,14 @@ export class StorageService {
         }
     }
 
-    async uploadFile(file: Express.Multer.File, path: string, bucketName: string): Promise<string> {
+    async uploadFile(file: Express.Multer.File, path: string, bucketName: string, isPublic: boolean = true): Promise<string> {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
                 Key: path,
                 Body: file.buffer,
                 ContentType: file.mimetype,
-                ACL: "public-read" as ObjectCannedACL,
+                ACL: isPublic ? ("public-read" as ObjectCannedACL) : ("private" as ObjectCannedACL),
             });
 
             await this.s3Client.send(command);

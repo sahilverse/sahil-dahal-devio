@@ -30,6 +30,8 @@ export const TYPES = {
     QueueService: Symbol.for("QueueService"),
     EmailJobService: Symbol.for("EmailJobService"),
     EmailWorkerService: Symbol.for("EmailWorkerService"),
+    VideoJobService: Symbol.for("VideoJobService"),
+    VideoObserverService: Symbol.for("VideoObserverService"),
 
     SocketService: Symbol.for("SocketService"),
     StorageService: Symbol.for("StorageService"),

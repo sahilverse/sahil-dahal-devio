@@ -4,7 +4,7 @@ import { TYPES } from "../../types";
 import { CourseController } from "./course.controller";
 import { ModuleController } from "./modules/module.controller";
 import { LessonController } from "./lessons/lesson.controller";
-import { AuthMiddleware, validateRequest } from "../../middlewares";
+import { AuthMiddleware, validateRequest, videoUpload } from "../../middlewares";
 import {
     createCourseSchema,
     updateCourseSchema,
@@ -225,6 +225,45 @@ router.post(
     "/modules/:moduleId/lessons",
     validateRequest(createLessonSchema),
     lessonController.createLesson
+);
+
+/**
+ * @swagger
+ * /courses/lessons/{lessonId}/video:
+ *   post:
+ *     summary: Upload a raw MP4/MOV video for transcoding (Admin only)
+ *     tags: [Admin Course Management]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               video:
+ *                 type: string
+ *                 format: binary
+ *                 description: The raw video file (max 500MB)
+ *     responses:
+ *       202:
+ *         description: Video upload started and transcoding job queued
+ *       400:
+ *         description: Invalid file or file missing
+ *       404:
+ *         description: Lesson not found
+ */
+router.post(
+    "/lessons/:lessonId/video",
+    videoUpload.single("video"),
+    lessonController.uploadVideo
 );
 
 /**

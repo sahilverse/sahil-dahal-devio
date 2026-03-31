@@ -8,12 +8,19 @@ import { plainToInstance } from "class-transformer";
 import { LessonContentDto, CourseProgressDto, LessonSummaryDto, LessonCommentResponseDto, LessonCommentListDto } from "../course.dto";
 import { CourseRepository } from "../course.repository";
 import { ROLES } from "../../auth/auth.types";
+import { StorageService } from "../../storage";
+import { VideoJobService } from "../../../queue/jobs/video";
+import { MINIO_BUCKET_VIDEOS } from "../../../config/constants";
+import { v4 as uuidv4 } from "uuid";
+import { VideoStatus } from "../../../generated/prisma/enums";
 
 @injectable()
 export class LessonService {
     constructor(
         @inject(TYPES.LessonRepository) private lessonRepository: LessonRepository,
-        @inject(TYPES.CourseRepository) private courseRepository: CourseRepository
+        @inject(TYPES.CourseRepository) private courseRepository: CourseRepository,
+        @inject(TYPES.StorageService) private storageService: StorageService,
+        @inject(TYPES.VideoJobService) private videoJobService: VideoJobService
     ) { }
 
     async createLesson(moduleId: string, data: CreateLessonInput) {
@@ -96,6 +103,52 @@ export class LessonService {
 
         const progress = await this.lessonRepository.getUserCourseProgress(userId, courseId);
         return plainToInstance(CourseProgressDto, progress, { excludeExtraneousValues: true });
+    }
+
+    async uploadLessonVideo(lessonId: string, file: Express.Multer.File) {
+        const lesson = await this.lessonRepository.findById(lessonId);
+        if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
+
+        // Upload raw video to MinIO under temp/ prefix
+        const ext = file.originalname.split(".").pop() || "mp4";
+        const rawVideoKey = `temp/${lessonId}/${uuidv4()}.${ext}`;
+
+        await this.storageService.uploadBuffer(
+            file.buffer,
+            rawVideoKey,
+            file.mimetype,
+            MINIO_BUCKET_VIDEOS,
+            false // isPublic: false
+        );
+
+        // Update lesson status to PROCESSING
+        await this.lessonRepository.updateVideoStatus(lessonId, VideoStatus.PROCESSING);
+
+        // Add transcoding job to queue
+        await this.videoJobService.addTranscodeJob(lessonId, rawVideoKey);
+
+        return { lessonId, status: VideoStatus.PROCESSING, rawVideoKey };
+    }
+
+    async getLessonVideoStreaming(userId: string, lessonId: string, filePath: string) {
+        const lesson = await this.lessonRepository.findById(lessonId);
+        if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
+
+        const courseId = lesson.module.course.id;
+
+        // Check if user is enrolled or if lesson is a preview
+        const isEnrolled = await this.courseRepository.isUserEnrolled(userId, courseId);
+        if (!isEnrolled && !lesson.isPreview) {
+            throw new ApiError("You are not enrolled in this course", StatusCodes.FORBIDDEN);
+        }
+
+        if (lesson.videoStatus !== VideoStatus.READY) {
+            throw new ApiError("Video is not ready yet", StatusCodes.BAD_REQUEST);
+        }
+
+        const fullPath = `courses/${lessonId}/${filePath}`;
+
+        return this.storageService.getObjectStream(fullPath, MINIO_BUCKET_VIDEOS);
     }
 
     // ─── Lesson Comments ──────────────────────────────────

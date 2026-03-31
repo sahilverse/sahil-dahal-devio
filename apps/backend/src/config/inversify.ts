@@ -18,7 +18,7 @@ import { AuthMiddleware, EventGuard } from "../middlewares";
 import type { Transporter } from "nodemailer";
 import { MailService } from "../modules/mail";
 import { VerificationRepository, VerificationService } from "../modules/verification";
-import { QueueService, EmailJobService, EmailWorkerService } from "../queue";
+import { QueueService, EmailJobService, EmailWorkerService, VideoJobService, VideoObserverService } from "../queue";
 import { SocketService } from "../modules/socket";
 import { ISocketHandler } from "../modules/socket";
 import { StorageService } from "../modules/storage";
@@ -106,6 +106,8 @@ container.bind(TYPES.VerificationService).to(VerificationService).inSingletonSco
 container.bind<QueueService>(TYPES.QueueService).to(QueueService).inSingletonScope();
 container.bind<EmailJobService>(TYPES.EmailJobService).to(EmailJobService).inSingletonScope();
 container.bind<EmailWorkerService>(TYPES.EmailWorkerService).to(EmailWorkerService).inSingletonScope();
+container.bind<VideoJobService>(TYPES.VideoJobService).to(VideoJobService).inSingletonScope();
+container.bind<VideoObserverService>(TYPES.VideoObserverService).to(VideoObserverService).inSingletonScope();
 
 container.bind(TYPES.SocketService).to(SocketService).inSingletonScope();
 container.bind<StorageService>(TYPES.StorageService).to(StorageService).inSingletonScope();

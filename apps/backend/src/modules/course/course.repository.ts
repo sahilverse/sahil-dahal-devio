@@ -139,6 +139,11 @@ export class CourseRepository {
         });
     }
 
+    async isUserEnrolled(userId: string, courseId: string): Promise<boolean> {
+        const enrollment = await this.findEnrollment(userId, courseId);
+        return !!enrollment;
+    }
+
     async createEnrollment(userId: string, courseId: string) {
         return this.prisma.enrollment.create({
             data: { userId, courseId },
