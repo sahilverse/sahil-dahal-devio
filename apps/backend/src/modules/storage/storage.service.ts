@@ -1,6 +1,14 @@
 import { injectable } from "inversify";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ObjectCannedACL, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_BUCKET_PROBLEMS } from "../../config/constants";
+import {
+    MINIO_ENDPOINT,
+    MINIO_ACCESS_KEY,
+    MINIO_SECRET_KEY,
+    MINIO_BUCKET_UPLOADS,
+    MINIO_BUCKET_PROBLEMS,
+    MINIO_BUCKET_LABS,
+    MINIO_BUCKET_VIDEOS
+} from "../../config/constants";
 import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { logger } from "../../utils";
@@ -22,7 +30,12 @@ export class StorageService {
     }
 
     async init(): Promise<void> {
-        const buckets = [MINIO_BUCKET_NAME, MINIO_BUCKET_PROBLEMS];
+        const buckets = [
+            MINIO_BUCKET_UPLOADS,
+            MINIO_BUCKET_PROBLEMS,
+            MINIO_BUCKET_LABS,
+            MINIO_BUCKET_VIDEOS
+        ];
 
         for (const bucket of buckets) {
             try {
@@ -57,7 +70,7 @@ export class StorageService {
         }
     }
 
-    async getFile(path: string, bucketName: string = MINIO_BUCKET_NAME): Promise<string> {
+    async getFile(path: string, bucketName: string): Promise<string> {
         try {
             const command = new GetObjectCommand({
                 Bucket: bucketName,
@@ -79,7 +92,7 @@ export class StorageService {
         }
     }
 
-    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string = MINIO_BUCKET_NAME): Promise<string> {
+    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string): Promise<string> {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -97,7 +110,7 @@ export class StorageService {
         }
     }
 
-    async uploadFile(file: Express.Multer.File, path: string, bucketName: string = MINIO_BUCKET_NAME): Promise<string> {
+    async uploadFile(file: Express.Multer.File, path: string, bucketName: string): Promise<string> {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -115,7 +128,7 @@ export class StorageService {
         }
     }
 
-    async listFiles(bucketName: string = MINIO_BUCKET_NAME, prefix?: string): Promise<string[]> {
+    async listFiles(bucketName: string, prefix?: string): Promise<string[]> {
         try {
             const command = new ListObjectsV2Command({
                 Bucket: bucketName,
@@ -130,7 +143,7 @@ export class StorageService {
         }
     }
 
-    async deleteFile(path: string, bucketName: string = MINIO_BUCKET_NAME): Promise<void> {
+    async deleteFile(path: string, bucketName: string): Promise<void> {
         try {
             const bucketPrefix = `${MINIO_ENDPOINT}/${bucketName}/`;
             const key = path.includes(bucketPrefix)
