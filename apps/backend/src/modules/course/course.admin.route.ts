@@ -32,6 +32,36 @@ router.use(authMiddleware.adminOnly);
  *     tags: [Admin Course Management]
  *     security:
  *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, description]
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Advanced Node.js Microservices"
+ *               description:
+ *                 type: string
+ *                 example: "Master the art of building scalable microservices with TypeScript and Docker."
+ *               price:
+ *                 type: number
+ *                 default: 0
+ *               isFree:
+ *                 type: boolean
+ *                 default: false
+ *               maxCipherDiscount:
+ *                 type: integer
+ *               isPublished:
+ *                 type: boolean
+ *                 default: false
+ *               topics:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["backend", "microservices", "docker"]
  *     responses:
  *       201:
  *         description: Course created successfully
@@ -50,6 +80,34 @@ router.post(
  *     tags: [Admin Course Management]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               isFree:
+ *                 type: boolean
+ *               maxCipherDiscount:
+ *                 type: integer
+ *               isPublished:
+ *                 type: boolean
+ *               topics:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       200:
  *         description: Course updated
@@ -68,6 +126,12 @@ router.patch(
  *     tags: [Admin Course Management]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Course deleted
@@ -103,8 +167,10 @@ router.delete(
  *             properties:
  *               title:
  *                 type: string
+ *                 example: "Module 1: Introduction to Microservices"
  *               order:
  *                 type: integer
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Module created successfully
@@ -215,6 +281,7 @@ router.delete(
  *                 type: integer
  *               isPreview:
  *                 type: boolean
+ *                 default: false
  *     responses:
  *       201:
  *         description: Lesson created successfully
