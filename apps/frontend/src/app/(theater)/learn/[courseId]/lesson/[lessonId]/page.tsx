@@ -20,7 +20,8 @@ import {
     Download,
     Search,
     PlaySquare,
-    Loader2
+    Loader2,
+    AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { VideoPlayer } from "@/components/video/VideoPlayer";
+import { API_URL } from "@/lib/constants";
 
 export default function CoursePlayerPage() {
     const params = useParams() as { courseId: string; lessonId: string };
@@ -115,12 +118,19 @@ export default function CoursePlayerPage() {
                 <ResizablePanel defaultSize={75} minSize={50}>
                     <div className="h-full flex flex-col overflow-hidden">
                         {/* Video Player Section */}
-                        <div className="aspect-video bg-black/95 w-full relative flex items-center justify-center shadow-2xl">
+                        <div className="aspect-video bg-black w-full relative flex items-center justify-center shadow-2xl">
                             {lesson?.videoUrl ? (
-                                <div className="text-white flex flex-col items-center gap-4">
-                                     <PlayCircle className="size-20 text-primary animate-pulse" />
-                                     <p className="font-bold tracking-widest uppercase text-xs">Loading Secure Stream...</p>
-                                </div>
+                                lesson.videoStatus === "READY" ? (
+                                    <VideoPlayer 
+                                        src={`${API_URL?.replace(/\/$/, "")}/courses/lessons/${params.lessonId}/stream/master.m3u8`}
+                                        title={lesson.title}
+                                    />
+                                ) : (
+                                    <div className="text-white flex flex-col items-center gap-4">
+                                         <Loader2 className="size-10 text-primary animate-spin" />
+                                         <p className="font-bold tracking-widest uppercase text-xs">Video is still processing...</p>
+                                    </div>
+                                )
                             ) : (
                                 <div className="text-white flex flex-col items-center gap-4 opacity-50">
                                     <FileText className="size-20" />

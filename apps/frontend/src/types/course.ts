@@ -36,6 +36,7 @@ export interface Lesson {
     slug: string;
     content: string | null;
     videoUrl: string | null;
+    videoStatus: "READY" | "PROCESSING" | "FAILED" | null;
     duration: number | null;
     isPreview: boolean;
     order: number;
