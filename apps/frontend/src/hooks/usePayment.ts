@@ -2,16 +2,30 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { PaymentService, type InitiatePaymentResponse } from "@/api/paymentService";
 import { toast } from "sonner";
 
-// ─── Payment Initiation ───────────────────────────────────
-
-export function useInitiatePayment() {
+// ─── Cipher Purchase Initiation ───────────────────────────
+export function useInitiateCipherPurchase() {
     return useMutation<
         InitiatePaymentResponse,
         { errorMessage?: string },
         { packageId: string; promoCode?: string }
     >({
         mutationFn: ({ packageId, promoCode }) =>
-            PaymentService.initiate(packageId, "ESEWA", promoCode),
+            PaymentService.initiateCipherPurchase(packageId, "ESEWA", promoCode),
+        onError: (error) => {
+            toast.error(error?.errorMessage || "Failed to initiate payment.");
+        },
+    });
+}
+
+// ─── Course Purchase Initiation ───────────────────────────
+export function useInitiateCoursePurchase() {
+    return useMutation<
+        InitiatePaymentResponse,
+        { errorMessage?: string },
+        { courseId: string; promoCode?: string; cipherAmount?: number }
+    >({
+        mutationFn: ({ courseId, promoCode, cipherAmount }) =>
+            PaymentService.initiateCoursePurchase(courseId, "ESEWA", promoCode, cipherAmount),
         onError: (error) => {
             toast.error(error?.errorMessage || "Failed to initiate payment.");
         },

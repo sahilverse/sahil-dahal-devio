@@ -31,11 +31,26 @@ export interface VerifyPaymentResponse {
 // ─── Payment API ───────────────────────────────────────────
 
 export const PaymentService = {
-    initiate: async (packageId: string, provider: typeof providers[number], promoCode?: string): Promise<InitiatePaymentResponse> => {
-        const { data } = await api.post("/payments/initiate", {
+    initiateCipherPurchase: async (packageId: string, provider: typeof providers[number], promoCode?: string): Promise<InitiatePaymentResponse> => {
+        const { data } = await api.post("/payments/initiate/cipher", {
             packageId,
             provider,
             ...(promoCode && { promoCode }),
+        });
+        return data.result;
+    },
+
+    initiateCoursePurchase: async (
+        courseId: string,
+        provider: typeof providers[number],
+        promoCode?: string,
+        cipherAmount?: number
+    ): Promise<InitiatePaymentResponse> => {
+        const { data } = await api.post("/payments/initiate/course", {
+            courseId,
+            provider,
+            ...(promoCode && { promoCode }),
+            ...(cipherAmount && { cipherAmount }),
         });
         return data.result;
     },

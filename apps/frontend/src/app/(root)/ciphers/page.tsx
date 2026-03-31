@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CheckoutModal, { type CheckoutItem } from "@/components/shared/CheckoutModal";
 import { useCipherPackages } from "@/hooks/useCipher";
-import { useInitiatePayment } from "@/hooks/usePayment";
+import { useInitiateCipherPurchase } from "@/hooks/usePayment";
 import { useValidatePromo } from "@/hooks/usePromo";
 import type { CipherPackage } from "@/api/cipherService";
 import { PaymentSession } from "@/lib/payment-session";
@@ -45,7 +45,7 @@ export default function CipherStorePage() {
     const { openLogin } = useAuthModal();
 
     const { data: packages, isLoading, error } = useCipherPackages();
-    const initiatePayment = useInitiatePayment();
+    const initiatePayment = useInitiateCipherPurchase();
     const validatePromo = useValidatePromo();
 
     const [selectedItem, setSelectedItem] = useState<CheckoutItem | null>(null);
