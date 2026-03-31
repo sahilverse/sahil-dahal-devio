@@ -1359,12 +1359,19 @@ model CourseModule {
   @@index([order])
 }
 
+enum VideoStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
 model Lesson {
   id        String  @id @default(cuid())
   moduleId  String  @map("module_id")
   title     String
   content   String?
   videoUrl  String? @map("video_url")
+  videoStatus VideoStatus? @map("video_status")
   duration  Int?
   order     Int     @default(0)
   isPreview Boolean @default(false) @map("is_preview")
