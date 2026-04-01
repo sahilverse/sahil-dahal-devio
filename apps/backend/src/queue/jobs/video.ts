@@ -22,7 +22,7 @@ export class VideoJobService {
             VIDEO_TRANSCODE_JOB,
             payload,
             {
-                jobId: lessonId,
+                jobId: `${lessonId}-${Date.now()}`,
                 attempts: 3,
                 backoff: {
                     type: "exponential",

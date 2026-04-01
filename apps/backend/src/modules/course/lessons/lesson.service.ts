@@ -1,11 +1,13 @@
+import { Request, Response, NextFunction } from 'express';
+import { Readable } from "stream";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../types";
 import { LessonRepository } from "./lesson.repository";
-import { ApiError } from "../../../utils/ApiError";
+import { plainToInstance } from "class-transformer";
+import { LessonContentDto, CourseProgressDto, LessonCommentResponseDto, LessonCommentListDto, LessonListDto } from "../course.dto";
+import { ApiError, logger } from "../../../utils";
 import { StatusCodes } from "http-status-codes";
 import { CreateLessonInput, UpdateLessonInput, LessonQueryInput } from "@devio/zod-utils";
-import { plainToInstance } from "class-transformer";
-import { LessonContentDto, CourseProgressDto, LessonSummaryDto, LessonCommentResponseDto, LessonCommentListDto } from "../course.dto";
 import { CourseRepository } from "../course.repository";
 import { ROLES } from "../../auth/auth.types";
 import { StorageService } from "../../storage";
@@ -25,14 +27,14 @@ export class LessonService {
 
     async createLesson(moduleId: string, data: CreateLessonInput) {
         const lesson = await this.lessonRepository.create(moduleId, data);
-        return plainToInstance(LessonContentDto, lesson, { excludeExtraneousValues: true });
+        return plainToInstance(LessonContentDto, JSON.parse(JSON.stringify(lesson)), { excludeExtraneousValues: true });
     }
 
     async updateLesson(lessonId: string, data: UpdateLessonInput) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
         const updated = await this.lessonRepository.update(lessonId, data);
-        return plainToInstance(LessonContentDto, updated, { excludeExtraneousValues: true });
+        return plainToInstance(LessonContentDto, JSON.parse(JSON.stringify(updated)), { excludeExtraneousValues: true });
     }
 
     async deleteLesson(lessonId: string) {
@@ -42,38 +44,39 @@ export class LessonService {
     }
 
     async getLessonsByModuleId(moduleId: string, query: LessonQueryInput) {
+        const limit = Number(query.limit) || 12;
         const lessons = await this.lessonRepository.findManyByModuleId(
             moduleId,
-            query.limit,
+            limit,
             query.cursor
         );
 
         let nextCursor: string | null = null;
-        if (lessons.length > query.limit) {
+        if (lessons.length > limit) {
             const nextItem = lessons.pop();
             nextCursor = nextItem?.id || null;
         }
 
-        return {
-            items: plainToInstance(LessonSummaryDto, lessons, { excludeExtraneousValues: true }),
+        return plainToInstance(LessonListDto, JSON.parse(JSON.stringify({
+            items: lessons,
             nextCursor,
-        };
+        })), { excludeExtraneousValues: true });
     }
 
-    async getLessonContent(userId: string, lessonId: string): Promise<LessonContentDto> {
+    async getLessonContent(userId: string, roleName: string | null | undefined, lessonId: string): Promise<LessonContentDto> {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
         const courseId = lesson.module.course.id;
 
-        if (!lesson.isPreview) {
+        if (!lesson.isPreview && roleName !== ROLES.ADMIN) {
             const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
             if (!enrollment) {
                 throw new ApiError("You must be enrolled to access this lesson", StatusCodes.FORBIDDEN);
             }
         }
 
-        return plainToInstance(LessonContentDto, lesson, { excludeExtraneousValues: true });
+        return plainToInstance(LessonContentDto, JSON.parse(JSON.stringify(lesson)), { excludeExtraneousValues: true });
     }
 
     async updateLessonProgress(userId: string, lessonId: string, isCompleted: boolean) {
@@ -94,7 +97,7 @@ export class LessonService {
             });
         }
 
-        return plainToInstance(CourseProgressDto, progress, { excludeExtraneousValues: true });
+        return plainToInstance(CourseProgressDto, JSON.parse(JSON.stringify(progress)), { excludeExtraneousValues: true });
     }
 
     async getCourseProgress(userId: string, courseId: string): Promise<CourseProgressDto> {
@@ -102,7 +105,7 @@ export class LessonService {
         if (!enrollment) throw new ApiError("You must be enrolled to view progress", StatusCodes.FORBIDDEN);
 
         const progress = await this.lessonRepository.getUserCourseProgress(userId, courseId);
-        return plainToInstance(CourseProgressDto, progress, { excludeExtraneousValues: true });
+        return plainToInstance(CourseProgressDto, JSON.parse(JSON.stringify(progress)), { excludeExtraneousValues: true });
     }
 
     async uploadLessonVideo(lessonId: string, file: Express.Multer.File) {
@@ -130,7 +133,7 @@ export class LessonService {
         return { lessonId, status: VideoStatus.PROCESSING, rawVideoKey };
     }
 
-    async getLessonVideoStreaming(userId: string, lessonId: string, filePath: string) {
+    async getLessonVideoStreaming(userId: string, roleName: string | null | undefined, lessonId: string, filePath: string) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
@@ -138,7 +141,7 @@ export class LessonService {
 
         // Check if user is enrolled or if lesson is a preview
         const isEnrolled = await this.courseRepository.isUserEnrolled(userId, courseId);
-        if (!isEnrolled && !lesson.isPreview) {
+        if (!isEnrolled && !lesson.isPreview && roleName !== ROLES.ADMIN) {
             throw new ApiError("You are not enrolled in this course", StatusCodes.FORBIDDEN);
         }
 
@@ -147,20 +150,23 @@ export class LessonService {
         }
 
         const fullPath = `courses/${lessonId}/${filePath}`;
-
         return this.storageService.getObjectStream(fullPath, MINIO_BUCKET_VIDEOS);
     }
 
     // ─── Lesson Comments ──────────────────────────────────
 
-    async createComment(userId: string, roleName: string | null | undefined, lessonId: string, data: { content: string; parentId?: string }) {
+    async createComment(
+        userId: string,
+        roleName: string | null | undefined,
+        lessonId: string,
+        data: { content: string; parentId?: string }
+    ) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
         if (roleName !== ROLES.ADMIN) {
             const courseId = lesson.module.course.id;
             const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
-
             if (!enrollment) {
                 throw new ApiError("You must be enrolled to comment on this lesson", StatusCodes.FORBIDDEN);
             }
@@ -173,22 +179,34 @@ export class LessonService {
         }
 
         const comment = await this.lessonRepository.createComment(lessonId, userId, data);
-        return plainToInstance(LessonCommentResponseDto, comment, { excludeExtraneousValues: true });
+        return plainToInstance(LessonCommentResponseDto, JSON.parse(JSON.stringify(comment)), { excludeExtraneousValues: true });
     }
 
-    async getComments(userId: string | undefined, roleName: string | null | undefined, lessonId: string, query: { limit: number; cursor?: string; parentId?: string }) {
+
+    async getComments(
+        userId: string | undefined,
+        roleName: string | null | undefined,
+        lessonId: string,
+        query: { limit: number; cursor?: string; sort: "best" | "newest" | "oldest" }
+    ) {
         const lesson = await this.lessonRepository.findById(lessonId);
         if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
 
-        if (!lesson.isPreview && userId && roleName !== ROLES.ADMIN) {
+        // Enforcement: Lesson discussion is for enrolled students only (unless it's a preview lesson)
+        if (!lesson.isPreview && roleName !== ROLES.ADMIN) {
+            if (!userId) throw new ApiError("Authentication required", StatusCodes.UNAUTHORIZED);
             const courseId = lesson.module.course.id;
             const enrollment = await this.courseRepository.findEnrollment(userId, courseId);
             if (!enrollment) throw new ApiError("You must be enrolled to view comments", StatusCodes.FORBIDDEN);
         }
 
-        const parentIdFilter = query.parentId === undefined ? null : query.parentId;
-
-        const comments = await this.lessonRepository.findComments(lessonId, query.limit, query.cursor, parentIdFilter);
+        const comments = await this.lessonRepository.findComments(lessonId, {
+            limit: query.limit,
+            cursor: query.cursor,
+            sort: query.sort,
+            currentUserId: userId,
+            parentId: null, // Initial fetch is top-level only
+        });
 
         let nextCursor: string | null = null;
         if (comments.length > query.limit) {
@@ -196,9 +214,66 @@ export class LessonService {
             nextCursor = nextItem?.id || null;
         }
 
-        return plainToInstance(LessonCommentListDto, {
+        return plainToInstance(LessonCommentListDto, JSON.parse(JSON.stringify({
             items: comments,
             nextCursor,
-        }, { excludeExtraneousValues: true });
+        })), { excludeExtraneousValues: true });
+    }
+
+    async getReplies(
+        userId: string | undefined,
+        roleName: string | null | undefined,
+        lessonId: string,
+        commentId: string,
+        query: { limit: number; cursor?: string }
+    ) {
+        const lesson = await this.lessonRepository.findById(lessonId);
+        if (!lesson) throw new ApiError("Lesson not found", StatusCodes.NOT_FOUND);
+
+        const comments = await this.lessonRepository.findReplies(commentId, {
+            limit: query.limit,
+            cursor: query.cursor,
+            currentUserId: userId,
+        });
+
+        let nextCursor: string | null = null;
+        if (comments.length > query.limit) {
+            const nextItem = comments.pop();
+            nextCursor = nextItem?.id || null;
+        }
+
+        return plainToInstance(LessonCommentListDto, JSON.parse(JSON.stringify({
+            items: comments,
+            nextCursor,
+        })), { excludeExtraneousValues: true });
+    }
+
+    async updateComment(userId: string, commentId: string, content: string) {
+        const comment = await this.lessonRepository.findCommentById(commentId);
+        if (!comment) throw new ApiError("Comment not found", StatusCodes.NOT_FOUND);
+        if (comment.userId !== userId) throw new ApiError("Unauthorized", StatusCodes.FORBIDDEN);
+
+        const updated = await this.lessonRepository.updateComment(commentId, content, userId);
+        return plainToInstance(LessonCommentResponseDto, JSON.parse(JSON.stringify(updated)), { excludeExtraneousValues: true });
+    }
+
+    async deleteComment(userId: string, roleName: string | null | undefined, commentId: string) {
+        const comment = await this.lessonRepository.findCommentById(commentId);
+        if (!comment) throw new ApiError("Comment not found", StatusCodes.NOT_FOUND);
+
+        if (comment.userId !== userId && roleName !== ROLES.ADMIN) {
+            throw new ApiError("Unauthorized", StatusCodes.FORBIDDEN);
+        }
+
+        const deleted = await this.lessonRepository.softDelete(commentId);
+        return plainToInstance(LessonCommentResponseDto, JSON.parse(JSON.stringify(deleted)), { excludeExtraneousValues: true });
+    }
+
+    async voteComment(userId: string, commentId: string, type: "UP" | "DOWN" | null) {
+        const comment = await this.lessonRepository.findCommentById(commentId);
+        if (!comment) throw new ApiError("Comment not found", StatusCodes.NOT_FOUND);
+
+        const updatedComment = await this.lessonRepository.vote(commentId, userId, type);
+        return plainToInstance(LessonCommentResponseDto, JSON.parse(JSON.stringify(updatedComment)), { excludeExtraneousValues: true });
     }
 }

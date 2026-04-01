@@ -14,34 +14,10 @@ export class CourseRepository {
     }
 
     async findBySlug(slug: string, currentUserId?: string) {
-        return this.prisma.course.findUnique({
+        const course = await this.prisma.course.findUnique({
             where: { slug },
             include: {
                 ...this.courseInclude(),
-                modules: {
-                    orderBy: { order: "asc" },
-                    include: {
-                        lessons: {
-                            orderBy: { order: "asc" },
-                            select: {
-                                id: true,
-                                title: true,
-                                duration: true,
-                                order: true,
-                                isPreview: true,
-                            },
-                        },
-                    },
-                },
-                reviews: {
-                    take: 10,
-                    orderBy: { createdAt: "desc" },
-                    include: {
-                        user: {
-                            select: { id: true, username: true, firstName: true, lastName: true, avatarUrl: true },
-                        },
-                    },
-                },
                 _count: {
                     select: {
                         enrollments: true,
@@ -56,13 +32,21 @@ export class CourseRepository {
                 } : {}),
             },
         });
+
+        if (!course) return null;
+        const [enrichedCourse] = await this.attachMetrics([course]);
+        return enrichedCourse;
     }
 
     async findById(id: string) {
-        return this.prisma.course.findUnique({
+        const course = await this.prisma.course.findUnique({
             where: { id },
             include: this.courseInclude(),
         });
+
+        if (!course) return null;
+        const [enrichedCourse] = await this.attachMetrics([course]);
+        return enrichedCourse;
     }
 
     async findMany(params: {
@@ -99,10 +83,10 @@ export class CourseRepository {
         if (sortBy === "PRICE_LOW") orderBy = [{ price: "asc" }, { id: "asc" }];
         if (sortBy === "PRICE_HIGH") orderBy = [{ price: "desc" }, { id: "desc" }];
 
-        return this.prisma.course.findMany({
+        const courses = await this.prisma.course.findMany({
             where,
             orderBy,
-            take: (Number(limit) || 10) + 1,
+            take: Number(limit) + 1,
             ...(cursor && {
                 skip: 1,
                 cursor: { id: cursor },
@@ -117,6 +101,8 @@ export class CourseRepository {
                 },
             },
         });
+
+        return this.attachMetrics(courses);
     }
 
     async update(id: string, data: Prisma.CourseUpdateInput) {
@@ -160,7 +146,7 @@ export class CourseRepository {
     async findEnrollmentsByUser(userId: string, limit: number, cursor?: string) {
         const enrollments = await this.prisma.enrollment.findMany({
             where: { userId },
-            take: (Number(limit) || 12) + 1,
+            take: Number(limit) + 1,
             cursor: cursor ? { id: cursor } : undefined,
             skip: cursor ? 1 : 0,
             include: {
@@ -181,7 +167,13 @@ export class CourseRepository {
             orderBy: { enrolledAt: "desc" },
         });
 
-        return enrollments;
+        const courses = enrollments.map(e => e.course);
+        const enrichedCourses = await this.attachMetrics(courses);
+
+        return enrollments.map((e, index) => ({
+            ...e,
+            course: enrichedCourses[index]
+        }));
     }
 
     // ─── Reviews ───────────────────────────────────────────
@@ -267,6 +259,47 @@ export class CourseRepository {
                 data: topicIds.map(topicId => ({ courseId, topicId })),
             });
         }
+    }
+
+    // ─── Metrics Enrichment ────────────────────────────────
+
+    async attachMetrics(courses: any[]) {
+        if (!courses || courses.length === 0) return courses;
+
+        const courseIds = courses.map(c => c.id);
+
+        const ratings = await this.prisma.courseReview.groupBy({
+            by: ['courseId'],
+            _avg: { rating: true },
+            where: { courseId: { in: courseIds } }
+        });
+
+        const lessonDurations = await this.prisma.lesson.findMany({
+            where: { module: { courseId: { in: courseIds } } },
+            select: {
+                duration: true,
+                module: {
+                    select: { courseId: true }
+                }
+            }
+        });
+
+        const durationMap = lessonDurations.reduce((acc, lesson) => {
+            const cid = lesson.module.courseId;
+            acc[cid] = (acc[cid] || 0) + (lesson.duration || 0);
+            return acc;
+        }, {} as Record<string, number>);
+
+        const ratingMap = ratings.reduce((acc, r) => {
+            acc[r.courseId] = r._avg.rating ? Number(r._avg.rating.toFixed(1)) : 0;
+            return acc;
+        }, {} as Record<string, number>);
+
+        return courses.map(course => ({
+            ...course,
+            averageRating: ratingMap[course.id] || 0,
+            duration: durationMap[course.id] || 0
+        }));
     }
 
     // ─── Helpers ───────────────────────────────────────────

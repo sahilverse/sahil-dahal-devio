@@ -4,6 +4,7 @@ import { CourseRepository } from "./course.repository";
 import { TopicService } from "../topic/topic.service";
 import { CipherService } from "../cipher/cipher.service";
 import { NotificationService } from "../notification/notification.service";
+import { StorageService } from "../storage";
 import { ApiError } from "../../utils/ApiError";
 import { logger } from "../../utils/logger";
 import { StatusCodes } from "http-status-codes";
@@ -12,10 +13,14 @@ import {
     CourseListItemDto,
     CourseDetailDto,
     CourseReviewResponseDto,
+    CourseListDto,
+    CourseReviewListDto,
 } from "./course.dto";
 import { CipherReason, NotificationType } from "../../generated/prisma/client";
+import { MINIO_BUCKET_UPLOADS } from "../../config/constants";
+import * as path from "path";
 import slugify from "slugify";
-import type {
+import {
     CreateCourseInput,
     UpdateCourseInput,
     CreateReviewInput,
@@ -23,17 +28,45 @@ import type {
     CourseQueryInput,
     EnrollmentQueryInput,
 } from "@devio/zod-utils";
+import { LessonRepository } from "./lessons/lesson.repository";
 
 @injectable()
 export class CourseService {
     constructor(
         @inject(TYPES.CourseRepository) private courseRepository: CourseRepository,
+        @inject(TYPES.LessonRepository) private lessonRepository: LessonRepository,
         @inject(TYPES.TopicService) private topicService: TopicService,
         @inject(TYPES.CipherService) private cipherService: CipherService,
         @inject(TYPES.NotificationService) private notificationService: NotificationService,
+        @inject(TYPES.StorageService) private storageService: StorageService,
     ) { }
 
     // ─── Course CRUD (Admin) ──────────────────────────────
+    
+    async updateThumbnail(courseId: string, file: Express.Multer.File): Promise<string> {
+        const course = await this.courseRepository.findById(courseId);
+        if (!course) throw new ApiError("Course not found", StatusCodes.NOT_FOUND);
+
+        const extension = path.extname(file.originalname);
+        const fileName = `thumbnails/${courseId}-${Date.now()}${extension}`;
+
+        // Upload to MinIO
+        const thumbnailUrl = await this.storageService.uploadFile(file, fileName, MINIO_BUCKET_UPLOADS, true);
+
+        // Update database
+        await this.courseRepository.update(courseId, { thumbnailUrl });
+
+        // Cleanup old thumbnail if it exists
+        if (course.thumbnailUrl) {
+            try {
+                await this.storageService.deleteFile(course.thumbnailUrl, MINIO_BUCKET_UPLOADS);
+            } catch (err: any) {
+                logger.warn(`Failed to delete old thumbnail for course ${courseId}: ${err.message}`);
+            }
+        }
+
+        return thumbnailUrl;
+    }
 
     async createCourse(authorId: string, data: CreateCourseInput): Promise<CourseListItemDto> {
         const slug = slugify(data.title, { lower: true, strict: true });
@@ -69,7 +102,7 @@ export class CourseService {
             },
         });
 
-        return plainToInstance(CourseListItemDto, course, { excludeExtraneousValues: true });
+        return plainToInstance(CourseListItemDto, JSON.parse(JSON.stringify(course)), { excludeExtraneousValues: true });
     }
 
     async updateCourse(courseId: string, data: UpdateCourseInput): Promise<CourseListItemDto> {
@@ -99,7 +132,7 @@ export class CourseService {
         }
 
         const updated = await this.courseRepository.update(courseId, updateData);
-        return plainToInstance(CourseListItemDto, updated, { excludeExtraneousValues: true });
+        return plainToInstance(CourseListItemDto, JSON.parse(JSON.stringify(updated)), { excludeExtraneousValues: true });
     }
 
     async deleteCourse(courseId: string): Promise<void> {
@@ -110,10 +143,11 @@ export class CourseService {
 
     // ─── Course Queries ───────────────────────────────────
 
-    async getCourses(query: CourseQueryInput, currentUserId?: string) {
+    async getCourses(query: CourseQueryInput) {
+        const limit = Number(query.limit) || 12;
         const courses = await this.courseRepository.findMany({
             cursor: query.cursor,
-            limit: query.limit,
+            limit,
             topicSlug: query.topic,
             isFree: query.isFree,
             search: query.search,
@@ -122,15 +156,15 @@ export class CourseService {
         });
 
         let nextCursor: string | null = null;
-        if (courses.length > query.limit) {
+        if (courses.length > limit) {
             const nextItem = courses.pop();
             nextCursor = nextItem?.id || null;
         }
 
-        return {
-            courses: plainToInstance(CourseListItemDto, courses as any[], { excludeExtraneousValues: true }),
+        return plainToInstance(CourseListDto, JSON.parse(JSON.stringify({
+            items: courses,
             nextCursor,
-        };
+        })), { excludeExtraneousValues: true });
     }
 
     async getCourseBySlug(slug: string, currentUserId?: string): Promise<CourseDetailDto> {
@@ -143,11 +177,21 @@ export class CourseService {
             }
         }
 
-        return plainToInstance(CourseDetailDto, course, { excludeExtraneousValues: true });
+        const dto = plainToInstance(CourseDetailDto, JSON.parse(JSON.stringify(course)), { excludeExtraneousValues: true });
+
+        // Explicitly set enrollment status and progress
+        const enrollment = (course as any).enrollments?.[0];
+        dto.isEnrolled = !!enrollment;
+        if (enrollment) {
+            dto.progress = enrollment.progress;
+        }
+
+        return dto;
     }
 
     async getMyEnrollments(userId: string, query: EnrollmentQueryInput) {
-        const { limit, cursor } = query;
+        const limit = Number(query.limit) || 12;
+        const { cursor } = query;
         const enrollments = await this.courseRepository.findEnrollmentsByUser(userId, limit, cursor);
 
         let nextCursor: string | undefined = undefined;
@@ -156,11 +200,15 @@ export class CourseService {
             nextCursor = nextItem?.id;
         }
 
-        const items = enrollments.map((e: any) => ({
-            ...plainToInstance(CourseListItemDto, e.course, { excludeExtraneousValues: true }),
-            enrollmentStatus: e.status,
-            enrolledAt: e.createdAt,
-        }));
+        const items = enrollments.map((e: any) => {
+            const courseDto = plainToInstance(CourseListItemDto, JSON.parse(JSON.stringify(e.course)), { excludeExtraneousValues: true });
+            courseDto.progress = e.progress || 0;
+            return {
+                ...courseDto,
+                enrollmentStatus: e.status,
+                enrolledAt: e.createdAt,
+            };
+        });
 
         return { items, nextCursor };
     }
@@ -196,10 +244,12 @@ export class CourseService {
             return { enrollment, requiresPayment: false };
         }
 
-        // Paid course with full cipher discount
-        if (options.useCipherCoins && options.cipherAmount) {
+        // Paid course with potential cipher discount
+        if (options.useCipherCoins) {
             const maxDiscount = course.maxCipherDiscount ?? Number(course.price);
-            const effectiveCipherAmount = Math.min(options.cipherAmount, maxDiscount, Number(course.price));
+            // If amount not provided, assume maximum allowed discount
+            const requestedAmount = options.cipherAmount !== undefined ? options.cipherAmount : maxDiscount;
+            const effectiveCipherAmount = Math.min(requestedAmount, maxDiscount, Number(course.price));
             const remainingAmount = Number(course.price) - effectiveCipherAmount;
 
             if (remainingAmount <= 0) {
@@ -290,11 +340,35 @@ export class CourseService {
 
         const rating = await this.courseRepository.getAverageRating(courseId);
 
-        return {
-            reviews: plainToInstance(CourseReviewResponseDto, reviews as any[], { excludeExtraneousValues: true }),
+        return plainToInstance(CourseReviewListDto, JSON.parse(JSON.stringify({
+            items: reviews,
             nextCursor,
             averageRating: rating.average,
             totalReviews: rating.count,
-        };
+        })), { excludeExtraneousValues: true });
+    }
+
+    async resolveLessonId(userId: string, slug: string, lessonId: string) {
+        const course = await this.courseRepository.findBySlug(slug);
+        if (!course) throw new ApiError("Course not found", StatusCodes.NOT_FOUND);
+
+        let resolvedId = lessonId;
+
+        if (lessonId === "start") {
+            const first = await this.lessonRepository.findFirstLesson(course.id);
+            if (!first) throw new ApiError("No lessons found in this course", StatusCodes.NOT_FOUND);
+            resolvedId = first.id;
+        } else if (lessonId === "resume") {
+            const next = await this.lessonRepository.findNextUncompletedLesson(userId, course.id);
+            if (!next) {
+                // If all completed, just go to first
+                const first = await this.lessonRepository.findFirstLesson(course.id);
+                resolvedId = first?.id || lessonId;
+            } else {
+                resolvedId = next.id;
+            }
+        }
+
+        return { lessonId: resolvedId };
     }
 }

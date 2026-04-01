@@ -6,6 +6,8 @@ import { ModuleController } from "./modules/module.controller";
 import { LessonController } from "./lessons/lesson.controller";
 import { AuthMiddleware, validateRequest } from "../../middlewares";
 import { validateQuery } from "../../middlewares/validation";
+
+
 import {
     enrollCourseSchema,
     createReviewSchema,
@@ -207,7 +209,21 @@ router.get(
     courseController.getCourseBySlug
 );
 
-// ─── Authenticated Routes ──────────────────────────────
+/**
+ * @swagger
+ * /courses/{slug}/lessons/{lessonId}/resolve:
+ *   get:
+ *     summary: Resolve 'start' or 'resume' to a real lesson ID
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get(
+    "/:slug/lessons/:lessonId/resolve",
+    authMiddleware.guard,
+    courseController.resolveLesson
+);
+
 
 /**
  * @swagger
@@ -413,6 +429,76 @@ router.post(
     validateRequest(createLessonCommentSchema),
     lessonController.createComment
 );
+
+
+/**
+ * @swagger
+ * /courses/lessons/{lessonId}/comments/{commentId}/replies:
+ *   get:
+ *     summary: Get replies for a specific lesson comment
+ *     tags: [Courses]
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Replies fetched
+ */
+router.get(
+    "/lessons/:lessonId/comments/:commentId/replies",
+    authMiddleware.extractUser,
+    lessonController.getReplies
+);
+
+/**
+ * @swagger
+ * /courses/lessons/comments/{commentId}:
+ *   patch:
+ *     summary: Update a lesson comment
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.patch(
+    "/lessons/comments/:commentId",
+    authMiddleware.guard,
+    lessonController.updateComment
+);
+
+/**
+ * @swagger
+ * /courses/lessons/comments/{commentId}:
+ *   delete:
+ *     summary: Soft delete a lesson comment
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.delete(
+    "/lessons/comments/:commentId",
+    authMiddleware.guard,
+    lessonController.deleteComment
+);
+
+/**
+ * @swagger
+ * /courses/lessons/comments/{commentId}/vote:
+ *   post:
+ *     summary: Vote on a lesson comment
+ *     tags: [Courses]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post(
+    "/lessons/comments/:commentId/vote",
+    authMiddleware.guard,
+    lessonController.voteComment
+);
+
 
 /**
  * @swagger

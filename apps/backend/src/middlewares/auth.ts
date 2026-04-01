@@ -21,8 +21,7 @@ export class AuthMiddleware {
 
     guard = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authHeader = req.headers['authorization'];
-            const token = this.extractTokenFromHeader(authHeader);
+            const token = this.extractTokenFromHeader(req);
             if (!token) {
                 return ResponseHandler.sendError(res, StatusCodes.UNAUTHORIZED, 'Invalid or expired token');
             }
@@ -77,8 +76,7 @@ export class AuthMiddleware {
 
     extractUser = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authHeader = req.headers['authorization'];
-            const token = this.extractTokenFromHeader(authHeader);
+            const token = this.extractTokenFromHeader(req);
             if (!token) {
                 return next();
             }
@@ -111,8 +109,7 @@ export class AuthMiddleware {
 
     guardResetPasswordSession = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authHeader = req.headers['authorization'];
-            const token = this.extractTokenFromHeader(authHeader);
+            const token = this.extractTokenFromHeader(req);
             if (!token) {
                 return ResponseHandler.sendError(res, StatusCodes.UNAUTHORIZED, 'Invalid or expired token');
             }
@@ -151,11 +148,13 @@ export class AuthMiddleware {
 
     adminOnly = this.checkRole([ROLES.ADMIN]);
 
-    private extractTokenFromHeader(authHeader?: Request['headers']['authorization']): string | null {
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return null;
+    private extractTokenFromHeader(req: Request): string | null {
+        const authHeader = req.headers['authorization'];
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            return authHeader.split(' ')[1] ?? null;
         }
-        return authHeader.split(' ')[1] ?? null;
+        const queryToken = req.query.token as string;
+        return queryToken ?? null;
     }
 
 

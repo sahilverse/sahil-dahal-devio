@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../types";
 import { CourseService } from "./course.service";
-import { asyncHandler, ResponseHandler } from "../../utils";
+import { ApiError, asyncHandler, ResponseHandler } from "../../utils";
 import { StatusCodes } from "http-status-codes";
 
 @injectable()
@@ -29,11 +29,18 @@ export class CourseController {
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Course deleted successfully");
     });
 
+    uploadThumbnail = asyncHandler(async (req: Request, res: Response) => {
+        const { courseId } = req.params as { courseId: string };
+        if (!req.file) throw new ApiError("No file uploaded", StatusCodes.BAD_REQUEST);
+
+        const result = await this.courseService.updateThumbnail(courseId, req.file);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Thumbnail uploaded successfully", { thumbnailUrl: result });
+    });
+
     // ─── Course Queries ───────────────────────────────────
 
     getCourses = asyncHandler(async (req: Request, res: Response) => {
-        const currentUserId = req.user?.id;
-        const result = await this.courseService.getCourses(req.query as any, currentUserId);
+        const result = await this.courseService.getCourses(req.query as any);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Courses fetched successfully", result);
     });
 
@@ -102,5 +109,12 @@ export class CourseController {
         const cursor = req.query.cursor as string;
         const result = await this.courseService.getReviews(courseId, limit, cursor);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Reviews fetched successfully", result);
+    });
+
+    resolveLesson = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user!.id;
+        const { slug, lessonId } = req.params as { slug: string; lessonId: string };
+        const result = await this.courseService.resolveLessonId(userId, slug, lessonId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Lesson resolved successfully", result);
     });
 }

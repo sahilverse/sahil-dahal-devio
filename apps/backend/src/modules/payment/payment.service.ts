@@ -128,10 +128,10 @@ export class PaymentService {
         }
 
         // Apply cipher coin discount (elective)
-        if (cipherAmount && cipherAmount > 0) {
-            const maxCipherDiscount = course.maxCipherDiscount ?? subtotal;
+        if (cipherAmount !== undefined && cipherAmount > 0) {
+            const maxDiscount = course.maxCipherDiscount ?? subtotal;
             const afterPromo = subtotal - discountAmount;
-            cipherSpent = Math.min(cipherAmount, maxCipherDiscount, afterPromo);
+            cipherSpent = Math.min(cipherAmount, maxDiscount, afterPromo);
             discountAmount += cipherSpent;
         }
 
@@ -229,6 +229,8 @@ export class PaymentService {
             paymentId: payment.id,
             status: "COMPLETED",
             ciphersAwarded: payment.package?.points || 0,
+            type: payment.type,
+            courseSlug: (payment as any).course?.slug,
         };
     }
 

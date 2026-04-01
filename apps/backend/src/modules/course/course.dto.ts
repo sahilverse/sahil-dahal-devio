@@ -3,15 +3,6 @@ import { Exclude, Expose, Transform, Type } from "class-transformer";
 // ─── Nested DTOs ───────────────────────────────────────
 
 @Exclude()
-export class CourseAuthorDto {
-    @Expose() id!: string;
-    @Expose() username!: string;
-    @Expose() firstName!: string;
-    @Expose() lastName!: string;
-    @Expose() avatarUrl!: string;
-}
-
-@Exclude()
 export class CourseTopicDto {
     @Expose() id!: string;
     @Expose() name!: string;
@@ -26,6 +17,10 @@ export class LessonSummaryDto {
     @Expose() duration!: number;
     @Expose() order!: number;
     @Expose() isPreview!: boolean;
+
+    @Expose()
+    @Transform(({ obj }) => (obj.videoUrl ? "VIDEO" : "TEXT"))
+    type!: "VIDEO" | "TEXT";
 }
 
 @Exclude()
@@ -33,6 +28,10 @@ export class ModuleSummaryDto {
     @Expose() id!: string;
     @Expose() title!: string;
     @Expose() order!: number;
+
+    @Expose()
+    @Transform(({ obj }) => obj._count?.lessons ?? 0)
+    lessonCount!: number;
 
     @Expose()
     @Type(() => LessonSummaryDto)
@@ -66,13 +65,14 @@ export class CourseReviewResponseDto {
 @Exclude()
 export class CourseListItemDto {
     @Expose() id!: string;
+    @Expose() progress!: number;
     @Expose() title!: string;
     @Expose() slug!: string;
     @Expose() description!: string;
     @Expose() thumbnailUrl!: string;
 
     @Expose()
-    @Transform(({ value }) => Number(value))
+    @Transform(({ obj }) => (obj.price ? Number(obj.price) : 0))
     price!: number;
 
     @Expose() isFree!: boolean;
@@ -80,13 +80,8 @@ export class CourseListItemDto {
     @Expose() createdAt!: Date;
 
     @Expose()
-    @Type(() => CourseAuthorDto)
-    author!: CourseAuthorDto;
-
-    @Expose()
     @Transform(({ obj }) =>
         obj.courseTopics?.map((ct: any) => ({
-            id: ct.topic?.id,
             name: ct.topic?.name,
             slug: ct.topic?.slug,
         })) || []
@@ -100,6 +95,12 @@ export class CourseListItemDto {
     @Expose()
     @Transform(({ obj }) => obj._count?.reviews || 0)
     reviewCount!: number;
+
+    @Expose()
+    averageRating!: number;
+
+    @Expose()
+    duration!: number;
 }
 
 // ─── Course Detail ────────────────────────────────────
@@ -107,42 +108,33 @@ export class CourseListItemDto {
 @Exclude()
 export class CourseDetailDto {
     @Expose() id!: string;
+    @Expose() progress?: number;
     @Expose() title!: string;
     @Expose() slug!: string;
     @Expose() description!: string;
     @Expose() thumbnailUrl!: string;
 
     @Expose()
-    @Transform(({ value }) => Number(value))
+    @Transform(({ obj }) => (obj.price ? Number(obj.price) : 0))
     price!: number;
 
     @Expose() isFree!: boolean;
-    @Expose() maxCipherDiscount!: number;
+
+    @Expose()
+    @Transform(({ value }) => (value ? Number(value) : 0))
+    maxCipherDiscount!: number;
     @Expose() isPublished!: boolean;
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
 
     @Expose()
-    @Type(() => CourseAuthorDto)
-    author!: CourseAuthorDto;
-
-    @Expose()
     @Transform(({ obj }) =>
         obj.courseTopics?.map((ct: any) => ({
-            id: ct.topic?.id,
             name: ct.topic?.name,
             slug: ct.topic?.slug,
         })) || []
     )
     topics!: CourseTopicDto[];
-
-    @Expose()
-    @Type(() => ModuleSummaryDto)
-    modules!: ModuleSummaryDto[];
-
-    @Expose()
-    @Type(() => CourseReviewResponseDto)
-    reviews!: CourseReviewResponseDto[];
 
     @Expose()
     @Transform(({ obj }) => obj._count?.enrollments || 0)
@@ -153,11 +145,13 @@ export class CourseDetailDto {
     reviewCount!: number;
 
     @Expose()
-    @Transform(({ obj }) => {
-        if (!obj.enrollments || obj.enrollments.length === 0) return false;
-        return true;
-    })
     isEnrolled!: boolean;
+
+    @Expose()
+    averageRating!: number;
+
+    @Expose()
+    duration!: number;
 }
 
 // ─── Full Lesson (enrolled users) ─────────────────────
@@ -181,6 +175,7 @@ export class CourseProgressDto {
     @Expose() totalLessons!: number;
     @Expose() completedLessons!: number;
     @Expose() percentage!: number;
+    @Expose() completedLessonIds!: string[];
 }
 
 @Exclude()
@@ -201,7 +196,38 @@ export class LessonListDto {
     @Expose() nextCursor?: string;
 }
 
+@Exclude()
+export class CourseListDto {
+    @Expose()
+    @Type(() => CourseListItemDto)
+    items!: CourseListItemDto[];
+
+    @Expose() nextCursor?: string | null;
+}
+
+@Exclude()
+export class CourseReviewListDto {
+    @Expose()
+    @Type(() => CourseReviewResponseDto)
+    items!: CourseReviewResponseDto[];
+
+    @Expose() nextCursor?: string | null;
+
+    @Expose() averageRating!: number;
+    @Expose() totalReviews!: number;
+}
+
 // ─── Query DTO ────────────────────────────────────────
+
+@Exclude()
+export class MediaResponseDto {
+    @Expose() id!: string;
+    @Expose() url!: string;
+    @Expose() type!: string;
+    @Expose() fileName?: string;
+    @Expose() fileSize?: number;
+    @Expose() position!: number;
+}
 
 @Exclude()
 export class GetCoursesDto {
@@ -212,6 +238,7 @@ export class GetCoursesDto {
     @Expose() search?: string;
     @Expose() sortBy?: string;
 }
+
 
 // ─── Lesson Comments ──────────────────────────────────
 
@@ -230,6 +257,9 @@ export class LessonCommentResponseDto {
     @Expose() lessonId!: string;
     @Expose() parentId!: string | null;
     @Expose() content!: string;
+    @Expose() deletedAt!: Date | null;
+    @Expose() upvotes!: number;
+    @Expose() downvotes!: number;
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
 
@@ -240,7 +270,17 @@ export class LessonCommentResponseDto {
     @Expose()
     @Transform(({ obj }) => obj._count?.replies || 0)
     replyCount!: number;
+
+
+    @Expose()
+    @Transform(({ obj }) => obj.votes?.[0]?.type || null)
+    userVote!: "UP" | "DOWN" | null;
+
+    @Expose()
+    @Type(() => LessonCommentResponseDto)
+    replies?: LessonCommentResponseDto[];
 }
+
 
 @Exclude()
 export class LessonCommentListDto {

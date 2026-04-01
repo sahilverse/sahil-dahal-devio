@@ -46,6 +46,18 @@ export class ModuleRepository {
                 cursor: { id: cursor },
             }),
             include: {
+                lessons: {
+                    select: {
+                        id: true,
+                        title: true,
+                        duration: true,
+                        order: true,
+                        isPreview: true,
+                        videoUrl: true,
+                        videoStatus: true,
+                    },
+                    orderBy: [{ order: "asc" }, { id: "asc" }],
+                },
                 _count: {
                     select: { lessons: true },
                 },

@@ -24,24 +24,27 @@ export class VideoObserverService {
         });
 
         this.queueEvents.on("completed", async ({ jobId, returnvalue }) => {
-            const { masterPlaylistUrl } = returnvalue as unknown as { lessonId: string; masterPlaylistUrl: string };
-            logger.info(`Video transcode completed for lesson: ${jobId}`);
+            const { lessonId, masterPlaylistUrl, duration } = returnvalue as unknown as { lessonId: string; masterPlaylistUrl: string; duration: number };
+            logger.info(`Video transcode completed for lesson: ${jobId} | Duration: ${duration}s`);
 
             try {
-                await this.lessonRepository.updateVideoStatus(jobId, VideoStatus.READY);
-                await this.lessonRepository.update(jobId, {
+                await this.lessonRepository.updateVideoStatus(lessonId, VideoStatus.READY);
+                await this.lessonRepository.update(lessonId, {
                     videoUrl: masterPlaylistUrl,
+                    duration: Math.round(duration),
                 });
             } catch (err: any) {
-                logger.error(`Failed to update lesson ${jobId} after transcode: ${err.message}`);
+                logger.error(`Failed to update lesson ${lessonId} after transcode: ${err.message}`);
             }
         });
 
         this.queueEvents.on("failed", async ({ jobId, failedReason }) => {
             logger.error(`Video transcode failed for job ${jobId}: ${failedReason}`);
 
+            const lessonId = jobId.includes("-") ? jobId.substring(0, jobId.lastIndexOf("-")) : jobId;
+
             try {
-                await this.lessonRepository.updateVideoStatus(jobId, VideoStatus.FAILED);
+                await this.lessonRepository.updateVideoStatus(lessonId, VideoStatus.FAILED);
             } catch (err: any) {
                 logger.error(`Failed to update lesson status on transcode failure: ${err.message}`);
             }

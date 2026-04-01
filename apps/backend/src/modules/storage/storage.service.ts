@@ -86,7 +86,7 @@ export class StorageService {
         }
     }
 
-    async getFile(path: string, bucketName: string): Promise<string> {
+    async getFile(path: string, bucketName: string = MINIO_BUCKET_UPLOADS): Promise<string> {
         try {
             const command = new GetObjectCommand({
                 Bucket: bucketName,
@@ -108,7 +108,7 @@ export class StorageService {
         }
     }
 
-    async getObjectStream(path: string, bucketName: string) {
+    async getObjectStream(path: string, bucketName: string = MINIO_BUCKET_UPLOADS) {
         try {
             const command = new GetObjectCommand({
                 Bucket: bucketName,
@@ -127,7 +127,7 @@ export class StorageService {
         }
     }
 
-    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string, isPublic: boolean = true): Promise<string> {
+    async uploadBuffer(buffer: Buffer, path: string, mimetype: string, bucketName: string = MINIO_BUCKET_UPLOADS, isPublic: boolean = true): Promise<string> {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -145,7 +145,7 @@ export class StorageService {
         }
     }
 
-    async uploadFile(file: Express.Multer.File, path: string, bucketName: string, isPublic: boolean = true): Promise<string> {
+    async uploadFile(file: Express.Multer.File, path: string, bucketName: string = MINIO_BUCKET_UPLOADS, isPublic: boolean = true): Promise<string> {
         try {
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -163,7 +163,7 @@ export class StorageService {
         }
     }
 
-    async listFiles(bucketName: string, prefix?: string): Promise<string[]> {
+    async listFiles(bucketName: string = MINIO_BUCKET_UPLOADS, prefix?: string): Promise<string[]> {
         try {
             const command = new ListObjectsV2Command({
                 Bucket: bucketName,
@@ -178,7 +178,7 @@ export class StorageService {
         }
     }
 
-    async deleteFile(path: string, bucketName: string): Promise<void> {
+    async deleteFile(path: string, bucketName: string = MINIO_BUCKET_UPLOADS): Promise<void> {
         try {
             const bucketPrefix = `${MINIO_ENDPOINT}/${bucketName}/`;
             const key = path.includes(bucketPrefix)

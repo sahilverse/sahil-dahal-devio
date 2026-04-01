@@ -4,7 +4,7 @@ import { TYPES } from "../../types";
 import { CourseController } from "./course.controller";
 import { ModuleController } from "./modules/module.controller";
 import { LessonController } from "./lessons/lesson.controller";
-import { AuthMiddleware, validateRequest, videoUpload } from "../../middlewares";
+import { AuthMiddleware, validateRequest, videoUpload, upload } from "../../middlewares";
 import {
     createCourseSchema,
     updateCourseSchema,
@@ -23,6 +23,54 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
 router.use(authMiddleware.guard);
 router.use(authMiddleware.verifiedOnly);
 router.use(authMiddleware.adminOnly);
+
+// ─── Admin Course Routes ───────────────────────────────
+
+/**
+ * @swagger
+ * /courses/{courseId}/thumbnail:
+ *   patch:
+ *     summary: Upload/Update course thumbnail (Admin only)
+ *     tags: [Admin Course Management]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               thumbnail:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file (JPG, PNG, WebP), max 10MB
+ *     responses:
+ *       200:
+ *         description: Thumbnail uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 thumbnailUrl:
+ *                   type: string
+ *       400:
+ *         description: Invalid file
+ *       404:
+ *         description: Course not found
+ */
+router.patch(
+    "/:courseId/thumbnail",
+    upload.single("thumbnail"),
+    courseController.uploadThumbnail
+);
 
 /**
  * @swagger
