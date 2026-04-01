@@ -168,14 +168,14 @@ export function DiscussionItem({
                                     onClick={() => handleVote("UP")}
                                     className={cn(
                                         "h-6 w-6 rounded-lg transition-all cursor-pointer",
-                                        comment.userVote === "UP" ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-white/5"
+                                        comment.userVote === "UP" ? "text-orange-500 bg-orange-500/10" : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10"
                                     )}
                                 >
                                     <ArrowBigUp className={cn("h-4 w-4", comment.userVote === "UP" && "fill-current")} />
                                 </Button>
                                 <span className={cn(
                                     "text-[11px] font-black px-2 mt-px tabular-nums",
-                                    comment.userVote === "UP" ? "text-primary" : comment.userVote === "DOWN" ? "text-destructive" : "text-muted-foreground/60"
+                                    comment.userVote === "UP" ? "text-orange-500" : comment.userVote === "DOWN" ? "text-brand-primary" : "text-muted-foreground/60"
                                 )}>
                                     {formatCompactNumber(comment.upvotes - comment.downvotes)}
                                 </span>
@@ -185,11 +185,12 @@ export function DiscussionItem({
                                     onClick={() => handleVote("DOWN")}
                                     className={cn(
                                         "h-6 w-6 rounded-lg transition-all cursor-pointer",
-                                        comment.userVote === "DOWN" ? "text-destructive bg-destructive/10" : "text-muted-foreground hover:bg-white/5"
+                                        comment.userVote === "DOWN" ? "text-brand-primary bg-brand-primary/10" : "text-muted-foreground hover:text-brand-primary hover:bg-brand-primary/10"
                                     )}
                                 >
                                     <ArrowBigDown className={cn("h-4 w-4", comment.userVote === "DOWN" && "fill-current")} />
                                 </Button>
+
                             </div>
 
                             <Button
