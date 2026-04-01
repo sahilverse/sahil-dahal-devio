@@ -3,7 +3,7 @@ import Redis from "ioredis";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { REDIS_URL, VIDEO_TRANSCODE_QUEUE, MINIO_BUCKET_VIDEOS } from "./config/constants";
+import { REDIS_URL, VIDEO_TRANSCODE_QUEUE } from "./config/constants";
 import { downloadFile, uploadDirectory, deletePrefix } from "./config/storage";
 import { processVideo } from "./processor";
 import { logger } from "./utils/logger";
@@ -37,9 +37,9 @@ export function createTranscodeWorker(): Worker<VideoTranscodePayload> {
 
                 // Step 2: Transcode to HLS
                 logger.info(`[Job ${job.id}] Starting FFmpeg transcoding...`);
-                const variants = await processVideo(rawVideoPath, outputDir);
+                const { variants, duration } = await processVideo(rawVideoPath, outputDir);
                 await job.updateProgress(80);
-                logger.info(`[Job ${job.id}] Transcoded variants: ${variants.join(", ")}`);
+                logger.info(`[Job ${job.id}] Transcoded variants: ${variants.join(", ")} | Duration: ${duration}s`);
 
                 // Step 3: Upload HLS bundle to MinIO
                 const processedPrefix = `courses/${lessonId}`;
@@ -60,7 +60,7 @@ export function createTranscodeWorker(): Worker<VideoTranscodePayload> {
                 await job.updateProgress(100);
                 logger.info(`[Job ${job.id}] Transcode complete for lesson: ${lessonId}`);
 
-                return { lessonId, masterPlaylistUrl, variants };
+                return { lessonId, masterPlaylistUrl, variants, duration };
             } catch (error: any) {
                 logger.error(`[Job ${job.id}] Transcode failed: ${error.message}`);
                 throw error;
@@ -75,6 +75,7 @@ export function createTranscodeWorker(): Worker<VideoTranscodePayload> {
         {
             connection,
             concurrency: 1,
+            lockDuration: 300000,
             limiter: {
                 max: 1,
                 duration: 1000,

@@ -27,17 +27,19 @@ const VARIANTS: VideoVariant[] = [
  * Probes the input video to determine its resolution.
  * Returns the list of applicable variants (only those <= source resolution).
  */
-function probeVideo(inputPath: string): Promise<{ width: number; height: number }> {
+function probeVideo(inputPath: string): Promise<{ width: number; height: number; duration: number }> {
     return new Promise((resolve, reject) => {
         ffmpeg.ffprobe(inputPath, (err, metadata) => {
             if (err) return reject(err);
 
             const videoStream = metadata.streams.find((s) => s.codec_type === "video");
-            if (!videoStream || !videoStream.width || !videoStream.height) {
-                return reject(new Error("Could not determine video resolution"));
+            const duration = metadata.format.duration;
+
+            if (!videoStream || !videoStream.width || !videoStream.height || duration === undefined) {
+                return reject(new Error("Could not determine video metadata"));
             }
 
-            resolve({ width: videoStream.width, height: videoStream.height });
+            resolve({ width: videoStream.width, height: videoStream.height, duration });
         });
     });
 }
@@ -96,51 +98,103 @@ function transcodeVariant(inputPath: string, outputDir: string, variant: VideoVa
 }
 
 /**
- * Generates the master HLS playlist that references all variant playlists.
+ * Main processing function: executes a single, high-performance NVIDIA-accelerated
+ * FFmpeg command to generate all HLS variants and the master playlist in one pass.
  */
-function generateMasterPlaylist(outputDir: string, variants: VideoVariant[]): void {
-    let content = "#EXTM3U\n#EXT-X-VERSION:3\n\n";
-
-    for (const variant of variants) {
-        const bandwidth = parseInt(variant.videoBitrate) * 1000;
-        content += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${variant.width}x${variant.height}\n`;
-        content += `${variant.name}/playlist.m3u8\n\n`;
-    }
-
-    const masterPath = path.join(outputDir, "master.m3u8");
-    fs.writeFileSync(masterPath, content);
-    logger.info(`Master playlist generated: ${masterPath}`);
-}
-
-/**
- * Main processing function: probes video, transcodes applicable variants,
- * and generates a master playlist.
- */
-export async function processVideo(inputPath: string, outputDir: string): Promise<string[]> {
+export async function processVideo(inputPath: string, outputDir: string): Promise<{ variants: string[]; duration: number }> {
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
     logger.info(`Probing video: ${inputPath}`);
-    const { width, height } = await probeVideo(inputPath);
-    logger.info(`Source resolution: ${width}x${height}`);
+    const { width, height, duration } = await probeVideo(inputPath);
+    logger.info(`Source resolution: ${width}x${height} | Duration: ${duration}s`);
 
     // Filter variants to only include those <= source resolution
-    const applicableVariants = VARIANTS.filter((v) => v.height <= height);
-
+    let applicableVariants = VARIANTS.filter((v) => v.height <= height);
     if (applicableVariants.length === 0) {
-        // If source is smaller than 360p, still transcode to 360p
         applicableVariants.push(VARIANTS[0]!);
     }
 
-    logger.info(`Transcoding ${applicableVariants.length} variants: ${applicableVariants.map((v) => v.name).join(", ")}`);
+    logger.info(`Starting transcode for ${applicableVariants.length} variants in a single pass`);
 
-    // Transcode all applicable variants sequentially to avoid overloading CPU
-    for (const variant of applicableVariants) {
-        await transcodeVariant(inputPath, outputDir, variant);
-    }
+    return new Promise((resolve, reject) => {
+        const command = ffmpeg(inputPath);
 
-    generateMasterPlaylist(outputDir, applicableVariants);
+        // --- Build Filter Graph ---
+        // Split the decoded video into N streams, one for each variant
+        let filterComplex = `[0:v]split=${applicableVariants.length}`;
+        applicableVariants.forEach((_, i) => {
+            filterComplex += `[v${i}]`;
+        });
+        filterComplex += ";";
 
-    return applicableVariants.map((v) => v.name);
+        // Add scaling for each split stream
+        applicableVariants.forEach((v, i) => {
+            // Using software scale for maximum compatibility, but nvenc for encoding
+            filterComplex += `[v${i}]scale=w=${v.width}:h=${v.height}:force_original_aspect_ratio=decrease,pad=${v.width}:${v.height}:(ow-iw)/2:(oh-ih)/2[vout${i}]`;
+            if (i < applicableVariants.length - 1) filterComplex += ";";
+        });
+
+        // --- Build Output Options ---
+        const outputOptions: string[] = ["-filter_complex", filterComplex];
+
+        // Map video streams, encoders, and bitrates
+        applicableVariants.forEach((v, i) => {
+            outputOptions.push(
+                "-map", `[vout${i}]`,
+                `-c:v:${i}`, "h264_nvenc", // NVIDIA Hardware Acceleration
+                `-b:v:${i}`, v.videoBitrate,
+                `-maxrate:${i}`, v.maxrate,
+                `-bufsize:${i}`, v.bufsize,
+                "-preset", "p4", // Faster preset for NVENC
+                "-g", "48",
+                "-keyint_min", "48",
+                "-sc_threshold", "0"
+            );
+        });
+
+        // Map audio streams (reuse first audio stream for all variants)
+        applicableVariants.forEach((_, i) => {
+            outputOptions.push(
+                "-map", "0:a",
+                `-c:a:${i}`, "aac",
+                `-b:a:${i}`, "128k",
+                `-ar:${i}`, "48000"
+            );
+        });
+
+        // --- HLS Multi-Stream Mapping ---
+        const streamMap = applicableVariants.map((v, i) => `v:${i},a:${i},name:${v.name}`).join(" ");
+
+        outputOptions.push(
+            "-f", "hls",
+            "-hls_time", "6",
+            "-hls_playlist_type", "vod",
+            "-master_pl_name", "master.m3u8",
+            "-var_stream_map", streamMap,
+            "-hls_segment_filename", path.join(outputDir, "%v", "segment_%03d.ts")
+        );
+
+        command
+            .outputOptions(outputOptions)
+            .output(path.join(outputDir, "%v", "playlist.m3u8"))
+            .on("start", (cmd) => {
+                logger.debug(`FFmpeg command: ${cmd}`);
+            })
+            .on("progress", (progress) => {
+                if (progress.percent) {
+                    logger.info(`Transcoding Progress: ${Math.round(progress.percent)}%`);
+                }
+            })
+            .on("end", () => {
+                logger.info(`Transcode complete for all variants`);
+                resolve({ variants: applicableVariants.map((v) => v.name), duration });
+            })
+            .on("error", (err) => {
+                logger.error(`Hardware transcode failed: ${err.message}. Ensure your NVIDIA GPU is accessible and drivers are up to date.`);
+                reject(err);
+            })
+            .run();
+    });
 }
