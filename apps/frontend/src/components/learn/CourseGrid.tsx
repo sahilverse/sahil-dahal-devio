@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { courseService, GetCoursesParams } from "@/api/courseService";
 import { CourseCard } from "./CourseCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GraduationCap, SearchX } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CourseGridProps {
@@ -18,9 +17,11 @@ export function CourseGrid({ filters }: CourseGridProps) {
         queryFn: () => courseService.getCourses(filters),
     });
 
+    console.log(response)
+
     if (isLoading) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
                 {[...Array(8)].map((_, i) => (
                     <div key={i} className="space-y-4">
                         <Skeleton className="aspect-video w-full rounded-xl" />
@@ -67,7 +68,7 @@ export function CourseGrid({ filters }: CourseGridProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {courses.map((course) => (
                 <CourseCard key={course.id} course={course} />
             ))}

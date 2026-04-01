@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Filter, PlayCircle, Trophy, GraduationCap, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CourseGrid } from "@/components/learn/CourseGrid";
-import { GetCoursesParams } from "@/api/courseService";
 import { useAppSelector } from "@/store/hooks";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 
@@ -35,7 +34,7 @@ export default function LearnPage() {
     };
 
     return (
-        <div className="space-y-6 lg:pr-50">
+        <div className="space-y-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border/50 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5">

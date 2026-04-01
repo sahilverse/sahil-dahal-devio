@@ -105,8 +105,8 @@ export default function MyLearningPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {enrolledCourses && enrolledCourses.map((course) => (
-                            <Link key={course.id} href={`/learn/${course.slug}/lesson/resume`}>
-                                <Card className="overflow-hidden border-border/50 group hover:border-primary/50 transition-all hover:shadow-xl rounded-2xl">
+                            <Card key={course.id} className="overflow-hidden border-border/50 group hover:border-primary/50 transition-all hover:shadow-xl rounded-2xl flex flex-col">
+                                <Link href={`/learn/${course.slug}`} className="block relative group-hover:opacity-90 transition-opacity">
                                     <div className="aspect-[16/7] relative overflow-hidden bg-slate-900">
                                         {course.thumbnailUrl ? (
                                             <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" alt={course.title} />
@@ -114,32 +114,46 @@ export default function MyLearningPage() {
                                             <div className="w-full h-full flex items-center justify-center text-primary/20"><Play className="size-12" /></div>
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
-                                            <Badge className="bg-primary/20 backdrop-blur-md text-white border-primary/40 font-bold text-[10px] tracking-widest uppercase">35% COMPLETE</Badge>
+                                            <Badge className="bg-brand-primary/20 backdrop-blur-md text-white border-brand-primary/40 font-bold text-[10px] tracking-widest uppercase">{course.progress || 0}% COMPLETE</Badge>
                                         </div>
                                     </div>
-                                    <CardContent className="p-5 space-y-4">
-                                        <div className="space-y-1">
-                                            <h3 className="font-extrabold text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">{course.title}</h3>
-                                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Sahil Dahal</p>
-                                        </div>
+                                </Link>
 
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between text-[10px] font-black uppercase text-muted-foreground">
-                                                <span>Progress</span>
-                                                <span className="text-primary">35%</span>
-                                            </div>
-                                            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                                                <div className="h-full bg-primary w-[35%] transition-all duration-700" />
-                                            </div>
-                                        </div>
+                                <CardContent className="p-5 flex-1 flex flex-col space-y-4">
+                                    <Link href={`/learn/${course.slug}`} className="space-y-1 block hover:text-brand-primary transition-colors">
+                                        <h3 className="font-extrabold text-lg leading-tight line-clamp-1">{course.title}</h3>
+                                    </Link>
 
-                                        <Button className="w-full rounded-xl font-bold text-xs uppercase tracking-widest" size="sm">
-                                            <Play className="mr-2 size-3 fill-current" /> Resume Learning
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </Link>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-[10px] font-black uppercase text-muted-foreground">
+                                            <span>Progress</span>
+                                            <span className="text-brand-primary">{course.progress || 0}%</span>
+                                        </div>
+                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-brand-primary transition-all duration-700"
+                                                style={{ width: `${course.progress || 0}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+
+                                    <div className="pt-2">
+                                        <Link
+                                            href={`/learn/${course.slug}/lesson/${(course.progress || 0) > 0 ? 'resume' : 'start'}`}
+                                            className="block"
+                                        >
+                                            <Button className="w-full rounded-xl font-bold text-xs uppercase tracking-widest h-11" size="sm">
+                                                <Play className="mr-2 size-3 fill-current" />
+                                                {(course.progress || 0) > 0 ? 'Resume Learning' : 'Start Learning'}
+                                            </Button>
+                                        </Link>
+                                    </div>
+
+                                </CardContent>
+                            </Card>
                         ))}
+
                     </div>
                 )}
             </div>

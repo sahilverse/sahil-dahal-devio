@@ -6,20 +6,15 @@ export interface Course {
     description: string;
     thumbnailUrl: string | null;
     price: number | null;
-    instructorId: string;
-    instructor: {
-        id: string;
-        username: string;
-        firstName: string | null;
-        lastName: string | null;
-        avatarUrl: string | null;
-    };
     createdAt: string;
+    maxCipherDiscount: number | null;
     updatedAt: string;
-    _count?: {
-        enrollments: number;
-        modules: number;
-    }
+    averageRating: number;
+    duration: number;
+    reviewCount: number;
+    enrollmentCount: number;
+    isEnrolled: boolean;
+    progress?: number;
 }
 
 export interface Module {
@@ -27,6 +22,7 @@ export interface Module {
     title: string;
     order: number;
     courseId: string;
+    lessonCount: number;
     lessons: Lesson[];
 }
 
@@ -42,11 +38,19 @@ export interface Lesson {
     order: number;
     moduleId: string;
     type: "VIDEO" | "TEXT";
+    isCompleted?: boolean;
 }
 
 export interface CourseComment {
     id: string;
+    lessonId: string;
+    parentId: string | null;
     content: string;
+
+    deletedAt: string | null;
+    upvotes: number;
+    downvotes: number;
+    userVote: "UP" | "DOWN" | null;
     createdAt: string;
     user: {
         id: string;
@@ -55,4 +59,20 @@ export interface CourseComment {
     };
     replies?: CourseComment[];
     replyCount: number;
+}
+
+
+export interface CourseReview {
+    id: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    updatedAt: string;
+    user: {
+        id: string;
+        username: string;
+        avatarUrl: string | null;
+        firstName: string | null;
+        lastName: string | null;
+    };
 }

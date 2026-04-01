@@ -85,6 +85,10 @@ export default function CipherStorePage() {
                     promoCode,
                 });
 
+                if (!result.gatewayUrl || !result.gatewayConfig) {
+                    throw new Error("Invalid payment initiation response");
+                }
+
                 const form = document.createElement("form");
                 form.method = "POST";
                 form.action = result.gatewayUrl;

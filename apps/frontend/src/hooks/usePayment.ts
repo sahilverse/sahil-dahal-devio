@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PaymentService, type InitiatePaymentResponse } from "@/api/paymentService";
+import { providers } from "@devio/zod-utils";
 import { toast } from "sonner";
 
 // ─── Cipher Purchase Initiation ───────────────────────────
@@ -22,10 +23,10 @@ export function useInitiateCoursePurchase() {
     return useMutation<
         InitiatePaymentResponse,
         { errorMessage?: string },
-        { courseId: string; promoCode?: string; cipherAmount?: number }
+        { courseId: string; provider: typeof providers[number]; promoCode?: string; cipherAmount?: number }
     >({
-        mutationFn: ({ courseId, promoCode, cipherAmount }) =>
-            PaymentService.initiateCoursePurchase(courseId, "ESEWA", promoCode, cipherAmount),
+        mutationFn: ({ courseId, provider, promoCode, cipherAmount }) =>
+            PaymentService.initiateCoursePurchase(courseId, provider, promoCode, cipherAmount),
         onError: (error) => {
             toast.error(error?.errorMessage || "Failed to initiate payment.");
         },
@@ -36,7 +37,7 @@ export function useInitiateCoursePurchase() {
 
 export function useVerifyPayment(encodedData: string | null) {
     return useQuery<
-        { paymentId: string; status: string; ciphersAwarded: number },
+        { paymentId: string; status: string; ciphersAwarded: number; type: string; courseSlug?: string },
         { errorMessage?: string }
     >({
         queryKey: ["verify-payment", encodedData],

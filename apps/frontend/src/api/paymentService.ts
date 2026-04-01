@@ -17,15 +17,20 @@ export interface EsewaConfig {
 }
 
 export interface InitiatePaymentResponse {
-    paymentId: string;
-    gatewayConfig: Record<string, any>;
-    gatewayUrl: string;
+    enrolled: boolean;
+    courseSlug?: string;
+    paymentId?: string;
+    gatewayConfig?: Record<string, any>;
+    gatewayUrl?: string;
+    provider?: string;
 }
 
 export interface VerifyPaymentResponse {
     paymentId: string;
     status: string;
     ciphersAwarded: number;
+    type: string;
+    courseSlug?: string;
 }
 
 // ─── Payment API ───────────────────────────────────────────

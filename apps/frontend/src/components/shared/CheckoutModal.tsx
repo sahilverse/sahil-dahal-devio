@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Gift, Loader2, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
+import { Gift, Loader2, CheckCircle2, AlertCircle, ExternalLink, Coins } from "lucide-react";
+import { useCipherBalance } from "@/hooks/useCipher";
 
 // ─── Generic Props ─────────────────────────────────────────
 
@@ -34,8 +35,9 @@ interface CheckoutModalProps {
     icon?: React.ReactNode;
     confirmLabel?: string;
     promoEnabled?: boolean;
+    maxCipherDiscount?: number;
     isLoading?: boolean;
-    onConfirm: (item: CheckoutItem, promoCode?: string) => void;
+    onConfirm: (item: CheckoutItem, promoCode?: string, cipherAmount?: number) => void;
     onValidatePromo?: (code: string, itemId: string) => Promise<{ discount: number }>;
 }
 
@@ -47,12 +49,16 @@ export default function CheckoutModal({
     icon,
     confirmLabel = "Confirm",
     promoEnabled = true,
+    maxCipherDiscount = 0,
     isLoading = false,
     onConfirm,
     onValidatePromo,
 }: CheckoutModalProps) {
+    const { data: userBalance = 0 } = useCipherBalance();
+
     // ─── Local State ───────────────────────────────────────
     const [promoCode, setPromoCode] = useState("");
+    const [cipherAmount, setCipherAmount] = useState(0);
     const [isValidating, setIsValidating] = useState(false);
     const [discount, setDiscount] = useState(0);
     const [promoError, setPromoError] = useState<string | null>(null);
@@ -66,12 +72,14 @@ export default function CheckoutModal({
             setPromoError(null);
             setPromoSuccess(false);
             setIsValidating(false);
+            setCipherAmount(0);
         }
     }, [isOpen]);
 
     if (!item) return null;
 
-    const finalPrice = Math.max(0, item.price - discount);
+    const finalPrice = Math.max(0, item.price - discount - cipherAmount);
+    const maxApplicableCiphers = Math.min(userBalance, maxCipherDiscount || item.price);
 
     const handleApplyPromo = async () => {
         if (!promoCode.trim() || !onValidatePromo) return;
@@ -136,13 +144,52 @@ export default function CheckoutModal({
                         </div>
                         {discount > 0 && (
                             <div className="flex justify-between items-center text-green-500 animate-in fade-in slide-in-from-top-1">
-                                <span className="text-sm font-medium">Discount</span>
+                                <span className="text-sm font-medium">Promo Discount</span>
                                 <span className="font-bold">
                                     - {item.currency || "NPR"} {discount.toFixed(2)}
                                 </span>
                             </div>
                         )}
+                        {cipherAmount > 0 && (
+                            <div className="flex justify-between items-center text-brand-primary animate-in fade-in slide-in-from-top-1">
+                                <span className="text-sm font-medium">Cipher Discount</span>
+                                <span className="font-bold">
+                                    - {item.currency || "NPR"} {cipherAmount.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Elective Cipher Discount */}
+                    {maxCipherDiscount > 0 && (
+                        <div className="space-y-3 p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/10">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-xs font-bold uppercase text-brand-primary tracking-wider flex items-center gap-2">
+                                    <Coins className="w-3 h-3" />
+                                    Use Ciphers
+                                </Label>
+                                <span className="text-[10px] font-bold text-muted-foreground bg-background px-2 py-0.5 rounded-full border border-default">
+                                    Balance: {userBalance}
+                                </span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <input 
+                                    type="range"
+                                    min="0"
+                                    max={maxApplicableCiphers}
+                                    step="1"
+                                    value={cipherAmount}
+                                    onChange={(e) => setCipherAmount(Number(e.target.value))}
+                                    className="w-full accent-brand-primary h-1.5 bg-brand-primary/20 rounded-lg appearance-none cursor-pointer"
+                                />
+                                <div className="flex justify-between items-center mt-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Applied: {cipherAmount}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Limit: {maxApplicableCiphers}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Promo Code Section */}
                     {promoEnabled && onValidatePromo && (
@@ -206,7 +253,7 @@ export default function CheckoutModal({
                     <Button
                         variant="brand"
                         className="w-full font-bold h-11 text-base"
-                        onClick={() => onConfirm(item, promoSuccess ? promoCode : undefined)}
+                        onClick={() => onConfirm(item, promoSuccess ? promoCode : undefined, cipherAmount)}
                         disabled={isLoading}
                     >
                         {isLoading ? (

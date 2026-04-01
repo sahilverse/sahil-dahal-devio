@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { useVerifyPayment } from "@/hooks/usePayment";
 import { PaymentSession } from "@/lib/payment-session";
-import { SuccessState } from "./SuccessState";
 
 export function VerifyContent() {
     const searchParams = useSearchParams();
@@ -17,46 +17,32 @@ export function VerifyContent() {
         data
     } = useVerifyPayment(dataParam);
 
-    const [countdown, setCountdown] = useState(10);
     const qc = useQueryClient();
 
     useEffect(() => {
         if (data && data.status === "COMPLETED") {
-            toast.success(`${data.ciphersAwarded} Ciphers added!`);
+            toast.success(data.type === "COURSE_PURCHASE" ? "Enrollment Successful! 🎓" : `${data.ciphersAwarded} Ciphers added!`);
             qc.invalidateQueries({ queryKey: ["cipher-balance"] });
+            qc.invalidateQueries({ queryKey: ["course"] });
+            qc.invalidateQueries({ queryKey: ["course-modules"] });
             PaymentSession.clear();
+
+            // Immediate Redirect
+            if (data.type === "COURSE_PURCHASE" && data.courseSlug) {
+                router.replace(`/learn/${data.courseSlug}/lesson/start`);
+            } else {
+                router.replace("/");
+            }
         }
-    }, [data, qc]);
+    }, [data, qc, router]);
 
-    // 2. Handle Countdown
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (data && data.status === "COMPLETED" && countdown > 0) {
-            timer = setInterval(() => {
-                setCountdown((prev) => Math.max(0, prev - 1));
-            }, 1000);
-        }
-        return () => clearInterval(timer);
-    }, [data, countdown]);
-
-    // 3. Handle Redirect
-    useEffect(() => {
-        if (countdown === 0 && data?.status === "COMPLETED") {
-            router.push("/");
-        }
-    }, [countdown, data, router]);
-
-
-    if (data && data.status === "COMPLETED") {
-        return (
-            <SuccessState
-                data={data}
-                countdown={countdown}
-                onDashboard={() => router.push("/")}
-                onStore={() => router.push("/ciphers")}
-            />
-        );
-    }
-
-    return null;
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+            <Loader2 className="size-12 animate-spin text-primary" />
+            <div className="text-center space-y-2">
+                <h2 className="text-2xl font-black tracking-tight">Verifying Payment...</h2>
+                <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Please do not close this window</p>
+            </div>
+        </div>
+    );
 }
