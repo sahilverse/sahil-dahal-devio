@@ -29,11 +29,9 @@ export interface JobResponseDto {
         verificationTier: CompanyVerificationTier;
     } | null;
     topics?: {
-        topic: {
-            id: string;
-            name: string;
-            slug: string;
-        };
+        id: string;
+        name: string;
+        slug: string;
     }[];
 }
 

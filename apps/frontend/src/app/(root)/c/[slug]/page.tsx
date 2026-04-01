@@ -11,7 +11,6 @@ import {
     Globe,
     MapPin,
     Users,
-    Link as LinkIcon,
     Calendar,
     ArrowLeft,
     Share2,
@@ -24,13 +23,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import CompanyManagement from "@/components/companies/CompanyManagement";
-import UserAvatar from "@/components/navbar/UserAvatar";
+
 
 export default function CompanyProfilePage() {
     const { slug } = useParams() as { slug: string };

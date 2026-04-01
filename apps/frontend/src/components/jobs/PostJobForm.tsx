@@ -26,16 +26,18 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Briefcase, Building2, MapPin, DollarSign, Globe, Link as LinkIcon, Sparkles, Loader2 } from "lucide-react";
 import TopicSelector from "@/components/create/TopicSelector";
-import { useCreateJob } from "@/hooks/useJobs";
+import { useCreateJob, useUpdateJob } from "@/hooks/useJobs";
 import { useFetchUserCompanies } from "@/hooks/useCompanies";
 
-export default function PostJobForm() {
-    const { mutate: createJob, isPending } = useCreateJob();
+export default function PostJobForm({ initialData, jobId }: { initialData?: any; jobId?: string }) {
+    const { mutate: createJob, isPending: isCreating } = useCreateJob();
+    const { mutate: updateJob, isPending: isUpdating } = useUpdateJob();
     const { data: companies, isLoading: loadingCompanies } = useFetchUserCompanies();
+    const isPending = isCreating || isUpdating;
 
     const form = useForm<any>({
         resolver: zodResolver(createJobSchema) as any,
-        defaultValues: {
+        defaultValues: initialData || {
             title: "",
             description: "",
             type: JobType.FULL_TIME,
@@ -51,7 +53,11 @@ export default function PostJobForm() {
     });
 
     const onSubmit = (data: any) => {
-        createJob(data as CreateJobInput);
+        if (jobId) {
+            updateJob({ id: jobId, data });
+        } else {
+            createJob(data as CreateJobInput);
+        }
     };
 
     return (
@@ -311,11 +317,11 @@ export default function PostJobForm() {
                                 {isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Deploying Position...
+                                        {jobId ? "Updating Position..." : "Deploying Position..."}
                                     </>
                                 ) : (
                                     <>
-                                        List Job Posting
+                                        {jobId ? "Save Changes" : "List Job Posting"}
                                         <Sparkles className="ml-2 h-5 w-5" />
                                     </>
                                 )}

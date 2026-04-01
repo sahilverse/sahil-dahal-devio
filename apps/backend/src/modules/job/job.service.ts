@@ -79,11 +79,29 @@ export class JobService {
     async getJobBySlug(slug: string): Promise<JobResponseDto> {
         const job = await this.jobRepository.findBySlug(slug);
         if (!job) throw new ApiError("Job not found", StatusCodes.NOT_FOUND);
-        return job;
+        return {
+            ...job,
+            topics: job.topics ? job.topics.map((t: any) => ({
+                id: t.topic.id,
+                name: t.topic.name,
+                slug: t.topic.slug
+            })) : []
+        };
     }
 
     async getJobs(params: any): Promise<PaginatedJobsResponseDto> {
-        return this.jobRepository.findAll(params);
+        const { jobs, total } = await this.jobRepository.findAll(params);
+        return {
+            total,
+            jobs: jobs.map((job: any) => ({
+                ...job,
+                topics: job.topics ? job.topics.map((t: any) => ({
+                    id: t.topic.id,
+                    name: t.topic.name,
+                    slug: t.topic.slug
+                })) : []
+            }))
+        };
     }
 
     async updateJob(jobId: string, userId: string, data: any) {

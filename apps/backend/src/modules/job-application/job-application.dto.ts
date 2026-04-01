@@ -32,3 +32,8 @@ export interface JobApplicationResponseDto {
         avatarUrl: string | null;
     };
 }
+
+export interface PaginatedJobApplicationResponseDto {
+    applications: JobApplicationResponseDto[];
+    nextCursor: string | null;
+}

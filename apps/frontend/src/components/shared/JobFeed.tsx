@@ -22,7 +22,7 @@ export const JobFeed: React.FC<JobFeedProps> = ({ jobs, isLoading, className }) 
 
     if (!jobs || jobs.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-border/60 rounded-3xl bg-muted/5">
+            <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.02]">
                 <div className="bg-brand-primary/10 p-5 rounded-2xl mb-6">
                     <Briefcase className="h-10 w-10 text-brand-primary/60" />
                 </div>

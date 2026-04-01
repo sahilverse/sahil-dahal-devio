@@ -19,7 +19,7 @@ export interface Job {
     authorId: string;
     createdAt: string;
     company?: Company & { slug: string };
-    topics?: { topic: { name: string; slug: string } }[];
+    topics?: { id: string; name: string; slug: string }[];
 }
 
 export interface JobsResponse {
@@ -67,5 +67,22 @@ export const JobService = {
     apply: async (jobId: string, data: { coverLetter?: string, resumeUrl?: string }): Promise<any> => {
         const { data: response } = await api.post("/jobs/applications/apply", { jobId, ...data });
         return response.result;
+    },
+
+    getMyApplications: async (): Promise<any[]> => {
+        const { data } = await api.get("/jobs/applications/me");
+        return data.result;
+    },
+
+    updateApplicationStatus: async (id: string, status: string): Promise<any> => {
+        const { data } = await api.patch(`/jobs/applications/${id}/status`, { status });
+        return data.result;
+    },
+
+    getApplicationsForJob: async (jobId: string, cursor?: string, limit: number = 10): Promise<{ applications: any[], nextCursor: string | null }> => {
+        const { data } = await api.get(`/jobs/applications/${jobId}`, {
+            params: { cursor, limit }
+        });
+        return data.result;
     },
 };

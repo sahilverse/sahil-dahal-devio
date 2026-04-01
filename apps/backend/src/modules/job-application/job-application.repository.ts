@@ -67,8 +67,10 @@ export class JobApplicationRepository {
         });
     }
 
-    async findByJobId(jobId: string): Promise<JobApplication[]> {
+    async findByJobId(jobId: string, limit: number = 10, cursor?: string): Promise<JobApplication[]> {
         return this.prisma.jobApplication.findMany({
+            take: limit,
+            ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
             where: { jobId },
             include: {
                 user: {

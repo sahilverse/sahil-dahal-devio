@@ -27,7 +27,18 @@ export class JobApplicationController {
     getJobApplications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user!.id;
         const { jobId } = req.params;
-        const result = await this.jobApplicationService.getApplicationsForJob(jobId as string, userId);
+        const { cursor, limit } = req.query;
+        const parsedLimit = limit ? parseInt(limit as string, 10) : 10;
+        const result = await this.jobApplicationService.getApplicationsForJob(jobId as string, userId, cursor as string, parsedLimit);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Job applications fetched successfully", result);
+    });
+
+    updateApplicationStatus = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const userId = req.user!.id;
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        const result = await this.jobApplicationService.updateApplicationStatus(id as string, status, userId);
+        ResponseHandler.sendResponse(res, StatusCodes.OK, "Application status updated successfully", result);
     });
 }

@@ -14,9 +14,9 @@ interface JobCardProps {
 }
 
 const workplaceConfig = {
-    ON_SITE: { label: "On-site", className: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
-    HYBRID: { label: "Hybrid", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-    REMOTE: { label: "Remote", className: "bg-green-500/10 text-green-500 border-green-500/20" },
+    ON_SITE: { label: "On-site", className: "bg-white/5 text-muted-foreground border-white/10" },
+    HYBRID: { label: "Hybrid", className: "bg-white/5 text-muted-foreground border-white/10" },
+    REMOTE: { label: "Remote", className: "bg-white/5 text-muted-foreground border-white/10" },
 };
 
 const typeLabels = {
@@ -33,7 +33,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
         <Link
             href={`/j/${job.slug}`}
             className={cn(
-                "group relative block bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300 hover:border-brand-primary/50 hover:shadow-[0_8px_30px_rgba(88,101,242,0.12)] dark:hover:shadow-[0_8px_30px_rgba(88,101,242,0.08)]",
+                "group relative block bg-white/[0.02] rounded-3xl border border-white/5 p-6 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/10 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
                 className
             )}
         >
@@ -78,13 +78,17 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
                         <Badge variant="outline" className={cn("text-[10px] uppercase font-black px-2", workplaceConfig[job.workplace].className)}>
                             {workplaceConfig[job.workplace].label}
                         </Badge>
-                        <Badge variant="secondary" className="text-[10px] uppercase font-black px-2 bg-muted/50">
+                        <div className="flex items-center gap-0 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase text-muted-foreground">
                             {typeLabels[job.type]}
-                        </Badge>
-                        {job.topics && job.topics.slice(0, 2).map(({ topic }) => (
-                            <Badge key={topic.slug} variant="outline" className="text-[10px] font-bold border-brand-primary/20 text-brand-primary/80 bg-brand-primary/5">
-                                t/{topic.name}
-                            </Badge>
+                        </div>
+                        {job.topics && job.topics.slice(0, 2).map((topic) => (
+                            <div
+                                key={topic.slug}
+                                className="flex items-center gap-0 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold"
+                            >
+                                <span className="text-brand-primary/60">t/</span>
+                                <span className="text-muted-foreground">{topic.name}</span>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -97,12 +101,12 @@ export const JobCard: React.FC<JobCardProps> = ({ job, className }) => {
                         <MapPin className="h-3.5 w-3.5" />
                         {job.location || (job.workplace === "REMOTE" ? "Global" : "TBD")}
                     </div>
-                    {(job.salaryMin || job.salaryMax) && (
+                    {((job.salaryMin ?? 0) > 0 || (job.salaryMax ?? 0) > 0) && (
                         <div className="flex items-center gap-1">
                             <DollarSign className="h-3.5 w-3.5" />
-                            {job.salaryMin && job.salaryMin.toLocaleString()}
-                            {job.salaryMin && job.salaryMax && " - "}
-                            {job.salaryMax && job.salaryMax.toLocaleString()}
+                            {(job.salaryMin ?? 0) > 0 && job.salaryMin?.toLocaleString()}
+                            {(job.salaryMin ?? 0) > 0 && (job.salaryMax ?? 0) > 0 && " - "}
+                            {(job.salaryMax ?? 0) > 0 && job.salaryMax?.toLocaleString()}
                             <span className="ml-1 opacity-60 uppercase">{job.currency}</span>
                         </div>
                     )}

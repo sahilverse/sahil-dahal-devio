@@ -93,4 +93,41 @@ router.get(
     controller.getJobApplications
 );
 
+/**
+ * @swagger
+ * /jobs/applications/{id}/status:
+ *   patch:
+ *     summary: Update an application's status (Recruiters/Owners only)
+ *     tags: [Job Application]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, REVIEWING, SHORTLISTED, ACCEPTED, REJECTED]
+ *     responses:
+ *       200:
+ *         description: Application status updated successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.patch(
+    "/:id/status",
+    auth.guard,
+    controller.updateApplicationStatus
+);
+
 export { router };

@@ -97,6 +97,11 @@ export class JobRepository {
                             isVerified: true,
                             verificationTier: true
                         }
+                    },
+                    topics: {
+                        include: {
+                            topic: true
+                        }
                     }
                 },
                 skip: Number(skip),

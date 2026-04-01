@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
-import { useFetchJob } from "@/hooks/useJobs";
+import { useFetchJob, useUpdateJob, useFetchMyApplications } from "@/hooks/useJobs";
 import { VerificationBadge } from "@/components/shared/VerificationBadge";
 import {
     Briefcase,
@@ -13,7 +13,10 @@ import {
     Clock,
     Globe,
     ChevronRight,
-    Sparkles
+    Sparkles,
+    EyeOff,
+    Eye,
+    Users
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,12 +29,27 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { Edit3 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function JobDetailPage() {
     const { slug } = useParams() as { slug: string };
     const { data: job, isLoading } = useFetchJob(slug);
     const { user: currentUser } = useSelector((state: RootState) => state.auth);
     const { openLogin } = useAuthModal();
+    const { data: myApps } = useFetchMyApplications();
+    const updateJob = useUpdateJob();
+
+    const hasApplied = myApps?.some(app => app.jobId === job?.id);
+
+    const handleToggleActive = () => {
+        if (!job) return;
+        updateJob.mutate(
+            { id: job.id, data: { isActive: !job.isActive } },
+            {
+                onSuccess: () => toast.success(job.isActive ? "Job has been unlisted." : "Job is now active.")
+            }
+        );
+    };
 
     if (isLoading) return <JobDetailSkeleton />;
     if (!job) return <JobNotFound />;
@@ -66,7 +84,15 @@ export default function JobDetailPage() {
                     <span className="text-foreground truncate max-w-[200px]">{job.title}</span>
                 </nav>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="rounded-xl size-10">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="rounded-xl size-10 active:scale-95 transition-transform"
+                        onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            toast.success("Link copied to clipboard!");
+                        }}
+                    >
                         <Share2 className="h-4 w-4" />
                     </Button>
                 </div>
@@ -117,8 +143,8 @@ export default function JobDetailPage() {
                             <SpecCard
                                 icon={<DollarSign className="size-4" />}
                                 label="Compensation"
-                                value={job.salaryMin || job.salaryMax ?
-                                    `${job.salaryMin ? job.salaryMin.toLocaleString() : "..."} - ${job.salaryMax ? job.salaryMax.toLocaleString() : "..."}` :
+                                value={((job.salaryMin ?? 0) > 0 || (job.salaryMax ?? 0) > 0) ?
+                                    `${(job.salaryMin ?? 0) > 0 ? job.salaryMin!.toLocaleString() : "..."} - ${(job.salaryMax ?? 0) > 0 ? job.salaryMax!.toLocaleString() : "..."} ${job.currency}` :
                                     "Undisclosed"}
                             />
                         </div>
@@ -137,7 +163,7 @@ export default function JobDetailPage() {
                         <div className="space-y-4">
                             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground ml-1">Relevant Expertise</h3>
                             <div className="flex flex-wrap gap-2">
-                                {job.topics.map(({ topic }: any) => (
+                                {job.topics.map((topic: any) => (
                                     <Link
                                         key={topic.slug}
                                         href={`/t/${topic.slug}`}
@@ -156,20 +182,60 @@ export default function JobDetailPage() {
                     {/* Apply Card */}
                     <Card className="p-6 border-brand-primary/20 bg-brand-primary/[0.03] backdrop-blur-md rounded-3xl sticky top-28 space-y-6">
                         <div className="space-y-2">
-                            <h3 className="text-lg font-black">{isCreatorOrRecruiter ? "Manage your posting" : "Ready to apply?"}</h3>
+                            <h3 className="text-lg font-black">
+                                {isCreatorOrRecruiter
+                                    ? "Manage your posting"
+                                    : !job.isActive
+                                        ? "Position Closed"
+                                        : hasApplied
+                                            ? "Application Submitted"
+                                            : "Ready to apply?"}
+                            </h3>
                             <p className="text-sm text-muted-foreground font-medium">
                                 {isCreatorOrRecruiter
                                     ? "As a recruiter, you can modify the job details or view applicants."
-                                    : "This position is verified and actively accepting applications."}
+                                    : !job.isActive
+                                        ? "This position is no longer accepting new applications."
+                                        : hasApplied
+                                            ? "You have already applied for this role. The recruiter will review your profile."
+                                            : "This position is verified and actively accepting applications."}
                             </p>
                         </div>
 
                         {isCreatorOrRecruiter ? (
-                            <Button asChild size="lg" className="w-full h-14 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group">
-                                <Link href={`/jobs/edit/${job.id}`}>
-                                    Edit Job Posting
-                                    <Edit3 className="ml-2 h-5 w-5" />
-                                </Link>
+                            <div className="space-y-3">
+                                <Button asChild size="lg" className="w-full h-12 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 text-md group">
+                                    <Link href={`/j/${job.slug}/applications`}>
+                                        View Applicants
+                                        <Users className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button asChild variant="outline" className="w-full h-12 border-border/50 bg-background/50 hover:bg-background font-bold rounded-xl">
+                                        <Link href={`/jobs/edit/${job.slug}`}>
+                                            Edit Post
+                                            <Edit3 className="ml-2 h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        variant={job.isActive ? "destructive" : "secondary"}
+                                        className="w-full h-12 font-bold rounded-xl"
+                                        onClick={handleToggleActive}
+                                        disabled={updateJob.isPending}
+                                    >
+                                        {job.isActive ? "Unlist Job" : "Re-list Job"}
+                                        {job.isActive ? <EyeOff className="ml-2 h-4 w-4" /> : <Eye className="ml-2 h-4 w-4" />}
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : !job.isActive ? (
+                            <Button disabled size="lg" className="w-full h-14 bg-muted text-muted-foreground font-black rounded-2xl text-lg">
+                                Not Accepting Applications
+                            </Button>
+                        ) : hasApplied ? (
+                            <Button disabled size="lg" className="w-full h-14 bg-success/20 text-success border border-success/30 font-black rounded-2xl shadow-xl shadow-success/10 text-lg">
+                                Already Applied
+                                <Sparkles className="ml-2 h-5 w-5" />
                             </Button>
                         ) : !currentUser ? (
                             <Button

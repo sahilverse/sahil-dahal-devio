@@ -3,9 +3,10 @@ import { TYPES } from "../../types";
 import { JobApplicationRepository } from "./job-application.repository";
 import { JobRepository } from "../job/job.repository";
 import { CompanyRepository } from "../company/company.repository";
-import { CreateJobApplicationDto, JobApplicationResponseDto } from "./job-application.dto";
+import { CreateJobApplicationDto, JobApplicationResponseDto, PaginatedJobApplicationResponseDto } from "./job-application.dto";
 import { ApiError } from "../../utils";
 import { StatusCodes } from "http-status-codes";
+import { ApplicationStatus } from "../../generated/prisma/client";
 
 @injectable()
 export class JobApplicationService {
@@ -56,7 +57,7 @@ export class JobApplicationService {
         });
     }
 
-    async getApplicationsForJob(jobId: string, userId: string): Promise<JobApplicationResponseDto[]> {
+    async getApplicationsForJob(jobId: string, userId: string, cursor?: string, limit: number = 10): Promise<PaginatedJobApplicationResponseDto> {
         const job = await this.jobRepository.findById(jobId);
         if (!job) throw new ApiError("Job not found", StatusCodes.NOT_FOUND);
 
@@ -69,10 +70,37 @@ export class JobApplicationService {
             throw new ApiError("You do not have permission to view applications for this job", StatusCodes.FORBIDDEN);
         }
 
-        return this.jobApplicationRepository.findByJobId(jobId);
+        const applications = await this.jobApplicationRepository.findByJobId(jobId, limit + 1, cursor);
+        const hasNextPage = applications.length > limit;
+        const resultApplications = hasNextPage ? applications.slice(0, limit) : applications;
+        const nextCursor = hasNextPage ? resultApplications[resultApplications.length - 1]?.id || null : null;
+
+        return {
+            applications: resultApplications as any,
+            nextCursor
+        };
     }
 
     async getUserApplications(userId: string): Promise<JobApplicationResponseDto[]> {
         return this.jobApplicationRepository.findByUserId(userId);
+    }
+
+    async updateApplicationStatus(applicationId: string, status: ApplicationStatus, userId: string): Promise<JobApplicationResponseDto> {
+        const application = await this.jobApplicationRepository.findById(applicationId);
+        if (!application) throw new ApiError("Application not found", StatusCodes.NOT_FOUND);
+
+        const job = await this.jobRepository.findById(application.jobId);
+        if (!job) throw new ApiError("Job not found", StatusCodes.NOT_FOUND);
+
+        // RBAC: Only Author or Company Admin can edit application statuses
+        const isAuthor = job.authorId === userId;
+        const member = await this.companyRepository.findMember(job.companyId, userId);
+        const isCompanyAdmin = job.company?.ownerId === userId || (member && (member.role === "OWNER" || member.role === "RECRUITER"));
+
+        if (!isAuthor && !isCompanyAdmin) {
+            throw new ApiError("You do not have permission to update this application", StatusCodes.FORBIDDEN);
+        }
+
+        return this.jobApplicationRepository.update(applicationId, { status }) as any;
     }
 }
