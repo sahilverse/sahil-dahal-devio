@@ -24,7 +24,8 @@ import { TheaterTabs } from "@/components/theater/TheaterTabs";
 import { TheaterSidebar } from "@/components/theater/TheaterSidebar";
 
 export default function CoursePlayerPage() {
-    const params = useParams() as { courseId: string; lessonId: string };
+    const params = useParams() as { slug: string; lessonId: string };
+    const { slug, lessonId } = params;
     const router = useRouter();
     const queryClient = useQueryClient();
     const [expandedModules, setExpandedModules] = useState<string[]>([]);
@@ -35,8 +36,8 @@ export default function CoursePlayerPage() {
         if (params.lessonId === "start" || params.lessonId === "resume") {
             const resolveId = async () => {
                 try {
-                    const { lessonId } = await courseService.resolveLesson(params.courseId, params.lessonId);
-                    router.replace(`/learn/${params.courseId}/lesson/${lessonId}`);
+                    const { lessonId } = await courseService.resolveLesson(slug, params.lessonId);
+                    router.replace(`/learn/${slug}/lesson/${lessonId}`);
                 } catch (err) {
                     console.error("Failed to resolve lesson:", err);
                     toast.error("Failed to find lesson. Starting from beginning.");
@@ -44,7 +45,7 @@ export default function CoursePlayerPage() {
             };
             resolveId();
         }
-    }, [params.courseId, params.lessonId, router]);
+    }, [slug, params.lessonId, router]);
 
     // 1. Fetch Lesson Data
     const { data: lesson, isLoading: isLessonLoading, error: lessonError } = useQuery({
@@ -60,23 +61,23 @@ export default function CoursePlayerPage() {
     useEffect(() => {
         if (lessonError) {
             toast.error("You must be enrolled to access this lesson.");
-            router.replace(`/learn/${params.courseId}`);
+            router.replace(`/learn/${slug}`);
         }
-    }, [lessonError, params.courseId, router]);
+    }, [lessonError, slug, router]);
 
     // 2. Fetch Course & Modules
     const { data: course } = useQuery({
-        queryKey: ["course", params.courseId],
-        queryFn: () => courseService.getCourseBySlug(params.courseId),
+        queryKey: ["course", slug],
+        queryFn: () => courseService.getCourseBySlug(slug),
     });
 
     // Enrollment guard
     useEffect(() => {
         if (course && course.isEnrolled === false) {
             toast.info("Please enroll in the course to access the lesson player.");
-            router.replace(`/learn/${params.courseId}`);
+            router.replace(`/learn/${slug}`);
         }
-    }, [course, params.courseId, router]);
+    }, [course, slug, router]);
 
     const { data: modules } = useQuery({
         queryKey: ["course-modules", course?.id],
@@ -126,7 +127,7 @@ export default function CoursePlayerPage() {
     }
 
     if (lessonError || !lesson) {
-        return <TheaterError onAction={() => router.replace(`/learn/${params.courseId}`)} />;
+        return <TheaterError onAction={() => router.replace(`/learn/${slug}`)} />;
     }
 
 
@@ -140,7 +141,7 @@ export default function CoursePlayerPage() {
                     <div className="max-w-[1400px] mx-auto pt-8 pb-24 space-y-10">
                         {/* Header Controls */}
                         <div className="flex items-center justify-between">
-                            <Link href={`/learn/${params.courseId}/lesson/resume`} className="group flex items-center gap-3 text-muted-foreground hover:text-white transition-colors">
+                            <Link href={`/learn/${slug}/lesson/resume`} className="group flex items-center gap-3 text-muted-foreground hover:text-white transition-colors">
                                 <div className="p-2 rounded-xl bg-white/5 group-hover:bg-primary/20 transition-all">
                                     <AlertCircle className="size-4 rotate-180" />
                                 </div>
@@ -188,7 +189,7 @@ export default function CoursePlayerPage() {
 
             {/* Sidebar - Syllabus */}
             <TheaterSidebar
-                courseId={params.courseId}
+                slug={slug}
                 currentLessonId={params.lessonId}
                 modules={modules?.items}
                 progress={progress ? {

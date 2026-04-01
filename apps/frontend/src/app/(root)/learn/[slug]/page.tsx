@@ -36,9 +36,8 @@ const VideoPlayer = dynamic(() => import("@/components/video/VideoPlayer").then(
     loading: () => <div className="aspect-video w-full rounded-2xl bg-black flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>
 });
 
-export default function CourseLandingPage({ params }: { params: Promise<{ courseId: string }> }) {
-    const { courseId } = use(params);
-    const router = useRouter();
+export default function CourseLandingPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [previewLessonId, setPreviewLessonId] = useState<string | null>(null);
@@ -49,9 +48,9 @@ export default function CourseLandingPage({ params }: { params: Promise<{ course
     const initiateCoursePurchase = useInitiateCoursePurchase();
 
     const { data: course, isLoading, error } = useQuery({
-        queryKey: ["course", courseId, user?.id],
-        queryFn: () => courseService.getCourseBySlug(courseId),
-        enabled: !!courseId,
+        queryKey: ["course", slug, user?.id],
+        queryFn: () => courseService.getCourseBySlug(slug),
+        enabled: !!slug,
     });
 
     const { data: modules, isLoading: isModulesLoading } = useQuery({
@@ -77,11 +76,11 @@ export default function CourseLandingPage({ params }: { params: Promise<{ course
         mutationFn: (data: { rating: number; comment: string }) => courseService.postCourseReview(course!.id, data),
         onSuccess: () => {
             toast.success("Review submitted!");
-            queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+            queryClient.invalidateQueries({ queryKey: ["course", slug] });
             queryClient.invalidateQueries({ queryKey: ["course-reviews", course?.id] });
         },
         onError: (err: any) => {
-            toast.error(err?.response?.data?.message || "Failed to submit review.");
+            toast.error(err?.errorMessage || "Failed to submit review.");
         },
     });
 
@@ -90,11 +89,11 @@ export default function CourseLandingPage({ params }: { params: Promise<{ course
             courseService.updateCourseReview(course!.id, data.reviewId, { rating: data.rating, comment: data.comment }),
         onSuccess: () => {
             toast.success("Review updated!");
-            queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+            queryClient.invalidateQueries({ queryKey: ["course", slug] });
             queryClient.invalidateQueries({ queryKey: ["course-reviews", course?.id] });
         },
         onError: (err: any) => {
-            toast.error(err?.response?.data?.message || "Failed to update review.");
+            toast.error(err?.errorMessage || "Failed to update review.");
         },
     });
 
@@ -102,11 +101,11 @@ export default function CourseLandingPage({ params }: { params: Promise<{ course
         mutationFn: (reviewId: string) => courseService.deleteCourseReview(course!.id, reviewId),
         onSuccess: () => {
             toast.success("Review deleted!");
-            queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+            queryClient.invalidateQueries({ queryKey: ["course", slug] });
             queryClient.invalidateQueries({ queryKey: ["course-reviews", course?.id] });
         },
         onError: (err: any) => {
-            toast.error(err?.response?.data?.message || "Failed to delete review.");
+            toast.error(err?.errorMessage || "Failed to delete review.");
         },
     });
 
