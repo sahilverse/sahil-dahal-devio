@@ -128,8 +128,22 @@ export function TheaterSidebar({
                                                             >
                                                                 <div className="shrink-0">
                                                                     {isCurrent ? (
-                                                                        <div className="size-8 rounded-xl flex items-center justify-center text-brand-primary">
-                                                                            <Loader2 className="size-4 animate-spin" />
+                                                                        <div className="size-8 rounded-xl flex items-center justify-center gap-0.5 bg-brand-primary/20">
+                                                                            {[0, 1, 2].map((i) => (
+                                                                                <motion.div
+                                                                                    key={i}
+                                                                                    animate={{
+                                                                                        height: [4, 12, 4],
+                                                                                    }}
+                                                                                    transition={{
+                                                                                        duration: 0.8,
+                                                                                        repeat: Infinity,
+                                                                                        delay: i * 0.2,
+                                                                                        ease: "easeInOut",
+                                                                                    }}
+                                                                                    className="w-0.5 bg-brand-primary rounded-full"
+                                                                                />
+                                                                            ))}
                                                                         </div>
                                                                     ) : isLessonCompleted ? (
                                                                         <div className="size-8 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center text-success">
