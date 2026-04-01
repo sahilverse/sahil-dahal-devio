@@ -3,7 +3,9 @@
 import React, { useState, use } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { courseService } from "@/api/courseService";
+import { PromoService } from "@/api/promoService";
 import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
 import {
     PlayCircle,
@@ -126,7 +128,12 @@ export default function CourseLandingPage({ params }: { params: Promise<{ course
         setIsCheckoutOpen(true);
     };
 
+    const handleValidatePromo = async (code: string, itemId: string) => {
+        return PromoService.validate(code, undefined, itemId);
+    };
+
     const handleConfirmCourse = async (item: CheckoutItem, promoCode?: string, cipherAmount?: number) => {
+
         if (!course) return;
 
         try {
@@ -540,8 +547,10 @@ export default function CourseLandingPage({ params }: { params: Promise<{ course
                 }}
                 maxCipherDiscount={course.maxCipherDiscount || 0}
                 isLoading={initiateCoursePurchase.isPending || isRedirecting}
+                onValidatePromo={handleValidatePromo}
                 onConfirm={handleConfirmCourse}
             />
+
 
             {/* Mobile Sticky CTA */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border z-50 md:hidden animate-in fade-in slide-in-from-bottom-4 duration-500">

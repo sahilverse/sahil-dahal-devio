@@ -12,11 +12,13 @@ export interface PromoValidationResult {
 // ─── Promo API ─────────────────────────────────────────────
 
 export const PromoService = {
-    validate: async (code: string, packageId?: string): Promise<PromoValidationResult> => {
+    validate: async (code: string, packageId?: string, courseId?: string): Promise<PromoValidationResult> => {
         const { data } = await api.post("/promo-codes/validate", {
             code,
             ...(packageId && { packageId }),
+            ...(courseId && { courseId }),
         });
         return data.result;
     },
 };
+

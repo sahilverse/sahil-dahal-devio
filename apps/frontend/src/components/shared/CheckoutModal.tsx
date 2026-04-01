@@ -161,7 +161,7 @@ export default function CheckoutModal({
                     </div>
 
                     {/* Elective Cipher Discount */}
-                    {maxCipherDiscount > 0 && (
+                    {maxCipherDiscount > 0 && userBalance > 0 && (
                         <div className="space-y-3 p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/10">
                             <div className="flex justify-between items-center">
                                 <Label className="text-xs font-bold uppercase text-brand-primary tracking-wider flex items-center gap-2">
@@ -172,9 +172,9 @@ export default function CheckoutModal({
                                     Balance: {userBalance}
                                 </span>
                             </div>
-                            
+
                             <div className="space-y-2">
-                                <input 
+                                <input
                                     type="range"
                                     min="0"
                                     max={maxApplicableCiphers}
