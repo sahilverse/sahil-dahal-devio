@@ -8,7 +8,7 @@ export const createCourseSchema = z.object({
     description: z.string().min(1, "Description is required").max(5000, "Description must be less than 5000 characters").trim(),
     price: z.number().min(0, "Price cannot be negative").default(0),
     isFree: z.boolean().default(false),
-    maxCipherDiscount: z.number().int().min(0).optional(),
+    maxCipherDiscount: z.number().int().min(0).default(0),
     isPublished: z.boolean().default(false),
     topics: z.array(z.string().trim().min(1).max(50)).max(10, "Maximum 10 topics allowed").optional(),
 });
