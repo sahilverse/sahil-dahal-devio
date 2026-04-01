@@ -29,12 +29,31 @@ export function CourseCard({ course }: CourseCardProps) {
                     )}
                 </CardHeader>
 
-                <CardContent className="p-5 flex-1 space-y-4">
+                <CardContent className="p-5 flex-1 space-y-3">
+                    {course.topics && course.topics.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pb-1">
+                            {course.topics.slice(0, 3).map((topic, idx) => (
+                                <div
+                                    key={topic.slug || idx}
+                                    className="flex items-center gap-0 px-2 py-0.5 rounded-full bg-muted/30 border border-border/50 text-[10px] font-bold"
+                                >
+                                    <span className="text-primary/60">t/</span>
+                                    <span className="text-muted-foreground">{topic.name}</span>
+                                </div>
+                            ))}
+                            {course.topics.length > 3 && (
+                                <span className="text-[10px] font-bold text-muted-foreground/50 self-center">
+                                    +{course.topics.length - 3}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
                     <h3 className="font-extrabold text-xl leading-tight group-hover:text-primary transition-colors line-clamp-2">
                         {course.title}
                     </h3>
 
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground font-semibold pt-1">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground font-semibold pt-0.5">
                         <div className="flex items-center gap-1.5 text-amber-500">
                             <Star className="size-3.5 fill-amber-500" />
                             <span>{course.averageRating ? course.averageRating.toFixed(1) : "0.0"}</span>

@@ -56,6 +56,16 @@ export const courseService = {
         return response.data.result;
     },
 
+    async updateCourseReview(courseId: string, reviewId: string, data: { rating?: number; comment?: string }): Promise<CourseReview> {
+        const response = await api.patch(`/courses/reviews/${reviewId}`, data);
+        return response.data.result;
+    },
+
+    async deleteCourseReview(courseId: string, reviewId: string): Promise<void> {
+        await api.delete(`/courses/reviews/${reviewId}`);
+    },
+
+
     // ─── Comments ──────────────────────────────────────────
 
     async getLessonComments(lessonId: string, params: { limit?: number; cursor?: string; sort?: "best" | "newest" | "oldest" }): Promise<PaginatedResponse<CourseComment>> {

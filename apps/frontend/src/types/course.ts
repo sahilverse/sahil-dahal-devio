@@ -1,4 +1,10 @@
 
+export interface Topic {
+    id?: string;
+    name: string;
+    slug: string;
+}
+
 export interface Course {
     id: string;
     slug: string;
@@ -15,6 +21,7 @@ export interface Course {
     enrollmentCount: number;
     isEnrolled: boolean;
     progress?: number;
+    topics?: Topic[];
 }
 
 export interface Module {
