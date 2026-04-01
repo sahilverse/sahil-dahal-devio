@@ -107,12 +107,13 @@ model User {
 
   userAchievements UserAchievement[]
 
-  authoredCourses    Course[]            @relation("course_author")
-  courseEnrollments  Enrollment[]        @relation("student_enrollments")
-  lessonProgress     LessonProgress[]
-  courseReviews      CourseReview[]
-  lessonComments     LessonComment[]
-  payments           Payment[]
+  authoredCourses   Course[]         @relation("course_author")
+  courseEnrollments Enrollment[]     @relation("student_enrollments")
+  lessonProgress    LessonProgress[]
+  courseReviews     CourseReview[]
+  lessonComments    LessonComment[]
+  lessonCommentVotes LessonCommentVote[]
+  payments          Payment[]
 
   // Professional Profile
   experiences    UserExperience[]
@@ -658,6 +659,7 @@ model Media {
   commentId String? @map("comment_id")
   messageId String? @map("message_id")
 
+
   url  String
   type MediaType
 
@@ -675,6 +677,8 @@ model Media {
   @@index([commentId])
   @@index([messageId])
 }
+
+
 
 model Topic {
   id   String @id @default(cuid())
@@ -1292,7 +1296,7 @@ model Course {
   price  Decimal @default(0) @db.Decimal(10, 2)
   isFree Boolean @default(false) @map("is_free")
 
-  maxCipherDiscount Int?    @map("max_cipher_discount")
+  maxCipherDiscount Int?    @default(0) @map("max_cipher_discount")
   isPublished       Boolean @default(false) @map("is_published")
 
   authorId String @map("author_id")
@@ -1366,15 +1370,15 @@ enum VideoStatus {
 }
 
 model Lesson {
-  id        String  @id @default(cuid())
-  moduleId  String  @map("module_id")
-  title     String
-  content   String?
-  videoUrl  String? @map("video_url")
+  id          String       @id @default(cuid())
+  moduleId    String       @map("module_id")
+  title       String
+  content     String?
+  videoUrl    String?      @map("video_url")
   videoStatus VideoStatus? @map("video_status")
-  duration  Int?
-  order     Int     @default(0)
-  isPreview Boolean @default(false) @map("is_preview")
+  duration    Int?
+  order       Int          @default(0)
+  isPreview   Boolean      @default(false) @map("is_preview")
 
   module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
@@ -1390,7 +1394,8 @@ model LessonComment {
   userId   String  @map("user_id")
   parentId String? @map("parent_id")
 
-  content String
+  content   String
+  deletedAt DateTime? @map("deleted_at")
 
   upvotes   Int @default(0)
   downvotes Int @default(0)
@@ -1398,16 +1403,36 @@ model LessonComment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  lesson  Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent  LessonComment?  @relation("lesson_comment_replies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies LessonComment[] @relation("lesson_comment_replies")
+  lesson  Lesson              @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  LessonComment?      @relation("lesson_comment_replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies LessonComment[]     @relation("lesson_comment_replies")
+  votes   LessonCommentVote[]
+
 
   @@index([lessonId])
   @@index([userId])
   @@index([parentId])
   @@index([createdAt])
+  @@index([deletedAt])
 }
+
+model LessonCommentVote {
+  id              String   @id @default(cuid())
+  lessonCommentId String   @map("lesson_comment_id")
+  userId          String   @map("user_id")
+  type            VoteType
+
+  createdAt DateTime @default(now())
+
+  lessonComment LessonComment @relation(fields: [lessonCommentId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonCommentId, userId])
+  @@index([lessonCommentId])
+  @@index([userId])
+}
+
 
 model Enrollment {
   id       String @id @default(cuid())
