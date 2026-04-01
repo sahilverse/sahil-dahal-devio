@@ -33,6 +33,8 @@ export interface JobResponseDto {
         name: string;
         slug: string;
     }[];
+    hasApplied?: boolean;
+    applicationStatus?: string | null;
 }
 
 export type CreateJobDto = CreateJobInput;

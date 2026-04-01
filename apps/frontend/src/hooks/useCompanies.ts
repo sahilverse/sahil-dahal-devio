@@ -39,10 +39,9 @@ export function useManageMembers() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, userId, action, role }: { id: string, userId: string, action: "ADD" | "REMOVE" | "UPDATE_ROLE", role?: string }) =>
-            CompanyService.manageMembers(id, { userId, action, role }),
+        mutationFn: ({ id, userId, identifier, action, role }: { id: string, userId?: string, identifier?: string, action: "ADD" | "REMOVE" | "UPDATE_ROLE", role?: string }) =>
+            CompanyService.manageMembers(id, { userId, identifier, action, role }),
         onSuccess: (_, variables) => {
-            toast.success(`Member managed successfully!`);
             queryClient.invalidateQueries({ queryKey: ["companies", "detail"] });
         },
         onError: (error: any) => {

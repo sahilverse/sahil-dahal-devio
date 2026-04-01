@@ -88,9 +88,11 @@ export function useApplyJob() {
 }
 
 export function useFetchMyApplications() {
-    return useQuery<any[]>({
+    return useInfiniteQuery({
         queryKey: ["myApplications"],
-        queryFn: () => JobService.getMyApplications(),
+        queryFn: ({ pageParam }) => JobService.getMyApplications(pageParam as string | undefined),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     });
 }
 

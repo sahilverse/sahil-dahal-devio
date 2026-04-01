@@ -26,7 +26,8 @@ export class CompanyController {
 
     getCompanyBySlug = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { slug } = req.params as { slug: string };
-        const company = await this.companyService.getCompanyBySlug(slug);
+        const userId = req.user?.id;
+        const company = await this.companyService.getCompanyBySlug(slug, userId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Company fetched successfully", company);
     });
 
@@ -40,8 +41,7 @@ export class CompanyController {
     manageMember = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const adminId = req.user!.id;
         const { id: companyId } = req.params as { id: string };
-        const { userId: targetUserId, action, role } = req.body;
-        const result = await this.companyService.manageMember(companyId, adminId, targetUserId, action, role);
+        const result = await this.companyService.manageMember(companyId, adminId, req.body);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Member managed successfully", result);
     });
 

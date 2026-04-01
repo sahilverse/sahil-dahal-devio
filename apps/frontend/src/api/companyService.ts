@@ -33,6 +33,7 @@ export interface Company {
     verificationTier: CompanyVerificationTier;
     verifiedDomain: string | null;
     ownerId: string;
+    userRole?: "OWNER" | "RECRUITER" | "MEMBER" | null;
     createdAt: string;
     owner?: {
         id: string;
@@ -72,7 +73,7 @@ export const CompanyService = {
         return data.result;
     },
 
-    manageMembers: async (id: string, memberData: { userId: string, action: "ADD" | "REMOVE" | "UPDATE_ROLE", role?: string }): Promise<any> => {
+    manageMembers: async (id: string, memberData: { userId?: string, identifier?: string, action: "ADD" | "REMOVE" | "UPDATE_ROLE", role?: string }): Promise<any> => {
         const { data } = await api.post(`/companies/${id}/members`, memberData);
         return data.result;
     },

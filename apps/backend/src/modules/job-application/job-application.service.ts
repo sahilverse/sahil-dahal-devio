@@ -81,8 +81,21 @@ export class JobApplicationService {
         };
     }
 
-    async getUserApplications(userId: string): Promise<JobApplicationResponseDto[]> {
-        return this.jobApplicationRepository.findByUserId(userId);
+    async getUserApplications(userId: string, cursor?: string, limit: number = 10): Promise<PaginatedJobApplicationResponseDto> {
+        const applications = await this.jobApplicationRepository.findByUserId(userId, limit + 1, cursor);
+        const hasNextPage = applications.length > limit;
+        const resultApplications = hasNextPage ? applications.slice(0, limit) : applications;
+        const nextCursor = hasNextPage ? resultApplications[resultApplications.length - 1]?.id || null : null;
+
+        return {
+            applications: resultApplications as any,
+            nextCursor
+        };
+    }
+
+    async hasUserApplied(jobId: string, userId: string): Promise<boolean> {
+        const existing = await this.jobApplicationRepository.findByJobAndUser(jobId, userId);
+        return !!existing;
     }
 
     async updateApplicationStatus(applicationId: string, status: ApplicationStatus, userId: string): Promise<JobApplicationResponseDto> {

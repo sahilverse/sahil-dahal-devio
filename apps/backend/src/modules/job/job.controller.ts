@@ -20,7 +20,8 @@ export class JobController {
 
     getJobBySlug = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { slug } = req.params;
-        const job = await this.jobService.getJobBySlug(slug as string);
+        const userId = req.user?.id;
+        const job = await this.jobService.getJobBySlug(slug as string, userId);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Job fetched successfully", job);
     });
 

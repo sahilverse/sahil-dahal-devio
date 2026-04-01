@@ -109,6 +109,7 @@ router.post(
  */
 router.get(
     "/:slug",
+    authMiddleware.extractUser,
     companyController.getCompanyBySlug
 );
 

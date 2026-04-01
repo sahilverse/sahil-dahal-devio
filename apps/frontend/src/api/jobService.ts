@@ -20,6 +20,8 @@ export interface Job {
     createdAt: string;
     company?: Company & { slug: string };
     topics?: { id: string; name: string; slug: string }[];
+    hasApplied?: boolean;
+    applicationStatus?: string | null;
 }
 
 export interface JobsResponse {
@@ -69,8 +71,10 @@ export const JobService = {
         return response.result;
     },
 
-    getMyApplications: async (): Promise<any[]> => {
-        const { data } = await api.get("/jobs/applications/me");
+    getMyApplications: async (cursor?: string, limit: number = 10): Promise<{ applications: any[], nextCursor: string | null }> => {
+        const { data } = await api.get("/jobs/applications/me", {
+            params: { cursor, limit }
+        });
         return data.result;
     },
 

@@ -69,9 +69,9 @@ router.get(
 
 /**
  * @swagger
- * /jobs/applications/{jobId}:
+ * /jobs/applications/check/{jobId}:
  *   get:
- *     summary: Get applications for a specific job (Recruiters/Owners only)
+ *     summary: Check if current user has applied for a specific job
  *     tags: [Job Application]
  *     security:
  *       - BearerAuth: []
@@ -83,9 +83,7 @@ router.get(
  *           type: string
  *     responses:
  *       200:
- *         description: Job applications fetched successfully
- *       403:
- *         description: Insufficient permissions
+ *         description: Returns hasApplied boolean
  */
 router.get(
     "/:jobId",

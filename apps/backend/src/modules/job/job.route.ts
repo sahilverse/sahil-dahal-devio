@@ -105,6 +105,7 @@ router.post(
  */
 router.get(
     "/:slug",
+    authMiddleware.extractUser,
     jobController.getJobBySlug
 );
 

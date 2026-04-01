@@ -4,6 +4,7 @@ import { JobRepository } from "./job.repository";
 import { CompanyService } from "../company/company.service";
 import { CompanyRepository } from "../company/company.repository";
 import { TopicService } from "../topic/topic.service";
+import { JobApplicationRepository } from "../job-application/job-application.repository";
 import { Job, Prisma } from "../../generated/prisma/client";
 import { JobResponseDto, PaginatedJobsResponseDto } from "./job.dto";
 import { ApiError } from "../../utils";
@@ -16,7 +17,8 @@ export class JobService {
         @inject(TYPES.JobRepository) private jobRepository: JobRepository,
         @inject(TYPES.CompanyService) private companyService: CompanyService,
         @inject(TYPES.CompanyRepository) private companyRepository: CompanyRepository,
-        @inject(TYPES.TopicService) private topicService: TopicService
+        @inject(TYPES.TopicService) private topicService: TopicService,
+        @inject(TYPES.JobApplicationRepository) private jobApplicationRepository: JobApplicationRepository
     ) { }
 
     async createJob(userId: string, data: any) {
@@ -76,16 +78,30 @@ export class JobService {
         });
     }
 
-    async getJobBySlug(slug: string): Promise<JobResponseDto> {
+    async getJobBySlug(slug: string, userId?: string): Promise<JobResponseDto> {
         const job = await this.jobRepository.findBySlug(slug);
         if (!job) throw new ApiError("Job not found", StatusCodes.NOT_FOUND);
+
+        let hasApplied = false;
+        let applicationStatus = null;
+
+        if (userId) {
+            const application = await this.jobApplicationRepository.findByJobAndUser(job.id, userId);
+            if (application) {
+                hasApplied = true;
+                applicationStatus = application.status;
+            }
+        }
+
         return {
             ...job,
             topics: job.topics ? job.topics.map((t: any) => ({
                 id: t.topic.id,
                 name: t.topic.name,
                 slug: t.topic.slug
-            })) : []
+            })) : [],
+            hasApplied,
+            applicationStatus
         };
     }
 

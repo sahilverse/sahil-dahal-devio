@@ -20,7 +20,9 @@ export class JobApplicationController {
 
     getUserApplications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user!.id;
-        const result = await this.jobApplicationService.getUserApplications(userId);
+        const { cursor, limit } = req.query;
+        const parsedLimit = limit ? parseInt(limit as string, 10) : 10;
+        const result = await this.jobApplicationService.getUserApplications(userId, cursor as string, parsedLimit);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Applications fetched successfully", result);
     });
 

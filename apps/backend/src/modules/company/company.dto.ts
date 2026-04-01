@@ -14,6 +14,7 @@ export interface CompanyResponseDto {
     verificationTier: CompanyVerificationTier;
     verifiedDomain: string | null;
     ownerId: string;
+    userRole?: CompanyRole | null;
     createdAt: Date;
     updatedAt: Date;
     owner?: {
@@ -40,7 +41,8 @@ export type CreateCompanyDto = CreateCompanyInput;
 export type UpdateCompanyDto = UpdateCompanyInput;
 
 export interface ManageMemberDto {
-    userId: string;
+    userId?: string;
+    identifier?: string;
     action: "ADD" | "REMOVE" | "UPDATE_ROLE";
     role?: CompanyRole;
 }
