@@ -53,7 +53,7 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
     const [isExpanded, setIsExpanded] = useState(false);
     const [canExpand, setCanExpand] = useState(false);
     const [localShowComments, setLocalShowComments] = useState(false);
-    
+
     const isCommentsVisible = externalShowComments !== undefined ? externalShowComments : localShowComments;
     const toggleComments = onToggleComments || (() => setLocalShowComments(!localShowComments));
 
@@ -102,8 +102,15 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
         saveMutation.mutate(post.id);
     };
 
-    const handlePin = () => {
-        pinMutation.mutate({ postId: post.id, isPinned: !post.isPinned });
+    const handlePin = (type: "PROFILE" | "COMMUNITY") => {
+        const communityId = type === "COMMUNITY" ? post.community?.id : undefined;
+        const isPinned = type === "COMMUNITY" ? post.isPinnedToCommunity : post.isPinnedToProfile;
+
+        pinMutation.mutate({
+            postId: post.id,
+            isPinned: !isPinned,
+            communityId
+        });
     };
 
     const handleToggleVisibility = () => {
@@ -151,7 +158,7 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                                 </span>
                             </div>
                             <div className="text-[12px] font-medium text-muted-foreground/60">
-                                <Link href={`/user/${post.author.username}`} className="hover:text-foreground/40 transition-colors">
+                                <Link href={`/u/${post.author.username}`} className="hover:text-foreground/40 transition-colors">
                                     u/{post.author.username}
                                 </Link>
                             </div>
@@ -159,14 +166,14 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                     </div>
                 ) : (
                     <div className="flex items-center gap-2">
-                        <Link href={`/user/${post.author.username}`} className="shrink-0">
+                        <Link href={`/u/${post.author.username}`} className="shrink-0">
                             <UserAvatar
                                 user={post.author}
                                 size="sm"
                             />
                         </Link>
                         <div className="flex items-center gap-1.5">
-                            <Link href={`/user/${post.author.username}`} className="text-[14px] font-bold text-foreground hover:underline leading-none">
+                            <Link href={`/u/${post.author.username}`} className="text-[14px] font-bold text-foreground hover:underline leading-none">
                                 u/{post.author.username}
                             </Link>
                             <span className="text-[10px] text-muted-foreground/40">•</span>
@@ -179,10 +186,19 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
 
                 <div className="flex-1" />
 
-                {post.isPinned && (
-                    <div className="flex items-center text-brand font-medium bg-transparent rounded-full whitespace-nowrap">
-                        <Pin className="h-3 w-3 fill-current rotate-45" />
+                {post.visibility === "PRIVATE" && (
+                    <div className="flex items-center gap-1 text-muted-foreground/60 font-medium bg-muted/30 px-2 py-0.5 rounded-full border border-border/50">
+                        <EyeOff className="h-3 w-3" />
+                        <span className="text-[10px] font-bold uppercase tracking-tight">Private</span>
+                    </div>
+                )}
 
+                {post.isPinned && (
+                    <div className="flex items-center gap-1 text-brand font-medium bg-transparent rounded-full whitespace-nowrap">
+                        <Pin className="h-3 w-3 fill-current rotate-45" />
+                        {pathname?.startsWith("/d/") && (
+                            <span className="text-[10px] font-bold uppercase tracking-tight">Pinned by mods</span>
+                        )}
                     </div>
                 )}
 
@@ -198,16 +214,31 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                                 <DropdownMenuItem className="gap-2 cursor-pointer">
                                     <Pencil className="h-4 w-4" /> Edit
                                 </DropdownMenuItem>
-                                {user && pathname?.startsWith(`/user/${user.username}`) && isOwner && (
+
+                                {/* Pin to Profile */}
+                                {isOwner && (
                                     <DropdownMenuItem
                                         className="gap-2 cursor-pointer"
-                                        onClick={handlePin}
+                                        onClick={() => handlePin("PROFILE")}
                                         disabled={pinMutation.isPending}
                                     >
-                                        <Pin className={cn("h-4 w-4", post.isPinned && "fill-current")} />
-                                        {post.isPinned ? "Unpin from Profile" : "Pin to Profile"}
+                                        <Pin className={cn("h-4 w-4", post.isPinnedToProfile && "fill-current")} />
+                                        {post.isPinnedToProfile ? "Unpin from Profile" : "Pin to Profile"}
                                     </DropdownMenuItem>
                                 )}
+
+                                {/* Pin to Community */}
+                                {post.community && post.canManage && (
+                                    <DropdownMenuItem
+                                        className="gap-2 cursor-pointer"
+                                        onClick={() => handlePin("COMMUNITY")}
+                                        disabled={pinMutation.isPending}
+                                    >
+                                        <Pin className={cn("h-4 w-4", post.isPinnedToCommunity && "fill-current")} />
+                                        {post.isPinnedToCommunity ? "Unpin from Community" : "Pin to Community"}
+                                    </DropdownMenuItem>
+                                )}
+
                                 <DropdownMenuItem
                                     className="gap-2 cursor-pointer"
                                     onClick={handleToggleVisibility}

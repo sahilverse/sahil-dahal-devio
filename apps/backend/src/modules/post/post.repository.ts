@@ -65,8 +65,9 @@ export class PostRepository {
         visibility?: PostVisibility;
         savedByUserId?: string;
         sortBy?: "HOT" | "NEW" | "TOP" | "BEST";
+        excludeIds?: string[];
     }): Promise<Post[]> {
-        const { cursor, limit, userId, communityId, currentUserId, status, visibility, savedByUserId, sortBy } = params;
+        const { cursor, limit, userId, communityId, currentUserId, status, visibility, savedByUserId, sortBy, excludeIds } = params;
 
         const isOwner = userId && currentUserId && userId === currentUserId;
 
@@ -89,13 +90,6 @@ export class PostRepository {
         }
 
         const getOrderBy = () => {
-            if (shouldSortByPin) {
-                return [
-                    { pinnedPosts: { _count: "desc" as Prisma.SortOrder } },
-                    { createdAt: "desc" } as any
-                ];
-            }
-
             switch (sortBy) {
                 case "NEW":
                     return { createdAt: "desc" };
@@ -118,6 +112,9 @@ export class PostRepository {
             cursor: cursor ? { id: cursor } : undefined,
             skip: cursor ? 1 : 0,
             where: {
+                ...(excludeIds && excludeIds.length > 0 && {
+                    id: { notIn: excludeIds }
+                }),
                 ...(userId && { authorId: userId }),
                 ...(communityId && {
                     communityId,
@@ -268,6 +265,23 @@ export class PostRepository {
                 ...(communityId ? { communityId } : { userId })
             }
         });
+    }
+
+    async findPinnedPosts(userId?: string, communityId?: string, currentUserId?: string): Promise<Post[]> {
+        const pinned = await this.prisma.pinnedPost.findMany({
+            where: {
+                ...(communityId ? { communityId } : { userId })
+            },
+            include: {
+                post: {
+                    include: this.getPostInclude(currentUserId)
+                }
+            },
+            take: 3,
+            orderBy: { createdAt: "desc" }
+        });
+
+        return pinned.map(p => p.post as unknown as Post);
     }
 
     async togglePin(postId: string, isPinned: boolean, currentUserId?: string, communityId?: string): Promise<Post> {

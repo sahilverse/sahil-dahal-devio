@@ -80,6 +80,22 @@ export class PostResponseDto {
 
     @Expose()
     @Transform(({ obj, options }) => {
+        const currentUserId = (options as any)?.currentUserId;
+        if (!currentUserId || !obj.pinnedPosts) return false;
+        return obj.pinnedPosts.some((p: any) => p.userId === currentUserId);
+    })
+    isPinnedToProfile!: boolean;
+
+    @Expose()
+    @Transform(({ obj }) => {
+        const communityId = obj.communityId;
+        if (!communityId || !obj.pinnedPosts) return false;
+        return obj.pinnedPosts.some((p: any) => p.communityId === communityId);
+    })
+    isPinnedToCommunity!: boolean;
+
+    @Expose()
+    @Transform(({ obj, options }) => {
         const onlySaved = (options as any)?.onlySaved;
         const queryUserId = (options as any)?.queryUserId;
         const queryCommunityId = (options as any)?.queryCommunityId;

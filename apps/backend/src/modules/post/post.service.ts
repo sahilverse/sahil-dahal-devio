@@ -195,31 +195,50 @@ export class PostService {
         query: GetPostsDto,
         currentUserId?: string
     ): Promise<{ posts: PostResponseDto[]; nextCursor: string | null }> {
+        const { userId, communityId, cursor, limit, onlySaved, sortBy, status, visibility } = query;
+
+        let pinnedPosts: any[] = [];
+        let excludeIds: string[] = [];
+
+        // 1. If it's the first page of a context view, get pinned posts
+        if (!cursor && !onlySaved && (userId || communityId)) {
+            pinnedPosts = await this.postRepository.findPinnedPosts(userId, communityId, currentUserId);
+            excludeIds = pinnedPosts.map(p => p.id);
+        }
+
+        // 2. Adjust limit if we have pins on the first page
+        const fetchLimit = !cursor ? limit - pinnedPosts.length : limit;
+
+        // 3. Get regular posts
         const posts = await this.postRepository.findMany({
-            cursor: query.cursor,
-            limit: query.limit,
-            userId: query.userId,
-            communityId: query.communityId,
+            cursor,
+            limit: fetchLimit,
+            userId,
+            communityId,
             currentUserId,
-            status: query.status,
-            visibility: query.visibility,
-            savedByUserId: query.onlySaved ? currentUserId : undefined,
-            sortBy: query.sortBy,
+            status,
+            visibility,
+            savedByUserId: onlySaved ? currentUserId : undefined,
+            sortBy,
+            excludeIds
         });
 
+        // 4. Combine
+        const combinedPosts = !cursor ? [...pinnedPosts, ...posts] : posts;
+
         let nextCursor: string | null = null;
-        if (posts.length > query.limit) {
-            const nextItem = posts.pop();
+        if (combinedPosts.length > limit) {
+            const nextItem = combinedPosts.pop();
             nextCursor = nextItem?.id || null;
         }
 
         return {
-            posts: plainToInstance(PostResponseDto, posts as any[], {
+            posts: plainToInstance(PostResponseDto, combinedPosts as any[], {
                 excludeExtraneousValues: true,
                 currentUserId,
-                queryUserId: query.userId,
-                queryCommunityId: query.communityId,
-                onlySaved: query.onlySaved,
+                queryUserId: userId,
+                queryCommunityId: communityId,
+                onlySaved: onlySaved,
             } as any),
             nextCursor,
         };
@@ -343,11 +362,11 @@ export class PostService {
         if (communityId) {
             const isMod = await this.communityRepository.isModeratorOrCreator(communityId, userId);
 
-            if (!isMod && post.authorId !== userId) {
-                throw new ApiError("You are not authorized to pin to this community", StatusCodes.FORBIDDEN);
+            if (!isMod) {
+                throw new ApiError("Only moderators can pin posts to the community", StatusCodes.FORBIDDEN);
             }
         } else if (post.authorId !== userId) {
-            throw new ApiError("You are not authorized to pin this post", StatusCodes.FORBIDDEN);
+            throw new ApiError("You can only pin your own posts to your profile", StatusCodes.FORBIDDEN);
         }
 
         if (isPinned) {

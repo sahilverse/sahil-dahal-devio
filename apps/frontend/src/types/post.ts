@@ -44,6 +44,8 @@ export interface PostResponseDto {
     userVote?: "UP" | "DOWN";
     isSaved?: boolean;
     isPinned: boolean;
+    isPinnedToProfile: boolean;
+    isPinnedToCommunity: boolean;
     visibility: "PUBLIC" | "PRIVATE";
     acceptedAnswerId?: string;
     canManage: boolean;

@@ -119,10 +119,11 @@ export function usePinPost() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ postId, isPinned }: { postId: string; isPinned: boolean }) =>
-            PostService.togglePinPost(postId, isPinned),
+        mutationFn: ({ postId, isPinned, communityId }: { postId: string; isPinned: boolean; communityId?: string }) =>
+            PostService.togglePinPost(postId, isPinned, communityId),
         onSuccess: (data, variables) => {
-            const message = data.isPinned ? "Post pinned to profile!" : "Post unpinned!";
+            const context = variables.communityId ? "community" : "profile";
+            const message = data.isPinned ? `Post pinned to ${context}!` : `Post unpinned from ${context}!`;
             toast.success(message);
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
