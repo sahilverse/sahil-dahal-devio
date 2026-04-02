@@ -15,7 +15,7 @@ interface SearchDropdownProps {
     recentSearches: string[];
     onRecentRemove: (term: string) => void;
     onSelect: (term: string) => void;
-    isMobile?: boolean; // Prop for mobile/overlay view
+    isMobile?: boolean;
 }
 
 const typeIcons = {
@@ -60,8 +60,8 @@ export default function SearchDropdown({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={cn(
                 "z-50 bg-white dark:bg-bg-dark overflow-hidden flex flex-col transition-all duration-200",
-                isMobile 
-                    ? "w-full min-h-0 flex-1 border-none shadow-none" 
+                isMobile
+                    ? "w-full min-h-0 flex-1 border-none shadow-none"
                     : "absolute top-full left-4 right-4 mt-2 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl max-h-[80vh] backdrop-blur-md"
             )}
         >
