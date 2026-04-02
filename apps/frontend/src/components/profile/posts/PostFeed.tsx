@@ -2,6 +2,7 @@
 
 import { useFetchPosts } from "@/hooks/usePosts";
 import PostCard from "./PostCard";
+import DraftCard from "./DraftCard";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -17,9 +18,11 @@ interface PostFeedProps {
     isCurrentUser?: boolean;
     username?: string;
     sortBy?: string;
+    status?: string;
+    limit?: number;
 }
 
-export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser, username, sortBy }: PostFeedProps) {
+export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser, username, sortBy, status, limit = 10 }: PostFeedProps) {
     const { user } = useAppSelector((state) => state.auth);
     const [activePostId, setActivePostId] = useState<string | null>(null);
 
@@ -30,7 +33,7 @@ export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser
         isFetchingNextPage,
         isLoading,
         isError
-    } = useFetchPosts({ userId, communityId, onlySaved, sortBy, limit: 10 });
+    } = useFetchPosts({ userId, communityId, onlySaved, sortBy, status, limit });
 
     const { ref, inView } = useInView();
 
@@ -96,13 +99,17 @@ export default function PostFeed({ userId, communityId, onlySaved, isCurrentUser
     return (
         <div className="space-y-4">
             {posts.map((post) => (
-                <PostCard
-                    key={post.id}
-                    post={post}
-                    isOwner={user?.id === post.author.id}
-                    showComments={activePostId === post.id}
-                    onToggleComments={() => setActivePostId(activePostId === post.id ? null : post.id)}
-                />
+                status === "DRAFT" ? (
+                    <DraftCard key={post.id} post={post} />
+                ) : (
+                    <PostCard
+                        key={post.id}
+                        post={post}
+                        isOwner={user?.id === post.author.id}
+                        showComments={activePostId === post.id}
+                        onToggleComments={() => setActivePostId(activePostId === post.id ? null : post.id)}
+                    />
+                )
             ))}
 
             {/* Infinite Scroll Trigger */}

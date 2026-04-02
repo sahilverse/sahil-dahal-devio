@@ -2,66 +2,39 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useSearchParams } from "next/navigation";
 import { useEffect, ReactNode } from "react";
 import { Form } from "@/components/ui/form";
-import { PostType, PostStatus } from "@devio/zod-utils";
+import { PostType, PostStatus, CreatePostFormData, frontendPostSchema } from "@devio/zod-utils";
 import { useCommunity } from "@/hooks/useCommunity";
 
-const frontendPostSchema = z.discriminatedUnion("type", [
-    z.object({
-        type: z.literal(PostType.TEXT),
-        title: z.string().min(1, "Title is required").max(300),
-        content: z.string().optional(),
-        communityId: z.cuid().optional(),
-        topics: z.array(z.string()).max(5).optional(),
-        status: z.enum(PostStatus),
-        media: z.array(z.instanceof(File)).max(10).optional(),
-    }),
-    z.object({
-        type: z.literal(PostType.LINK),
-        title: z.string().min(1, "Title is required").max(300),
-        linkUrl: z.url("Invalid URL"),
-        communityId: z.cuid().optional(),
-        topics: z.array(z.string()).max(5).optional(),
-        status: z.enum(PostStatus),
-    }),
-    z.object({
-        type: z.literal(PostType.QUESTION),
-        title: z.string().min(1, "Title is required").max(300),
-        content: z.string().optional(),
-        communityId: z.cuid().optional(),
-        topics: z.array(z.string()).max(5).optional(),
-        status: z.enum(PostStatus),
-        bountyAmount: z.number().int().min(0).optional(),
-        media: z.array(z.instanceof(File)).max(10).optional(),
-    }),
-]);
 
-export type CreatePostFormData = z.infer<typeof frontendPostSchema>;
+
+import { PostResponseDto } from "@/types/post";
 
 interface CreatePostFormProps {
     children: ReactNode;
     onSubmit: (data: CreatePostFormData) => void;
     isPending: boolean;
+    initialData?: PostResponseDto;
+    isEdit?: boolean;
 }
 
-export default function CreatePostForm({ children, onSubmit, isPending }: CreatePostFormProps) {
+export default function CreatePostForm({ children, onSubmit, isPending, initialData, isEdit }: CreatePostFormProps) {
     const searchParams = useSearchParams();
-    const typeParam = searchParams.get("type")?.toUpperCase() as PostType;
+    const typeParam = (initialData?.type as PostType) || (searchParams.get("type")?.toUpperCase() as PostType);
 
     const form = useForm<CreatePostFormData>({
         resolver: zodResolver(frontendPostSchema),
         mode: "onChange",
         defaultValues: {
-            type: PostType.TEXT,
-            title: "",
-            content: "",
-            linkUrl: "",
-            bountyAmount: 0,
-            topics: [],
-            status: PostStatus.PUBLISHED,
+            type: initialData?.type || PostType.TEXT,
+            title: initialData?.title || "",
+            content: initialData?.content || "",
+            linkUrl: initialData?.linkUrl || "",
+            bountyAmount: initialData?.bountyAmount || 0,
+            topics: initialData?.topics?.map(t => t.name) || [],
+            status: initialData?.status === "DRAFT" ? PostStatus.DRAFT : PostStatus.PUBLISHED,
             media: [],
         } as any,
     });

@@ -3,6 +3,7 @@ export interface PostResponseDto {
     title: string;
     content?: string;
     type: "TEXT" | "LINK" | "QUESTION" | "POLL";
+    status: "PUBLISHED" | "DRAFT";
     linkUrl?: string;
     bountyAmount?: number;
     bountyExpiresAt?: string;

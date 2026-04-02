@@ -259,6 +259,23 @@ export class PostService {
             }
         }
 
+        // Handle Topics Update if provided
+        if (data.topics && Array.isArray(data.topics)) {
+            const topicIds: string[] = [];
+            for (const topicName of data.topics) {
+                const topic = await this.topicService.createTopic(topicName);
+                if (topic) topicIds.push(topic.id);
+            }
+
+            // Transform into Prisma connect/disconnect structure
+            data.topics = {
+                deleteMany: {},
+                create: topicIds.map(id => ({
+                    topic: { connect: { id } }
+                }))
+            };
+        }
+
         const updatedPost = await this.postRepository.update(postId, data, userId);
         return plainToInstance(PostResponseDto, updatedPost, {
             excludeExtraneousValues: true,

@@ -223,6 +223,9 @@ export class UpdatePostDto {
 
     @Expose()
     visibility?: PostVisibility;
+
+    @Expose()
+    topics?: string[];
 }
 
 @Exclude()

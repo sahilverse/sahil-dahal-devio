@@ -2,7 +2,7 @@ import { useMutation, useQueryClient, useInfiniteQuery, useQuery } from "@tansta
 import { PostService } from "@/api/postService";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { CreatePostFormData } from "@/components/create/CreatePostForm";
+import { CreatePostFormData } from "@devio/zod-utils";
 import { useAppSelector } from "@/store/hooks";
 import { logger } from "@/lib/logger";
 
@@ -21,12 +21,16 @@ export function useCreatePost() {
 
     return useMutation({
         mutationFn: (data: CreatePostFormData) => PostService.createPost(data),
-        onSuccess: (data) => {
-            toast.success("Post created successfully!");
+        onSuccess: (data, variables) => {
+            const isDraft = variables.status === "DRAFT";
+            toast.success(isDraft ? "Draft saved successfully!" : "Post created successfully!");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
+            queryClient.invalidateQueries({ queryKey: ["postCount"] });
 
-            if (data.community) {
+            if (isDraft) {
+                router.replace(`/edit/${data.id}`);
+            } else if (data.community) {
                 router.push(`/d/${data.community.name}?view=posts`);
             } else {
                 router.push(`/u/${user?.username}?view=posts`);
@@ -138,15 +142,21 @@ export function usePinPost() {
 
 export function useUpdatePost() {
     const queryClient = useQueryClient();
+    const router = useRouter();
 
     return useMutation({
-        mutationFn: ({ postId, data }: { postId: string; data: { visibility?: string; status?: string; title?: string; content?: string } }) =>
+        mutationFn: ({ postId, data }: { postId: string; data: Partial<CreatePostFormData> }) =>
             PostService.updatePost(postId, data),
         onSuccess: (updatedPost) => {
-            toast.success("Post updated successfully!");
+            const isDraft = updatedPost.status === "DRAFT";
+            toast.success(isDraft ? "Draft updated successfully!" : "Post updated successfully!");
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             queryClient.invalidateQueries({ queryKey: ["post", updatedPost.id] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
+
+            if (updatedPost.status === "PUBLISHED") {
+                router.push(`/post/${updatedPost.id}`);
+            }
         },
         onError: (error: any) => {
             toast.error(error?.errorMessage || "Failed to update post.");
@@ -154,7 +164,7 @@ export function useUpdatePost() {
     });
 }
 
-export function useFetchPosts(filters?: { userId?: string; communityId?: string; onlySaved?: boolean; sortBy?: string; limit?: number }) {
+export function useFetchPosts(filters?: { userId?: string; communityId?: string; onlySaved?: boolean; sortBy?: string; limit?: number; status?: string }) {
     return useInfiniteQuery({
         queryKey: ["posts", filters],
         queryFn: async ({ pageParam = undefined }) => {
@@ -166,6 +176,13 @@ export function useFetchPosts(filters?: { userId?: string; communityId?: string;
         },
         getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
         initialPageParam: undefined,
+    });
+}
+
+export function useFetchPostCount(params?: { status?: string; visibility?: string }) {
+    return useQuery({
+        queryKey: ["postCount", params],
+        queryFn: () => PostService.getPostCount(params || {}),
     });
 }
 

@@ -34,11 +34,13 @@ export class PostController {
         const files = req.files as Express.Multer.File[] || [];
         const body = req.body;
 
+        console.log(body)
+
         const timezoneOffsetHeader = req.headers['x-timezone-offset'];
         const timezoneOffset = timezoneOffsetHeader ? parseInt(timezoneOffsetHeader as string, 10) : undefined;
 
         const post = await this.postService.createPost(userId, body, files, timezoneOffset);
-        return ResponseHandler.sendResponse(res, StatusCodes.CREATED, "Post created successfully", post);
+        return ResponseHandler.sendResponse(res, StatusCodes.CREATED, body.status === "DRAFT" ? "Draft Saved successfully" : "Post created successfully", post);
 
     });
 

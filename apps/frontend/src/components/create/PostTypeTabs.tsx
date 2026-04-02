@@ -7,7 +7,11 @@ import { motion } from "motion/react";
 
 import { PostType } from "@devio/zod-utils";
 
-export default function PostTypeTabs() {
+interface PostTypeTabsProps {
+    isEdit?: boolean;
+}
+
+export default function PostTypeTabs({ isEdit }: PostTypeTabsProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const paramType = searchParams.get("type")?.toUpperCase() as PostType;
@@ -16,6 +20,7 @@ export default function PostTypeTabs() {
         : PostType.TEXT;
 
     const handleTabChange = (value: string) => {
+        if (isEdit) return;
         router.push(`/create?type=${value.toLowerCase()}`);
     };
 

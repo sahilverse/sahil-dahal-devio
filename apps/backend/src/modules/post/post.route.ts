@@ -144,30 +144,6 @@ router.get(
 
 /**
  * @swagger
- * /posts/{postId}:
- *   get:
- *     summary: Get a post by ID
- *     tags: [Post]
- *     parameters:
- *       - in: path
- *         name: postId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Post fetched successfully
- *       404:
- *         description: Post not found
- */
-router.get(
-    "/:postId",
-    authMiddleware.extractUser,
-    postController.getPost
-);
-
-/**
- * @swagger
  * /posts/count:
  *   get:
  *     summary: Get post count (e.g. for drafts)
@@ -194,6 +170,32 @@ router.get(
  *         description: Unauthorized
  */
 router.get("/count", authMiddleware.guard, authMiddleware.verifiedOnly, postController.getPostCount);
+
+/**
+ * @swagger
+ * /posts/{postId}:
+ *   get:
+ *     summary: Get a post by ID
+ *     tags: [Post]
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Post fetched successfully
+ *       404:
+ *         description: Post not found
+ */
+router.get(
+    "/:postId",
+    authMiddleware.extractUser,
+    postController.getPost
+);
+
+
 
 /**
  * @swagger

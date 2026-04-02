@@ -50,4 +50,39 @@ export const createPostSchema = z.discriminatedUnion("type", [
     }).strict(),
 ]);
 
+
+export const frontendPostSchema = z.discriminatedUnion("type", [
+    z.object({
+        type: z.literal(PostType.TEXT),
+        title: z.string().min(1, "Title is required").max(300),
+        content: z.string().optional(),
+        communityId: z.cuid().optional(),
+        topics: z.array(z.string()).max(5).optional(),
+        status: z.enum([PostStatus.PUBLISHED, PostStatus.DRAFT] as any),
+        visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+        media: z.array(z.instanceof(File)).max(10).optional(),
+    }),
+    z.object({
+        type: z.literal(PostType.LINK),
+        title: z.string().min(1, "Title is required").max(300),
+        linkUrl: z.url("Invalid URL"),
+        communityId: z.cuid().optional(),
+        topics: z.array(z.string()).max(5).optional(),
+        status: z.enum([PostStatus.PUBLISHED, PostStatus.DRAFT] as any),
+        visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+    }),
+    z.object({
+        type: z.literal(PostType.QUESTION),
+        title: z.string().min(1, "Title is required").max(300),
+        content: z.string().optional(),
+        communityId: z.cuid().optional(),
+        topics: z.array(z.string()).max(5).optional(),
+        status: z.enum([PostStatus.PUBLISHED, PostStatus.DRAFT] as any),
+        visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
+        bountyAmount: z.number().int().min(0).optional(),
+        media: z.array(z.instanceof(File)).max(10).optional(),
+    }),
+]);
+
+export type CreatePostFormData = z.infer<typeof frontendPostSchema>;
 export type CreatePostInput = z.infer<typeof createPostSchema>;

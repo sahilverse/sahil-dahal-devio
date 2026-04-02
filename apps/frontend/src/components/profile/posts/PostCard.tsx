@@ -186,6 +186,13 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
 
                 <div className="flex-1" />
 
+                {post.status === "DRAFT" && (
+                    <div className="flex items-center gap-1 text-muted-foreground/60 font-medium bg-muted/30 px-2 py-0.5 rounded-full border border-border/50">
+                        <Pencil className="h-3 w-3" />
+                        <span className="text-[10px] font-bold uppercase tracking-tight">Draft</span>
+                    </div>
+                )}
+
                 {post.visibility === "PRIVATE" && (
                     <div className="flex items-center gap-1 text-muted-foreground/60 font-medium bg-muted/30 px-2 py-0.5 rounded-full border border-border/50">
                         <EyeOff className="h-3 w-3" />
@@ -211,9 +218,11 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                     <DropdownMenuContent align="end" className="bg-card">
                         {post.canManage ? (
                             <>
-                                <DropdownMenuItem className="gap-2 cursor-pointer">
-                                    <Pencil className="h-4 w-4" /> Edit
-                                </DropdownMenuItem>
+                                <Link href={`/edit/${post.id}`}>
+                                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                                        <Pencil className="h-4 w-4" /> Edit
+                                    </DropdownMenuItem>
+                                </Link>
 
                                 {/* Pin to Profile */}
                                 {isOwner && (

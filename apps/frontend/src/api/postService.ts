@@ -1,5 +1,5 @@
 import api from "./axios";
-import { CreatePostFormData } from "@/components/create/CreatePostForm";
+import { CreatePostFormData } from "@devio/zod-utils";
 
 export const PostService = {
     createPost: async (payload: CreatePostFormData) => {
@@ -48,13 +48,18 @@ export const PostService = {
         return data.result;
     },
 
-    getPosts: async (params: { cursor?: string; limit?: number; userId?: string; communityId?: string; onlySaved?: boolean; sortBy?: string }) => {
+    getPosts: async (params: { cursor?: string; limit?: number; userId?: string; communityId?: string; onlySaved?: boolean; sortBy?: string; status?: string }) => {
         const { data } = await api.get("/posts", { params });
         return data.result;
     },
 
     getPostById: async (postId: string) => {
         const { data } = await api.get(`/posts/${postId}`);
+        return data.result;
+    },
+
+    getPostCount: async (params: { status?: string; visibility?: string }) => {
+        const { data } = await api.get("/posts/count", { params });
         return data.result;
     },
 
@@ -76,7 +81,7 @@ export const PostService = {
         const { data } = await api.delete(`/posts/${postId}`);
         return data.result;
     },
-    updatePost: async (postId: string, payload: { visibility?: string; status?: string; title?: string; content?: string }) => {
+    updatePost: async (postId: string, payload: Partial<CreatePostFormData>) => {
         const { data } = await api.patch(`/posts/${postId}`, payload);
         return data.result;
     }
