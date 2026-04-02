@@ -29,7 +29,7 @@ export function VerifyContent() {
 
             // Immediate Redirect
             if (data.type === "COURSE_PURCHASE" && data.courseSlug) {
-                router.replace(`/learn/${data.courseSlug}/lesson/start`);
+                router.replace(`/l/${data.courseSlug}/lesson/start`);
             } else {
                 router.replace("/");
             }

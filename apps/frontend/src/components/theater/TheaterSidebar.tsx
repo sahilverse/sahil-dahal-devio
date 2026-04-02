@@ -122,7 +122,7 @@ export function TheaterSidebar({
                                                         return (
                                                             <Link
                                                                 key={l.id}
-                                                                href={`/learn/${slug}/lesson/${l.id}`}
+                                                                href={`/l/${slug}/lesson/${l.id}`}
                                                                 className={`flex items-center gap-5 p-4 rounded-2xl cursor-pointer transition-all border border-transparent ${isCurrent ? 'bg-brand-primary/10 border-brand-primary/20 shadow-inner' : 'hover:bg-white/[0.02]'
                                                                     }`}
                                                             >

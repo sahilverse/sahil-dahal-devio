@@ -6,11 +6,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCompactNumber(number: number): string {
-  if (number < 1000) {
-    return number.toString();
-  }
-  return Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-US", {
     notation: "compact",
+    compactDisplay: "short",
     maximumFractionDigits: 1,
-  }).format(number).toLowerCase();
+  }).format(number);
 }

@@ -1,20 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/slices/ui/uiSlice";
 import { toggleChat } from "@/slices/chat/chatSlice";
 import Link from "next/link";
 import ThemeToggle from "../ThemeToggle";
-import { Bell, Menu, MessageSquareText, Plus, MoreVertical, Monitor, Sun, Moon, LogIn, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Bell, Menu, MessageSquareText, Plus, MoreVertical, Monitor, Sun, Moon, LogIn, ArrowLeft, ShoppingBag, X } from "lucide-react";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import NavbarSearch from "./NavbarSearch";
 import MobileSearchButton from "./MobileSearchButton";
+import SearchDropdown from "./SearchDropdown";
+import SearchChip from "./SearchChip";
 import UserMenu from "./UserMenu";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import { useUnreadChatCount } from "@/hooks/useConversation";
+import { useSearch } from "@/hooks/useSearch";
 import Image from "next/image";
 import { setTheme } from "@/slices/theme";
+import { AnimatePresence } from "motion/react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -35,25 +39,86 @@ export default function Navbar() {
     const { data: unreadCount } = useUnreadCount();
     const { data: unreadChatCount } = useUnreadChatCount();
 
+    // Search Hook for Mobile
+    const {
+        query,
+        setQuery,
+        results,
+        isLoading,
+        context,
+        suppressContext,
+        recentSearches,
+        saveRecentSearch,
+        removeRecentSearch
+    } = useSearch();
+
+    const mobileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleMobileSelect = (term: string) => {
+        saveRecentSearch(term);
+        setShowMobileSearch(false);
+    };
+
+    const clearMobileChip = () => {
+        if (context) {
+            suppressContext(context.type, context.value);
+        }
+        setTimeout(() => mobileInputRef.current?.focus(), 0);
+    };
+
     // Mobile Search Overlay
     if (showMobileSearch) {
         return (
-            <div className="sticky top-0 z-50 bg-white dark:bg-bg-dark border-b border-gray-300 dark:border-gray-700">
-                <div className="flex items-center gap-3 p-2">
+            <div className="fixed inset-0 z-[100] bg-white dark:bg-bg-dark flex flex-col pt-safe">
+                <div className="flex items-center gap-3 p-3 border-b border-gray-300 dark:border-gray-700">
                     <button
                         onClick={() => setShowMobileSearch(false)}
                         className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors cursor-pointer"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="flex-1">
+                    <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 focus-within:ring-brand-primary transition-all">
+                        {context && (
+                            <SearchChip
+                                type={context.type}
+                                label={context.label}
+                                iconUrl={context.iconUrl}
+                                onClear={clearMobileChip}
+                            />
+                        )}
                         <input
+                            ref={mobileInputRef}
                             type="text"
-                            placeholder="Find anything"
+                            placeholder={context ? `Search in ${context.label}` : "Find anything"}
                             autoFocus
-                            className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-primary text-gray-900 dark:text-gray-100 placeholder:text-gray-500"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && query.trim()) {
+                                    handleMobileSelect(query);
+                                }
+                            }}
+                            className="flex-1 bg-transparent text-sm outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-500"
                         />
+                        {query && (
+                            <button onClick={() => setQuery("")} className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                    <SearchDropdown
+                        isOpen={true}
+                        query={query}
+                        results={results}
+                        isLoading={isLoading}
+                        recentSearches={recentSearches}
+                        onRecentRemove={removeRecentSearch}
+                        onSelect={handleMobileSelect}
+                        isMobile={true}
+                    />
                 </div>
             </div>
         );
