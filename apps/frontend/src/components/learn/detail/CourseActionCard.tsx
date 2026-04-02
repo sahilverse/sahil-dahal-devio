@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import { 
-    PlayCircle, 
-    CheckCircle2, 
-    Loader2, 
-    Clock, 
-    FileText, 
-    Trophy 
+import {
+    PlayCircle,
+    CheckCircle2,
+    Loader2,
+    Clock,
+    FileText,
+    Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/types/course";
@@ -68,7 +68,7 @@ export const CourseActionCard: React.FC<CourseActionCardProps> = ({
                             size="lg"
                             onClick={() => {
                                 if (course.isEnrolled) {
-                                    router.push(`/learn/${course.slug}/lesson/resume`);
+                                    router.push(`/l/${course.slug}/lesson/${(course.progress!) > 0 ? 'resume' : 'start'}`);
                                 } else {
                                     onEnroll();
                                 }
@@ -103,7 +103,7 @@ export const CourseActionCard: React.FC<CourseActionCardProps> = ({
                     size="lg"
                     onClick={() => {
                         if (course.isEnrolled) {
-                            router.push(`/learn/${course.slug}/lesson/start`);
+                            router.push(`/ l / ${course.slug} / lesson / start`);
                         } else {
                             onEnroll();
                         }

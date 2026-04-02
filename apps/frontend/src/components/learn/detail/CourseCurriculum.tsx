@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-    ChevronDown, 
-    ChevronUp, 
-    Loader2, 
-    PlayCircle, 
-    FileText 
+import {
+    ChevronDown,
+    ChevronUp,
+    Loader2,
+    PlayCircle,
+    FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Module, Lesson } from "@/types/course";
