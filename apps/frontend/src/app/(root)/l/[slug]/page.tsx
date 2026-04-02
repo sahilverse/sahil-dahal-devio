@@ -134,7 +134,7 @@ export default function CourseLandingPage({ params }: { params: Promise<{ slug: 
         if (!course) return;
 
         if (course.price === 0 || !course.price) {
-            window.location.href = `/learn/${course.slug}/lesson/start`;
+            window.location.href = `/l/${course.slug}/lesson/start`;
             return;
         }
 
@@ -158,7 +158,7 @@ export default function CourseLandingPage({ params }: { params: Promise<{ slug: 
 
             if (result.enrolled) {
                 toast.success("Enrolled successfully!");
-                window.location.href = `/learn/${course.slug}/lesson/start`;
+                window.location.href = `/l/${course.slug}/lesson/start`;
                 return;
             }
 

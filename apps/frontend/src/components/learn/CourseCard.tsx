@@ -13,7 +13,7 @@ interface CourseCardProps {
 export function CourseCard({ course }: CourseCardProps) {
 
     return (
-        <Link href={`/learn/${course.slug}`}>
+        <Link href={`/l/${course.slug}`}>
             <Card className="h-full overflow-hidden border-border/50 hover:border-primary/50 transition-all hover:shadow-lg group flex flex-col">
                 <CardHeader className="p-0 relative aspect-video overflow-hidden">
                     {course.thumbnailUrl ? (

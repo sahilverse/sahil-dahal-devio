@@ -106,7 +106,7 @@ export default function MyLearningPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {enrolledCourses && enrolledCourses.map((course) => (
                             <Card key={course.id} className="overflow-hidden border-border/50 group hover:border-primary/50 transition-all hover:shadow-xl rounded-2xl flex flex-col">
-                                <Link href={`/learn/${course.slug}`} className="block relative group-hover:opacity-90 transition-opacity">
+                                <Link href={`/l/${course.slug}`} className="block relative group-hover:opacity-90 transition-opacity">
                                     <div className="aspect-[16/7] relative overflow-hidden bg-slate-900">
                                         {course.thumbnailUrl ? (
                                             <img src={course.thumbnailUrl} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" alt={course.title} />
@@ -120,7 +120,7 @@ export default function MyLearningPage() {
                                 </Link>
 
                                 <CardContent className="p-5 flex-1 flex flex-col space-y-4">
-                                    <Link href={`/learn/${course.slug}`} className="space-y-1 block hover:text-brand-primary transition-colors">
+                                    <Link href={`/l/${course.slug}`} className="space-y-1 block hover:text-brand-primary transition-colors">
                                         <h3 className="font-extrabold text-lg leading-tight line-clamp-1">{course.title}</h3>
                                     </Link>
 
@@ -140,7 +140,7 @@ export default function MyLearningPage() {
 
                                     <div className="pt-2">
                                         <Link
-                                            href={`/learn/${course.slug}/lesson/${(course.progress || 0) > 0 ? 'resume' : 'start'}`}
+                                            href={`/l/${course.slug}/lesson/${(course.progress || 0) > 0 ? 'resume' : 'start'}`}
                                             className="block"
                                         >
                                             <Button className="w-full rounded-xl font-bold text-xs uppercase tracking-widest h-11" size="sm">

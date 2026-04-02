@@ -37,7 +37,7 @@ export default function CoursePlayerPage() {
             const resolveId = async () => {
                 try {
                     const { lessonId } = await courseService.resolveLesson(slug, params.lessonId);
-                    router.replace(`/learn/${slug}/lesson/${lessonId}`);
+                    router.replace(`/l/${slug}/lesson/${lessonId}`);
                 } catch (err) {
                     console.error("Failed to resolve lesson:", err);
                     toast.error("Failed to find lesson. Starting from beginning.");
@@ -61,7 +61,7 @@ export default function CoursePlayerPage() {
     useEffect(() => {
         if (lessonError) {
             toast.error("You must be enrolled to access this lesson.");
-            router.replace(`/learn/${slug}`);
+            router.replace(`/l/${slug}`);
         }
     }, [lessonError, slug, router]);
 
@@ -75,7 +75,7 @@ export default function CoursePlayerPage() {
     useEffect(() => {
         if (course && course.isEnrolled === false) {
             toast.info("Please enroll in the course to access the lesson player.");
-            router.replace(`/learn/${slug}`);
+            router.replace(`/l/${slug}`);
         }
     }, [course, slug, router]);
 
@@ -127,7 +127,7 @@ export default function CoursePlayerPage() {
     }
 
     if (lessonError || !lesson) {
-        return <TheaterError onAction={() => router.replace(`/learn/${slug}`)} />;
+        return <TheaterError onAction={() => router.replace(`/l/${slug}`)} />;
     }
 
 
@@ -141,7 +141,7 @@ export default function CoursePlayerPage() {
                     <div className="max-w-[1400px] mx-auto pt-8 pb-24 space-y-10">
                         {/* Header Controls */}
                         <div className="flex items-center justify-between">
-                            <Link href={`/learn/${slug}/lesson/resume`} className="group flex items-center gap-3 text-muted-foreground hover:text-white transition-colors">
+                            <Link href={`/l/${slug}/lesson/resume`} className="group flex items-center gap-3 text-muted-foreground hover:text-white transition-colors">
                                 <div className="p-2 rounded-xl bg-white/5 group-hover:bg-primary/20 transition-all">
                                     <AlertCircle className="size-4 rotate-180" />
                                 </div>

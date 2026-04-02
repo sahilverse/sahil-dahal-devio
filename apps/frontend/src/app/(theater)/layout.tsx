@@ -18,7 +18,7 @@ export default function TheaterLayout({
             {/* Minimal Top Navigation */}
             <header className="h-14 shrink-0 border-b border-border/50 bg-background/95 backdrop-blur z-50 flex items-center justify-between px-4 lg:px-6">
                 <div className="flex items-center gap-4">
-                    <Link href={`/learn/${params.slug}`} className="text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center p-2 rounded-md hover:bg-muted/50">
+                    <Link href={`/l/${params.slug}`} className="text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center p-2 rounded-md hover:bg-muted/50">
                         <ArrowLeft className="w-5 h-5" />
                         <span className="sr-only">Back to courses</span>
                     </Link>
