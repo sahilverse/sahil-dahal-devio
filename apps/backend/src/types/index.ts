@@ -137,6 +137,8 @@ export const TYPES = {
     LessonRepository: Symbol.for("LessonRepository"),
     LessonService: Symbol.for("LessonService"),
     LessonController: Symbol.for("LessonController"),
+    SearchService: Symbol.for("SearchService"),
+    SearchController: Symbol.for("SearchController"),
 };
 
 export * from "./jwt";

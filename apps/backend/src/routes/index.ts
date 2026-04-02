@@ -24,6 +24,7 @@ import { router as labRoutes } from "../modules/lab/lab.route";
 import { router as paymentRoutes } from "../modules/payment/payment.route";
 import { router as promoCodeRoutes } from "../modules/promo-code/promo-code.route";
 import { router as courseRoutes } from "../modules/course/course.route";
+import { router as searchRoutes } from "../modules/search/search.route";
 
 const router: Router = Router();
 
@@ -50,5 +51,6 @@ router.use("/labs", labRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/promo-codes", promoCodeRoutes);
 router.use("/courses", courseRoutes);
+router.use("/search", searchRoutes);
 
 export default router;

@@ -106,6 +106,7 @@ export class UserRepository {
                     { username: { contains: query, mode: 'insensitive' } },
                     { username: { not: null } },
                     { accountStatus: 'ACTIVE' },
+                    { roleId: { not: 1 } },
                     ...(excludeId ? [{ id: { not: excludeId } }] : [])
                 ]
             },
@@ -113,7 +114,10 @@ export class UserRepository {
             select: {
                 id: true,
                 username: true,
+                firstName: true,
+                lastName: true,
                 avatarUrl: true,
+                auraPoints: true,
             } as any
         });
     }

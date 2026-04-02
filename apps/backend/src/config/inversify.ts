@@ -43,6 +43,7 @@ import { PromoCodeRepository, PromoCodeService, PromoCodeController } from "../m
 import { CourseRepository, CourseService, CourseController } from "../modules/course";
 import { ModuleRepository, ModuleService, ModuleController } from "../modules/course/modules";
 import { LessonRepository, LessonService, LessonController } from "../modules/course/lessons";
+import { SearchService, SearchController } from "../modules/search";
 
 
 const container = new Container();
@@ -189,6 +190,8 @@ container.bind<ModuleController>(TYPES.ModuleController).to(ModuleController).in
 container.bind<LessonRepository>(TYPES.LessonRepository).to(LessonRepository).inSingletonScope();
 container.bind<LessonService>(TYPES.LessonService).to(LessonService).inSingletonScope();
 container.bind<LessonController>(TYPES.LessonController).to(LessonController).inSingletonScope();
+container.bind<SearchService>(TYPES.SearchService).to(SearchService).inSingletonScope();
+container.bind<SearchController>(TYPES.SearchController).to(SearchController).inSingletonScope();
 
 
 export { container };
