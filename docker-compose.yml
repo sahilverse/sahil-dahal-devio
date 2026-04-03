@@ -131,6 +131,8 @@ services:
     depends_on:
       - redis
       - minio
+    # Note: NVIDIA settings below are ignored by the transcoder if no GPU is detected at runtime.
+    # It will automatically fall back to CPU (libx264) sequentially.
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
