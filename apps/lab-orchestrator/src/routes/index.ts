@@ -1,10 +1,7 @@
-import express, { Router, Request, Response, NextFunction } from "express";
+import express, { Router } from "express";
 import { InstanceController } from "../controller/instance.controller";
 import { validateRequest } from "../middlewares/validateRequest";
 import { z } from "zod";
-import { config } from "../config/env";
-import { ApiError } from "../utils/ApiError";
-import { StatusCodes } from "http-status-codes";
 
 export const createRouter = (instanceController: InstanceController): express.Router => {
     const router = Router();
@@ -13,6 +10,12 @@ export const createRouter = (instanceController: InstanceController): express.Ro
         roomId: z.string().min(1, "Room ID is required"),
         userId: z.string().min(1, "User ID is required"),
         imageId: z.string().min(1, "Image ID is required"),
+        dockerfilePath: z.string().optional(),
+    });
+
+    const BuildSchema = z.object({
+        imageId: z.string().min(1, "Image ID is required"),
+        dockerfilePath: z.string().min(1, "Dockerfile path is required"),
     });
 
     /**
@@ -44,6 +47,35 @@ export const createRouter = (instanceController: InstanceController): express.Ro
         "/provision",
         validateRequest(ProvisionSchema),
         instanceController.provision
+    );
+
+    /**
+     * @openapi
+     * /instances/build:
+     *   post:
+     *     tags: [Instances]
+     *     summary: Trigger background build for a custom lab image
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               imageId:
+     *                 type: string
+     *               dockerfilePath:
+     *                 type: string
+     *     responses:
+     *       202:
+     *         description: Image build process started in background
+     *       401:
+     *         description: Unauthorized
+     */
+    router.post(
+        "/build",
+        validateRequest(BuildSchema),
+        instanceController.buildImage
     );
 
     /**

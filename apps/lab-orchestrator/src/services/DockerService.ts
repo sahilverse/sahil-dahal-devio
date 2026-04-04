@@ -1,4 +1,6 @@
 import Docker from "dockerode";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import * as tar from "tar-stream";
 import { config } from "../config/env";
 import { logger } from "../utils/logger";
 import { ApiError } from "../utils/ApiError";
@@ -6,9 +8,20 @@ import { StatusCodes } from "http-status-codes";
 
 export class DockerService {
     private docker: Docker;
+    private s3Client: S3Client;
 
     constructor() {
         this.docker = new Docker({ socketPath: config.dockerSocket });
+
+        this.s3Client = new S3Client({
+            endpoint: config.minio.endpoint,
+            region: config.minio.region,
+            credentials: {
+                accessKeyId: config.minio.accessKey,
+                secretAccessKey: config.minio.secretKey,
+            },
+            forcePathStyle: true,
+        });
     }
 
     async initializeNetwork() {
@@ -30,7 +43,45 @@ export class DockerService {
         }
     }
 
-    async provisionInstance(roomId: string, userId: string, imageId: string) {
+    async buildImageFromMinio(imageId: string, dockerfilePath: string) {
+        try {
+            logger.info(`Starting on-demand build for ${imageId} from ${dockerfilePath}`);
+
+            // 1. Download Dockerfile from MinIO (private bucket)
+            const command = new GetObjectCommand({
+                Bucket: config.minio.bucket,
+                Key: dockerfilePath,
+            });
+            const response = await this.s3Client.send(command);
+            const dockerfileContent = await response.Body?.transformToString('utf-8');
+
+            if (!dockerfileContent) {
+                throw new Error(`Dockerfile is empty or not found at ${dockerfilePath}`);
+            }
+
+            // 2. Create tar stream for build context
+            const pack = tar.pack();
+            pack.entry({ name: 'Dockerfile' }, dockerfileContent);
+            pack.finalize();
+
+            // 3. Trigger Docker build
+            const stream = await this.docker.buildImage(pack, { t: imageId });
+
+            await new Promise((resolve, reject) => {
+                this.docker.modem.followProgress(stream, (err, output) => {
+                    if (err) return reject(err);
+                    resolve(output);
+                });
+            });
+
+            logger.info(`Successfully built image: ${imageId}`);
+        } catch (error: any) {
+            logger.error(`Failed to build image ${imageId}:`, error);
+            throw new ApiError(`Image Build Failed: ${error.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async provisionInstance(roomId: string, userId: string, imageId: string, dockerfilePath?: string) {
         const containerName = `devio-lab-${roomId}-${userId}-${Date.now()}`;
 
         try {
@@ -38,19 +89,23 @@ export class DockerService {
             const imageExists = images.find(
                 (i) => i.RepoTags?.includes(imageId) || i.RepoTags?.includes(`${imageId}:latest`)
             );
-            
+
             if (!imageExists) {
-                logger.info(`Pulling image ${imageId}...`);
-                await new Promise((resolve, reject) => {
-                    this.docker.pull(imageId, (err: Error, stream: NodeJS.ReadableStream) => {
-                        if (err) return reject(err);
-                        this.docker.modem.followProgress(stream, onFinished);
-                        function onFinished(err: Error | null, output: any) {
+                if (dockerfilePath) {
+                    await this.buildImageFromMinio(imageId, dockerfilePath);
+                } else {
+                    logger.info(`Pulling image ${imageId}...`);
+                    await new Promise((resolve, reject) => {
+                        this.docker.pull(imageId, (err: Error, stream: NodeJS.ReadableStream) => {
                             if (err) return reject(err);
-                            resolve(output);
-                        }
+                            this.docker.modem.followProgress(stream, onFinished);
+                            function onFinished(err: Error | null, output: any) {
+                                if (err) return reject(err);
+                                resolve(output);
+                            }
+                        });
                     });
-                });
+                }
             }
 
             logger.info(`Creating container ${containerName} from image ${imageId}...`);
@@ -62,9 +117,9 @@ export class DockerService {
                     Memory: 512 * 1024 * 1024,
                     NanoCpus: 1 * 1e9,
                     AutoRemove: true,
-                    
+
                 },
-                Tty: true, 
+                Tty: true,
             })) as unknown as Docker.Container;
 
             await container.start();
@@ -98,8 +153,8 @@ export class DockerService {
             return true;
         } catch (error: any) {
             if (error.statusCode === 404) {
-                 logger.info(`Container ${instanceId} not found, already terminated or AutoRemoved.`);
-                 return true;
+                logger.info(`Container ${instanceId} not found, already terminated or AutoRemoved.`);
+                return true;
             }
             logger.error(`Error terminating instance ${instanceId}:`, error);
             throw new ApiError(`Termination Failed: ${error.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
