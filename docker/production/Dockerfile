@@ -81,11 +81,11 @@ ENV APP_NAME=${APP_NAME}
 RUN if [ "${APP_NAME}" = "@devio/backend" ]; then \
     echo '#!/bin/sh\npnpm exec prisma migrate deploy && pnpm exec prisma db seed && node dist/index.mjs' > entrypoint.sh && chmod +x entrypoint.sh; \
     elif [ "${APP_NAME}" = "@devio/code-sandbox" ]; then \
-    echo '#!/bin/sh\nsh ./buildImages.sh && node dist/index.mjs' > entrypoint.sh && chmod +x entrypoint.sh; \
+    echo '#!/bin/sh\nbash ./buildImages.sh && node dist/index.js' > entrypoint.sh && chmod +x entrypoint.sh; \
     elif [ "${APP_NAME}" = "@devio/frontend" ]; then \
     echo '#!/bin/sh\npnpm start' > entrypoint.sh && chmod +x entrypoint.sh; \
     else \
-    echo '#!/bin/sh\nnode dist/index.mjs' > entrypoint.sh && chmod +x entrypoint.sh; \
+    echo '#!/bin/sh\nnode dist/index.js' > entrypoint.sh && chmod +x entrypoint.sh; \
     fi
 
 CMD ["./entrypoint.sh"]
