@@ -40,11 +40,14 @@ RUN pnpm install --frozen-lockfile
 FROM node-env AS builder
 COPY --from=installer /app/ .
 COPY --from=pruner /app/out/full/ .
+
+ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
+ENV DATABASE_URL=$DATABASE_URL
+
 # Re-generate Prisma Client for backend
 ARG APP_NAME
 ARG APP_PATH
 RUN if [ "${APP_NAME}" = "@devio/backend" ]; then \
-    echo "Running Prisma Generate..." && \
     cd apps/backend && npx prisma generate; \
     fi
 RUN turbo build --filter=${APP_NAME}
