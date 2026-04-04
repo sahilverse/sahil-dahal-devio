@@ -208,7 +208,8 @@ export class LabRepository {
         title: string;
         difficulty: any;
         description: string;
-        imageId: string;
+        dockerImageId: string;
+        dockerfilePath?: string;
         estimatedTime: number | null;
         pointsReward: number;
         cipherReward: number;
@@ -231,7 +232,8 @@ export class LabRepository {
                     title: data.title,
                     difficulty: data.difficulty,
                     description: data.description,
-                    imageId: data.imageId,
+                    dockerImageId: data.dockerImageId,
+                    dockerfilePath: data.dockerfilePath,
                     estimatedTime: data.estimatedTime,
                     pointsReward: data.pointsReward,
                     cipherReward: data.cipherReward,
@@ -241,7 +243,8 @@ export class LabRepository {
                     title: data.title,
                     difficulty: data.difficulty,
                     description: data.description,
-                    imageId: data.imageId,
+                    dockerImageId: data.dockerImageId,
+                    dockerfilePath: data.dockerfilePath,
                     estimatedTime: data.estimatedTime,
                     pointsReward: data.pointsReward,
                     cipherReward: data.cipherReward,

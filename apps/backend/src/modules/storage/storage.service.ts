@@ -7,7 +7,8 @@ import {
     MINIO_BUCKET_UPLOADS,
     MINIO_BUCKET_PROBLEMS,
     MINIO_BUCKET_LABS,
-    MINIO_BUCKET_VIDEOS
+    MINIO_BUCKET_VIDEOS,
+    S3_REGION
 } from "../../config/constants";
 import { ApiError } from "../../utils/ApiError";
 import { StatusCodes } from "http-status-codes";
@@ -20,7 +21,7 @@ export class StorageService {
     constructor() {
         this.s3Client = new S3Client({
             endpoint: MINIO_ENDPOINT,
-            region: "us-east-1",
+            region: S3_REGION,
             credentials: {
                 accessKeyId: MINIO_ACCESS_KEY,
                 secretAccessKey: MINIO_SECRET_KEY,

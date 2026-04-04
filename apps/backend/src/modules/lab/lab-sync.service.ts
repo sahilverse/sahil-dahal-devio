@@ -4,6 +4,8 @@ import { StorageService } from "../storage/storage.service";
 import { TYPES } from "../../types";
 import { logger, normalizeContent } from "../../utils";
 import slugify from "slugify";
+import axios from "axios";
+import { LAB_ORCHESTRATOR_URL } from "../../config/constants";
 import { Difficulty, CTFChallengeType } from "../../generated/prisma/client";
 
 @injectable()
@@ -24,6 +26,15 @@ export class LabSyncService {
             const structureData = JSON.parse(content);
             const slug = slugify(structureData.title, { lower: true, strict: true });
             const roomFolder = key.includes('/') ? key.substring(0, key.lastIndexOf('/')) : '';
+
+            // Check for  Dockerfile
+            let dockerfilePath: string | undefined;
+            try {
+                await this.storageService.getFile(`${roomFolder}/Dockerfile`, bucket);
+                dockerfilePath = `${roomFolder}/Dockerfile`;
+            } catch {
+                dockerfilePath = undefined;
+            }
 
             let richDescription: string;
             try {
@@ -50,7 +61,8 @@ export class LabSyncService {
                 title: structureData.title,
                 difficulty: structureData.difficulty as Difficulty,
                 description: richDescription,
-                imageId: structureData.imageId,
+                dockerImageId: structureData.dockerImageId || structureData.imageId || `devio-lab:${slug}`,
+                dockerfilePath,
                 estimatedTime: structureData.estimatedTime || null,
                 pointsReward: structureData.pointsReward || 0,
                 cipherReward: structureData.cipherReward || 0,
@@ -58,7 +70,19 @@ export class LabSyncService {
                 challenges: challengesData
             });
 
-            logger.info(`Successfully synced room: ${structureData.title} (${slug})`);
+            logger.info(`Successfully synced room: ${structureData.title} (${slug})${dockerfilePath ? ' with custom Dockerfile' : ''}`);
+
+            // Prebuild the image if a custom Dockerfile exists
+            if (dockerfilePath) {
+                const imageId = structureData.dockerImageId || structureData.imageId || `devio/${slug}`;
+                logger.info(`Triggering prebuild for custom image: ${imageId}`);
+                axios.post(`${LAB_ORCHESTRATOR_URL}/api/instances/build`, {
+                    imageId,
+                    dockerfilePath
+                }).catch(err => {
+                    logger.error(`Failed to trigger prebuild for ${imageId}: ${err.message}`);
+                });
+            }
         } catch (error: any) {
             logger.error(`Failed to process MinIO event for ${key}: ${error.message}`);
         }

@@ -66,7 +66,8 @@ export class LabVMService {
             const response = await axios.post(`${LAB_ORCHESTRATOR_URL}/api/instances/provision`, {
                 roomId,
                 userId,
-                imageId: room.imageId
+                imageId: room.dockerImageId,
+                dockerfilePath: room.dockerfilePath || undefined
             });
 
             const instance = response.data.result;
@@ -87,7 +88,7 @@ export class LabVMService {
             startedAt: new Date(),
             instanceId: instanceId,
             ipAddress: ipAddress,
-            imageId: room.imageId
+            imageId: room.dockerImageId
         });
 
         logger.info(`Started VM session ${session.id} for user ${userId} in room ${roomId}. Expires at ${expiresAt} (Daily Budget)`);
