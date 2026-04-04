@@ -1,12 +1,12 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_VIDEOS } from "./constants";
+import { MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_VIDEOS, S3_REGION } from "./constants";
 import { logger } from "../utils/logger";
 import * as fs from "fs";
 import * as path from "path";
 
 const s3Client = new S3Client({
     endpoint: MINIO_ENDPOINT,
-    region: "us-east-1",
+    region: S3_REGION,
     credentials: {
         accessKeyId: MINIO_ACCESS_KEY,
         secretAccessKey: MINIO_SECRET_KEY,
