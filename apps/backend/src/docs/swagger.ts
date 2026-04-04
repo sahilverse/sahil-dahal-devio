@@ -1,7 +1,7 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import express from "express";
-import { PORT } from "../config/constants";
+import { PORT, NODE_ENV } from "../config/constants";
 
 const options: swaggerJSDoc.Options = {
     definition: {
@@ -13,10 +13,10 @@ const options: swaggerJSDoc.Options = {
         },
         servers: [
             {
-                url: process.env.NODE_ENV === "production"
+                url: NODE_ENV === "production"
                     ? `https://api.${process.env.PROD_DOMAIN}/api`
                     : `http://localhost:${PORT}/api`,
-                description: process.env.NODE_ENV === "production" ? "Production Server" : "Local Development",
+                description: NODE_ENV === "production" ? "Production Server" : "Local Development",
             },
         ],
         components: {
