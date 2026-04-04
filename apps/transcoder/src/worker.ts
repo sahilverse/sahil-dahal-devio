@@ -50,11 +50,11 @@ export function createTranscodeWorker(): Worker<VideoTranscodePayload> {
                 // Step 4: No DB update here, the backend will observe this job's completion
                 const masterPlaylistUrl = `courses/${lessonId}/master.m3u8`;
 
-                // Step 5: Cleanup - delete raw video from temp bucket
+                // Step 5: Cleanup - delete all temporary files for this lesson
                 try {
-                    await deletePrefix(rawVideoKey);
+                    await deletePrefix(`temp/${lessonId}`);
                 } catch (cleanupErr: any) {
-                    logger.warn(`[Job ${job.id}] Failed to cleanup raw video: ${cleanupErr.message}`);
+                    logger.warn(`[Job ${job.id}] Failed to cleanup temp lesson folder: ${cleanupErr.message}`);
                 }
 
                 await job.updateProgress(100);
