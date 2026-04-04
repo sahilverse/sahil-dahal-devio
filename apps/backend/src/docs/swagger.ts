@@ -13,7 +13,10 @@ const options: swaggerJSDoc.Options = {
         },
         servers: [
             {
-                url: `http://localhost:${PORT}/api`,
+                url: process.env.NODE_ENV === "production"
+                    ? `https://api.${process.env.PROD_DOMAIN}/api`
+                    : `http://localhost:${PORT}/api`,
+                description: process.env.NODE_ENV === "production" ? "Production Server" : "Local Development",
             },
         ],
         components: {
