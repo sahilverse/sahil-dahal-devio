@@ -175,6 +175,9 @@ services:
     image: judge0/judge0:1.13.1
     container_name: devio-judge0-server
     privileged: true
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
     volumes:
       - ./infra/judge0/judge0.conf:/judge0.conf:ro
     environment:
