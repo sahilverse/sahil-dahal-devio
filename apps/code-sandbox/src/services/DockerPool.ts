@@ -72,8 +72,7 @@ class DockerPool {
         try {
             const containers = await this.docker.listContainers({ all: true });
             const sandboxContainers = containers.filter(containerInfo => {
-                const imageNames = Object.values(LANGUAGE_CONFIG).map(config => config.image);
-                return containerInfo.Image && imageNames.includes(containerInfo.Image);
+                return containerInfo.Labels && containerInfo.Labels['devio.sandbox.language'];
             });
 
             logger.info(`Found ${sandboxContainers.length} existing sandbox containers to clean up.`);
@@ -109,6 +108,9 @@ class DockerPool {
                 CpuQuota: 50000,
                 NetworkMode: 'none',
                 AutoRemove: false
+            },
+            Labels: {
+                'devio.sandbox.language': language
             },
             User: 'sandboxuser',
             WorkingDir: '/home/sandboxuser/tmp'
@@ -239,10 +241,10 @@ class DockerPool {
 
     private async getTotalContainers(language: string): Promise<number> {
         const pool = this.pools.get(language) || [];
-        const containers = await this.docker.listContainers();
-        const languageContainers = containers.filter(containerInfo =>
-            containerInfo.Image === LANGUAGE_CONFIG[language]?.image
-        );
+        const containers = await this.docker.listContainers({ all: true });
+        const languageContainers = containers.filter(containerInfo => {
+            return containerInfo.Labels && containerInfo.Labels['devio.sandbox.language'] === language;
+        });
         return pool.length + languageContainers.length;
     }
 

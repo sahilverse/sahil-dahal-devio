@@ -17,7 +17,7 @@ export const LANGUAGE_CONFIG: Record<string, LanguageConfig> = {
     },
     c: {
         image: 'devio-sandbox-cpp',
-        compileCommand: ['gcc', '-o', 'program', '{filename}'],
+        compileCommand: ['g++', '-o', 'program', '{filename}'],
         runCommand: ['./program'],
         extension: '.c',
         timeout: 2
