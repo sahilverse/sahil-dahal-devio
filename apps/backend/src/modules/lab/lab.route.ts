@@ -61,7 +61,7 @@ router.get("/:slug", labController.getRoomBySlug);
  *     summary: Enroll in a lab room
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -84,7 +84,7 @@ router.post("/join", authMiddleware.guard, labController.joinRoom);
  *     summary: Get enrollment status for a room
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: roomId
@@ -104,7 +104,7 @@ router.get("/enrollment/:roomId", authMiddleware.guard, labController.getEnrollm
  *     summary: Get all challenges for a specific room
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: roomId
@@ -124,7 +124,7 @@ router.get("/:roomId/challenges", authMiddleware.guard, labController.getChallen
  *     summary: Submit a flag for a challenge
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: challengeId
@@ -153,7 +153,7 @@ router.post("/challenges/:challengeId/submit", authMiddleware.guard, labControll
  *     summary: Start a new VM session for a room
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -176,7 +176,7 @@ router.post("/session", authMiddleware.guard, labController.startSession);
  *     summary: Get the current active VM session for a room
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: roomId
@@ -196,7 +196,7 @@ router.get("/session/active/:roomId", authMiddleware.guard, labController.getAct
  *     summary: Extend the duration of an active VM session
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: sessionId
@@ -216,7 +216,7 @@ router.post("/session/:sessionId/extend", authMiddleware.guard, labController.ex
  *     summary: Terminate an active VM session
  *     tags: [Lab]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: sessionId

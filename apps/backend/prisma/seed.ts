@@ -1,8 +1,10 @@
 import { prisma } from "../src/config/prisma";
+import bcrypt from "bcryptjs";
 
 async function main() {
     console.log("🌱 Starting database seeding...");
 
+    // ─── Roles ────────────────────────────────────────────────
     const userRole = await prisma.role.upsert({
         where: { id: 0 },
         update: {},
@@ -26,6 +28,30 @@ async function main() {
     console.log("✅ Roles seeded:");
     console.log(`   - ${userRole.name} (id: ${userRole.id})`);
     console.log(`   - ${adminRole.name} (id: ${adminRole.id})`);
+
+    // ─── Initial Admin User ───────────────────────────────────
+    const adminEmail = process.env.ADMIN_EMAIL!;
+    const adminPassword = process.env.ADMIN_PASSWORD!;
+
+    if (adminEmail && adminPassword) {
+        const hashedPassword = await bcrypt.hash(adminPassword, 12);
+        const adminUser = await prisma.user.upsert({
+            where: { email: adminEmail },
+            update: {},
+            create: {
+                email: adminEmail,
+                password: hashedPassword,
+                username: "admin",
+                firstName: "Devio",
+                lastName: "Admin",
+                roleId: adminRole.id,
+                emailVerified: new Date(),
+            },
+        });
+        console.log(`✅ Admin user seeded: ${adminUser.email}`);
+    } else {
+        console.log("⚠️ Skipping admin user seed: ADMIN_EMAIL or ADMIN_PASSWORD not found in env");
+    }
 
     // Achievement Categories & Criteria Constants
     const Category = {
@@ -154,10 +180,10 @@ async function main() {
 
     for (const pkg of cipherPackages) {
         await prisma.cipherPackage.upsert({
-            where: { id: toSlug(pkg.name) },
+            where: { slug: toSlug(pkg.name) },
             update: {},
             create: {
-                id: toSlug(pkg.name),
+                slug: toSlug(pkg.name),
                 name: pkg.name,
                 description: pkg.description,
                 points: pkg.points,

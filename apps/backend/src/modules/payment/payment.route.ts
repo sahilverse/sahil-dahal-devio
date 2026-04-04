@@ -30,7 +30,7 @@ router.get("/providers", paymentController.getProviders);
  *     summary: Initiate a cipher package purchase
  *     tags: [Payments]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -59,7 +59,7 @@ router.post("/initiate/cipher", authMiddleware.guard, validateRequest(InitiateCi
  *     summary: Initiate a course purchase (supports optional elective cipher discount)
  *     tags: [Payments]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -110,7 +110,7 @@ router.get("/verify/esewa", authMiddleware.guard, paymentController.verifyEsewa)
  *     summary: Get user's payment history
  *     tags: [Payments]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: limit

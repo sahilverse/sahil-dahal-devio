@@ -107,13 +107,13 @@ model User {
 
   userAchievements UserAchievement[]
 
-  authoredCourses   Course[]         @relation("course_author")
-  courseEnrollments Enrollment[]     @relation("student_enrollments")
-  lessonProgress    LessonProgress[]
-  courseReviews     CourseReview[]
-  lessonComments    LessonComment[]
+  authoredCourses    Course[]            @relation("course_author")
+  courseEnrollments  Enrollment[]        @relation("student_enrollments")
+  lessonProgress     LessonProgress[]
+  courseReviews      CourseReview[]
+  lessonComments     LessonComment[]
   lessonCommentVotes LessonCommentVote[]
-  payments          Payment[]
+  payments           Payment[]
 
   // Professional Profile
   experiences    UserExperience[]
@@ -659,7 +659,6 @@ model Media {
   commentId String? @map("comment_id")
   messageId String? @map("message_id")
 
-
   url  String
   type MediaType
 
@@ -677,8 +676,6 @@ model Media {
   @@index([commentId])
   @@index([messageId])
 }
-
-
 
 model Topic {
   id   String @id @default(cuid())
@@ -1247,6 +1244,7 @@ enum PaymentType {
 model CipherPackage {
   id          String  @id @default(cuid())
   name        String
+  slug        String  @unique
   description String?
   points      Int
   price       Decimal @db.Decimal(10, 2)
@@ -1409,7 +1407,6 @@ model LessonComment {
   replies LessonComment[]     @relation("lesson_comment_replies")
   votes   LessonCommentVote[]
 
-
   @@index([lessonId])
   @@index([userId])
   @@index([parentId])
@@ -1432,7 +1429,6 @@ model LessonCommentVote {
   @@index([lessonCommentId])
   @@index([userId])
 }
-
 
 model Enrollment {
   id       String @id @default(cuid())

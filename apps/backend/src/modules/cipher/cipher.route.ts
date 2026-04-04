@@ -16,7 +16,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *     summary: Get current Cipher Coin balance
  *     tags: [Cipher]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Current balance
@@ -30,7 +30,7 @@ router.get("/balance", authMiddleware.guard, cipherController.getBalance);
  *     summary: Get Cipher transaction history
  *     tags: [Cipher]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: limit

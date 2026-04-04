@@ -25,7 +25,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *     summary: Start a new conversation
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -60,7 +60,7 @@ router.post(
  *     summary: Search conversations by username
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: q
@@ -85,7 +85,7 @@ router.get(
  *     summary: Get global unread message count
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Unread count
@@ -103,7 +103,7 @@ router.get(
  *     summary: Get conversation list
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: limit
@@ -131,7 +131,7 @@ router.get(
  *     summary: Get messages for a conversation
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: conversationId
@@ -164,7 +164,7 @@ router.get(
  *     summary: Send a message
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: conversationId
@@ -204,7 +204,7 @@ router.post(
  *     summary: Edit a message
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: messageId
@@ -238,7 +238,7 @@ router.patch(
  *     summary: Delete or unsend a message
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: messageId
@@ -269,7 +269,7 @@ router.delete(
  *     summary: Delete conversation (clear history)
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: conversationId
@@ -293,7 +293,7 @@ router.delete(
  *     summary: Accept a conversation invite
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: conversationId
@@ -317,7 +317,7 @@ router.post(
  *     summary: Decline a conversation invite
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: conversationId
@@ -341,7 +341,7 @@ router.post(
  *     summary: Mark messages as seen
  *     tags: [Conversation]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: conversationId

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/slices/ui/uiSlice";
 import { toggleChat } from "@/slices/chat/chatSlice";
@@ -18,7 +18,7 @@ import { useUnreadChatCount } from "@/hooks/useConversation";
 import { useSearch } from "@/hooks/useSearch";
 import Image from "next/image";
 import { setTheme } from "@/slices/theme";
-import { AnimatePresence } from "motion/react";
+
 import {
     DropdownMenu,
     DropdownMenuContent,

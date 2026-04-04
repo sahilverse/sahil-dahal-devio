@@ -8,9 +8,33 @@ export class LessonRepository {
     constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
 
     async create(moduleId: string, data: CreateLessonInput) {
+        let finalOrder = data.order || 0;
+
+        // 1. If order is provided and exists, shift existing ones up
+        if (finalOrder > 0) {
+            const existing = await this.prisma.lesson.findFirst({
+                where: { moduleId, order: finalOrder },
+            });
+
+            if (existing) {
+                await this.prisma.lesson.updateMany({
+                    where: { moduleId, order: { gte: finalOrder } },
+                    data: { order: { increment: 1 } },
+                });
+            }
+        } else {
+            // 2. If no order, find max and increment
+            const aggregate = await this.prisma.lesson.aggregate({
+                where: { moduleId },
+                _max: { order: true },
+            });
+            finalOrder = (aggregate._max.order || 0) + 1;
+        }
+
         return this.prisma.lesson.create({
             data: {
                 ...data,
+                order: finalOrder,
                 module: { connect: { id: moduleId } },
             },
         });

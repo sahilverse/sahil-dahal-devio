@@ -1,34 +1,40 @@
+x-logging: &default-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100M
+
 services:
   # --- CORE INFRA ---
   postgres:
     image: postgres:18-alpine
     container_name: devio-postgres
     restart: unless-stopped
-    env_file: .env.local
-    ports:
-      - "5432:5432"
+    env_file: .env
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - devio-network
+    <<: *default-logging
 
   redis:
     image: redis:8-alpine
     container_name: devio-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redisdata:/data
     networks:
       - devio-network
+    <<: *default-logging
 
   minio:
     image: minio/minio:latest
     container_name: devio-minio
     restart: unless-stopped
-    env_file: .env.local
+    env_file: .env
     command: server /data --console-address ":9001"
+    volumes:
+      - miniodata:/data
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -39,129 +45,166 @@ services:
       - MINIO_NOTIFY_WEBHOOK_ENDPOINT_labs=http://backend:${PORT_BACKEND}/api/labs/webhook/minio
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    volumes:
-      - miniodata:/data
     networks:
       - devio-network
+    <<: *default-logging
 
   # --- MAIN APPLICATIONS ---
   backend:
     build:
       context: .
-      dockerfile: docker/development/Dockerfile
+      dockerfile: docker/production/Dockerfile
       args:
         - APP_NAME=@devio/backend
         - APP_PATH=apps/backend
     container_name: devio-backend
     restart: unless-stopped
+    ports:
+      - "${PORT_BACKEND}:${PORT_BACKEND}"
+    environment:
+      - PORT=${PORT_BACKEND}
+    env_file: .env
     depends_on:
       - postgres
       - redis
       - minio
-    env_file: .env.local
-    environment:
-      - PORT=${PORT_BACKEND}
-    ports:
-      - "${PORT_BACKEND}:${PORT_BACKEND}"
-    volumes:
-      - ./apps/backend/src:/app/apps/backend/src
     networks:
       - devio-network
+    <<: *default-logging
 
   frontend:
     build:
       context: .
-      dockerfile: docker/development/Dockerfile
+      dockerfile: docker/production/Dockerfile
       args:
         - APP_NAME=@devio/frontend
         - APP_PATH=apps/frontend
     container_name: devio-frontend
     restart: unless-stopped
-    depends_on:
-      - backend
-    env_file: .env.local
-    environment:
-      - PORT=${PORT_FRONTEND}
     ports:
       - "${PORT_FRONTEND}:${PORT_FRONTEND}"
-    volumes:
-      - ./apps/frontend/src:/app/apps/frontend/src
-      - ./apps/frontend/public:/app/apps/frontend/public
+    environment:
+      - PORT=${PORT_FRONTEND}
+    env_file: .env
     networks:
       - devio-network
+    <<: *default-logging
 
+  # --- WORKER SERVICES ---
   code-sandbox:
     build:
       context: .
-      dockerfile: docker/development/Dockerfile
+      dockerfile: docker/production/Dockerfile
       args:
         - APP_NAME=@devio/code-sandbox
         - APP_PATH=apps/code-sandbox
     container_name: devio-code-sandbox
     restart: unless-stopped
-    depends_on:
-      - redis
-    env_file: .env.local
     environment:
       - PORT=${PORT_CODE_SANDBOX}
-    ports:
-      - "${PORT_CODE_SANDBOX}:${PORT_CODE_SANDBOX}"
+    env_file: .env
     volumes:
-      - ./apps/code-sandbox/src:/app/apps/code-sandbox/src
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - devio-network
+    <<: *default-logging
 
   lab-orchestrator:
     build:
       context: .
-      dockerfile: docker/development/Dockerfile
+      dockerfile: docker/production/Dockerfile
       args:
         - APP_NAME=@devio/lab
         - APP_PATH=apps/lab-orchestrator
     container_name: devio-lab-orchestrator
     restart: unless-stopped
-    depends_on:
-      - redis
-    env_file: .env.local
     environment:
       - PORT=${PORT_LAB_ORCHESTRATOR}
-    ports:
-      - "${PORT_LAB_ORCHESTRATOR}:${PORT_LAB_ORCHESTRATOR}"
+    env_file: .env
     volumes:
-      - ./apps/lab-orchestrator/src:/app/apps/lab-orchestrator/src
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - devio-network
+    <<: *default-logging
 
   transcoder:
     build:
       context: .
-      dockerfile: docker/development/Dockerfile
+      dockerfile: docker/production/Dockerfile
       args:
         - APP_NAME=@devio/transcoder
         - APP_PATH=apps/transcoder
         - BASE_IMAGE=nvidia/cuda:12.4.1-runtime-ubuntu22.04
     container_name: devio-transcoder
     restart: unless-stopped
-    depends_on:
-      - redis
-      - minio
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
-    env_file: .env.local
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu, video ]
-    volumes:
-      - ./apps/transcoder/src:/app/apps/transcoder/src
+    env_file: .env
     networks:
       - devio-network
+    <<: *default-logging
+
+  # --- JUDGE0 STACK ---
+  judge0-db:
+    image: postgres:16.2
+    container_name: devio-judge0-db
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${JUDGE0_DB_NAME}
+      POSTGRES_USER: ${JUDGE0_DB_USER}
+      POSTGRES_PASSWORD: ${JUDGE0_DB_PASSWORD}
+    volumes:
+      - judge0-db-data:/var/lib/postgresql/data
+    networks:
+      - devio-network
+    <<: *default-logging
+
+  judge0-redis:
+    image: redis:7.2.4
+    container_name: devio-judge0-redis
+    command: [ "sh", "-c", "docker-entrypoint.sh --requirepass \"${JUDGE0_REDIS_PASSWORD}\"" ]
+    volumes:
+      - judge0-redis-data:/data
+    networks:
+      - devio-network
+    <<: *default-logging
+
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    container_name: devio-judge0-server
+    privileged: true
+    env_file: .env
+    environment:
+      REDIS_HOST: judge0-redis
+      POSTGRES_HOST: judge0-db
+      REDIS_PASSWORD: ${JUDGE0_REDIS_PASSWORD}
+      POSTGRES_USER: ${JUDGE0_DB_USER}
+      POSTGRES_DB: ${JUDGE0_DB_NAME}
+      POSTGRES_PASSWORD: ${JUDGE0_DB_PASSWORD}
+    depends_on:
+      - judge0-db
+      - judge0-redis
+    networks:
+      - devio-network
+    <<: *default-logging
+
+  judge0-workers:
+    image: judge0/judge0:1.13.1
+    container_name: devio-judge0-workers
+    privileged: true
+    command: [ "./scripts/workers" ]
+    env_file: .env
+    environment:
+      REDIS_HOST: judge0-redis
+      POSTGRES_HOST: judge0-db
+      REDIS_PASSWORD: ${JUDGE0_REDIS_PASSWORD}
+      POSTGRES_USER: ${JUDGE0_DB_USER}
+      POSTGRES_DB: ${JUDGE0_DB_NAME}
+      POSTGRES_PASSWORD: ${JUDGE0_DB_PASSWORD}
+    depends_on:
+      - judge0-db
+      - judge0-redis
+    networks:
+      - devio-network
+    <<: *default-logging
 
   # --- AUTOMATION TIER ---
   minio-setup:
@@ -170,11 +213,11 @@ services:
     depends_on:
       - minio
       - backend
-    env_file: .env.local
+    env_file: .env
     entrypoint: >
       /bin/sh -c " until mc alias set myminio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD; do echo 'Waiting for MinIO...' && sleep 2; done;
 
-      echo 'Waiting for Backend to initialize buckets...'; sleep 10;
+      echo 'Waiting for Backend to initialize buckets...'; sleep 15;
 
       echo 'Setting Bucket Policies...'; mc anonymous set download myminio/devio-uploads || true; mc anonymous set download myminio/devio-problems || true; mc anonymous set private myminio/devio-labs || true; mc anonymous set private myminio/devio-videos || true;
 
@@ -194,3 +237,5 @@ volumes:
   pgdata:
   redisdata:
   miniodata:
+  judge0-db-data:
+  judge0-redis-data:

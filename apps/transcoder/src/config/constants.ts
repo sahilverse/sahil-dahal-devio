@@ -3,8 +3,8 @@ export const REDIS_URL = process.env.REDIS_URL!;
 
 // MinIO / S3
 export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT!;
-export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY!;
-export const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY!;
+export const MINIO_ACCESS_KEY = process.env.MINIO_ROOT_USER!;
+export const MINIO_SECRET_KEY = process.env.MINIO_ROOT_PASSWORD!;
 export const MINIO_BUCKET_VIDEOS = process.env.MINIO_BUCKET_VIDEOS!;
 
 // FFmpeg

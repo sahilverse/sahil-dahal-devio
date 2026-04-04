@@ -16,7 +16,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *     summary: Get current user's Aura points
  *     tags: [Aura]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: User points fetched successfully
@@ -44,7 +44,7 @@ auraRouter.get("/points", authMiddleware.guard, auraController.getPoints);
  *     summary: Get user's Aura transaction history
  *     tags: [Aura]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: limit

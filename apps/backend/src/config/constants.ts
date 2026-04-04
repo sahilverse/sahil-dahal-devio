@@ -43,8 +43,8 @@ export const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI!;
 
 // MinIO / S3
 export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT!;
-export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY!;
-export const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY!;
+export const MINIO_ACCESS_KEY = process.env.MINIO_ROOT_USER!;
+export const MINIO_SECRET_KEY = process.env.MINIO_ROOT_PASSWORD!;
 export const MINIO_USE_SSL = process.env.MINIO_USE_SSL === 'true';
 
 export const MINIO_BUCKET_UPLOADS = process.env.MINIO_BUCKET_UPLOADS!;

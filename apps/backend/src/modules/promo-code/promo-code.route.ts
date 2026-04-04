@@ -27,7 +27,7 @@ const authMiddleware = container.get<AuthMiddleware>(TYPES.AuthMiddleware);
  *     summary: Validate a promo code
  *     tags: [PromoCodes]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
