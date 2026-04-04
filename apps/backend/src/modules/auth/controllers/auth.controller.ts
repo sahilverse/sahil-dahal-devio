@@ -3,7 +3,6 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { AuthService } from "../services/auth.service";
 import { asyncHandler, ResponseHandler, RequestUtil } from "../../../utils";
-import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV, PROD_DOMAIN } from "../../../config/constants";
 import { StatusCodes } from "http-status-codes";
 import type { LoginServiceResponse } from "../auth.types";
 
@@ -23,14 +22,7 @@ export class AuthController {
 
         const loginResponse: LoginServiceResponse = await this.authService.loginUser(loginPayload, clientIp!, userAgent);
 
-        const refreshMaxAge = JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
-
-        res.cookie("refresh_token", loginResponse.refreshToken, {
-            httpOnly: true,
-            secure: NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: refreshMaxAge,
-        });
+        ResponseHandler.setAuthCookie(res, loginResponse.refreshToken);
 
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Login successful", {
             user: loginResponse.user,
@@ -43,7 +35,7 @@ export class AuthController {
 
         await this.authService.logoutUser(refreshToken);
 
-        res.clearCookie("refresh_token");
+        ResponseHandler.clearAuthCookie(res);
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Logout successful");
     });
 
@@ -57,14 +49,7 @@ export class AuthController {
 
         const refreshResponse = await this.authService.refreshTokens(oldRefreshToken, clientIp!, userAgent);
 
-        const refreshMaxAge = JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
-
-        res.cookie("refresh_token", refreshResponse.refreshToken, {
-            httpOnly: true,
-            secure: NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: refreshMaxAge,
-        });
+        ResponseHandler.setAuthCookie(res, refreshResponse.refreshToken);
 
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Tokens refreshed successfully", {
             user: refreshResponse.user,

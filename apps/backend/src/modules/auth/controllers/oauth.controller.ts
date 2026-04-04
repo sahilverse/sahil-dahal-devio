@@ -3,7 +3,6 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { OAuthService } from "../services/oauth.service";
 import { asyncHandler, ResponseHandler, RequestUtil } from "../../../utils";
-import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../../config/constants";
 import { StatusCodes } from "http-status-codes";
 import type { OAuthLoginResult } from "../auth.types";
 
@@ -26,7 +25,7 @@ export class OAuthController {
             userAgent
         );
 
-        this.setRefreshTokenCookie(res, result.refreshToken);
+        ResponseHandler.setAuthCookie(res, result.refreshToken);
 
         ResponseHandler.sendResponse(res, StatusCodes.OK, "Google authentication successful", {
             user: result.user,
@@ -50,7 +49,7 @@ export class OAuthController {
             userAgent
         );
 
-        this.setRefreshTokenCookie(res, result.refreshToken);
+        ResponseHandler.setAuthCookie(res, result.refreshToken);
 
         ResponseHandler.sendResponse(res, StatusCodes.OK, "GitHub authentication successful", {
             user: result.user,
@@ -59,14 +58,5 @@ export class OAuthController {
         });
     });
 
-    private setRefreshTokenCookie(res: Response, refreshToken: string): void {
-        const refreshMaxAge = JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
 
-        res.cookie("refresh_token", refreshToken, {
-            httpOnly: true,
-            secure: NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: refreshMaxAge,
-        });
-    }
 }

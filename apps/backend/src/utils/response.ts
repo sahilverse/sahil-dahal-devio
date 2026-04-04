@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ZodSafeParseResult } from 'zod';
+import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV, PROD_DOMAIN } from '../config/constants';
 
 export class ResponseHandler {
     static sendResponse(res: Response, statusCode: StatusCodes, message?: string, result?: any) {
@@ -43,5 +44,31 @@ export class ResponseHandler {
 
         return ResponseHandler.sendError(res, StatusCodes.BAD_REQUEST, errorMessage);
 
+    }
+
+    static setAuthCookie(res: Response, refreshToken: string) {
+        const refreshMaxAge = JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
+
+        if (NODE_ENV === 'production') {
+            res.clearCookie('refresh_token', { domain: `api.${PROD_DOMAIN}` });
+        }
+
+        res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: NODE_ENV === 'production',
+            sameSite: 'lax',
+            domain: NODE_ENV === 'production' ? `.${PROD_DOMAIN}` : undefined,
+            maxAge: refreshMaxAge,
+        });
+    }
+
+    static clearAuthCookie(res: Response) {
+        res.clearCookie('refresh_token', {
+            domain: NODE_ENV === 'production' ? `.${PROD_DOMAIN}` : undefined,
+        });
+
+        if (NODE_ENV === 'production') {
+            res.clearCookie('refresh_token', { domain: `api.${PROD_DOMAIN}` });
+        }
     }
 }
