@@ -85,80 +85,82 @@ function probeVideo(inputPath: string): Promise<{ width: number; height: number;
 }
 
 /**
- * Transcodes a single variant using FFmpeg (Software CPU).
+ * Logic for high-performance single-pass CPU transcoding of multiple variants.
+ * Uses a single filter graph to decode once and encode multiple streams simultaneously.
  */
-function transcodeVariant(inputPath: string, outputDir: string, variant: VideoVariant): Promise<void> {
-    const variantDir = path.join(outputDir, variant.name);
-    if (!fs.existsSync(variantDir)) {
-        fs.mkdirSync(variantDir, { recursive: true });
-    }
-
-    const playlistPath = path.join(variantDir, "playlist.m3u8");
-    const segmentPattern = path.join(variantDir, "segment_%03d.ts");
+async function transcodeCPU(inputPath: string, outputDir: string, variants: VideoVariant[], duration: number): Promise<{ variants: string[]; duration: number }> {
+    logger.info(`Starting single-pass CPU transcode for ${variants.length} variants`);
 
     return new Promise((resolve, reject) => {
-        ffmpeg(inputPath)
-            .outputOptions([
-                "-vf", `scale=w=${variant.width}:h=${variant.height}:force_original_aspect_ratio=decrease,pad=${variant.width}:${variant.height}:(ow-iw)/2:(oh-ih)/2`,
-                "-c:v", "libx264",
-                "-b:v", variant.videoBitrate,
-                "-maxrate", variant.maxrate,
-                "-bufsize", variant.bufsize,
-                "-c:a", "aac",
-                "-b:a", variant.audioBitrate,
-                "-ar", "48000",
+        const command = ffmpeg(inputPath);
+
+        // Filter graph: Split decoded video into N streams and scale them
+        let filterComplex = `[0:v]split=${variants.length}`;
+        variants.forEach((_, i) => {
+            filterComplex += `[v${i}]`;
+        });
+        filterComplex += ";";
+
+        variants.forEach((v, i) => {
+            filterComplex += `[v${i}]scale=w=${v.width}:h=${v.height}:force_original_aspect_ratio=decrease,pad=${v.width}:${v.height}:(ow-iw)/2:(oh-ih)/2[vout${i}]`;
+            if (i < variants.length - 1) filterComplex += ";";
+        });
+
+        const outputOptions: string[] = ["-filter_complex", filterComplex];
+
+        // Software encoding options for each variant
+        variants.forEach((v, i) => {
+            outputOptions.push(
+                "-map", `[vout${i}]`,
+                `-c:v:${i}`, "libx264",
+                `-b:v:${i}`, v.videoBitrate,
+                `-maxrate:${i}`, v.maxrate,
+                `-bufsize:${i}`, v.bufsize,
                 "-preset", "fast",
                 "-g", "48",
                 "-keyint_min", "48",
-                "-sc_threshold", "0",
-                "-hls_time", "6",
-                "-hls_playlist_type", "vod",
-                "-hls_segment_filename", segmentPattern,
-                "-f", "hls",
-            ])
-            .output(playlistPath)
-            .on("start", (cmd) => {
-                logger.debug(`FFmpeg [${variant.name}]: ${cmd}`);
-            })
+                "-sc_threshold", "0"
+            );
+        });
+
+        // Audio mapping for each variant
+        variants.forEach((_, i) => {
+            outputOptions.push(
+                "-map", "0:a",
+                `-c:a:${i}`, "aac",
+                `-b:a:${i}`, "128k",
+                `-ar:${i}`, "48000"
+            );
+        });
+
+        // Master playlist and HLS stream mapping
+        const streamMap = variants.map((v, i) => `v:${i},a:${i},name:${v.name}`).join(" ");
+        outputOptions.push(
+            "-f", "hls",
+            "-hls_time", "6",
+            "-hls_playlist_type", "vod",
+            "-master_pl_name", "master.m3u8",
+            "-var_stream_map", streamMap,
+            "-hls_segment_filename", path.join(outputDir, "%v", "segment_%03d.ts")
+        );
+
+        command
+            .outputOptions(outputOptions)
+            .output(path.join(outputDir, "%v", "playlist.m3u8"))
+            .on("start", (cmd) => logger.debug(`FFmpeg command: ${cmd}`))
             .on("progress", (progress) => {
-                if (progress.percent) {
-                    logger.info(`[${variant.name}] Progress: ${Math.round(progress.percent)}%`);
-                }
+                if (progress.percent) logger.info(`CPU Transcoding Progress: ${Math.round(progress.percent)}%`);
             })
             .on("end", () => {
-                logger.info(`[${variant.name}] Transcoding complete`);
-                resolve();
+                logger.info(`Single-pass CPU transcode complete for all variants`);
+                resolve({ variants: variants.map((v) => v.name), duration });
             })
             .on("error", (err) => {
-                logger.error(`[${variant.name}] FFmpeg error: ${err.message}`);
+                logger.error(`Single-pass CPU transcode failed: ${err.message}`);
                 reject(err);
             })
             .run();
     });
-}
-
-/**
- * Logic for sequential CPU transcoding of multiple variants.
- */
-async function transcodeCPU(inputPath: string, outputDir: string, variants: VideoVariant[], duration: number): Promise<{ variants: string[]; duration: number }> {
-    logger.info(`Starting sequential CPU transcode for ${variants.length} variants`);
-    for (const variant of variants) {
-        logger.info(`Transcoding variant: ${variant.name} (Software)`);
-        await transcodeVariant(inputPath, outputDir, variant);
-    }
-
-    // Generate Master Playlist for CPU mode
-    const masterPlaylistPath = path.join(outputDir, "master.m3u8");
-    let masterContent = "#EXTM3U\n#EXT-X-VERSION:3\n";
-    variants.forEach((v) => {
-        const bandwidth = parseInt(v.videoBitrate.replace("k", "000"));
-        masterContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${v.width}x${v.height}\n`;
-        masterContent += `${v.name}/playlist.m3u8\n`;
-    });
-    fs.writeFileSync(masterPlaylistPath, masterContent);
-
-    logger.info("Sequential transcode and master playlist generation complete");
-    return { variants: variants.map((v) => v.name), duration };
 }
 
 /**
