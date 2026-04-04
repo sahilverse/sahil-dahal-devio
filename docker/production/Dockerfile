@@ -45,6 +45,11 @@ COPY --from=pruner /app/out/full/ .
 ARG APP_NAME
 ARG APP_PATH
 
+# Prisma strictly requires a DATABASE_URL for schema validation during the generate phase.
+# This variable is injected purely for build-time validation and is overridden at runtime.
+ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
+ENV DATABASE_URL=$DATABASE_URL
+
 # Pass NEXT_PUBLIC environment variables to the builder (Crucial for Next.js)
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_SOCKET_URL
