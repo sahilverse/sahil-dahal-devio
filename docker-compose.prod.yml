@@ -175,7 +175,8 @@ services:
     image: judge0/judge0:1.13.1
     container_name: devio-judge0-server
     privileged: true
-    env_file: .env
+    volumes:
+      - ./infra/judge0/judge0.conf:/judge0.conf:ro
     environment:
       REDIS_HOST: judge0-redis
       POSTGRES_HOST: judge0-db
@@ -195,7 +196,8 @@ services:
     container_name: devio-judge0-workers
     privileged: true
     command: [ "./scripts/workers" ]
-    env_file: .env
+    volumes:
+      - ./infra/judge0/judge0.conf:/judge0.conf:ro
     environment:
       REDIS_HOST: judge0-redis
       POSTGRES_HOST: judge0-db
