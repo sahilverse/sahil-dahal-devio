@@ -10,6 +10,7 @@ export interface StreamData {
     stream?: any;
     dataReceived?: boolean;
     resolveDataWait?: () => void;
+    buffer?: Buffer;
 }
 
 export class ExecutionService {
@@ -60,8 +61,8 @@ export class ExecutionService {
         try {
             let execCmd: string[] = [];
 
-            const DEFAULT_TIMEOUT = 2;
-            const cpuTimeout = config.timeout || DEFAULT_TIMEOUT;
+            const DEFAULT_TIMEOUT = 3;
+            const cpuTimeout = Math.max(config.timeout || 0, DEFAULT_TIMEOUT);
 
             if (language === 'java') {
                 const className = this.extractJavaClassName(code);
@@ -86,86 +87,96 @@ export class ExecutionService {
             });
 
             const WALL_CLOCK_TIMEOUT = 120 * 1000;
-            const timeoutTimer = setTimeout(async () => {
-                logger.warn(`Session ${sessionId} wall-clock limit timed out after ${WALL_CLOCK_TIMEOUT}ms`);
-                try {
-                    await container.exec({
-                        Cmd: ['pkill', '-9', '-u', 'sandboxuser'],
-                        User: 'root'
-                    }).then(e => e.start({}));
 
-                    streamData.stderr += `\n[Execution timed out]\n`;
-                    await this.redisStreamManager.publishOutput(sessionId, 'stderr', `\n[Execution timed out]\n`);
-                    await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
+            return new Promise<void>((resolve, reject) => {
+                const timeoutTimer = setTimeout(async () => {
+                    logger.warn(`Session ${sessionId} wall-clock limit timed out after ${WALL_CLOCK_TIMEOUT}ms`);
+                    try {
+                        await container.exec({
+                            Cmd: ['pkill', '-9', '-u', 'sandboxuser'],
+                            User: 'root'
+                        }).then(e => e.start({}));
 
-                    if (streamData.resolveDataWait) streamData.resolveDataWait();
-                } catch (err) {
-                    logger.error(`Failed to kill process for session ${sessionId}: ${err}`);
-                }
-            }, WALL_CLOCK_TIMEOUT);
+                        streamData.stderr += `\n[Execution timed out]\n`;
+                        await this.redisStreamManager.publishOutput(sessionId, 'stderr', `\n[Execution timed out]\n`);
+                        await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
 
-            exec.start({ hijack: true, stdin: true }, async (err: any, stream: any) => {
-                if (err) {
-                    clearTimeout(timeoutTimer);
-                    logger.error(`Exec start error for session ${sessionId}: ${err.message}`);
-                    await this.redisStreamManager.publishOutput(sessionId, 'error', `Exec start error: ${err.message}`);
-                    await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
-                    return;
-                }
+                        if (streamData.resolveDataWait) streamData.resolveDataWait();
+                        resolve();
+                    } catch (err) {
+                        logger.error(`Failed to kill process for session ${sessionId}: ${err}`);
+                        resolve(); // Resolve anyway to unblock the session
+                    }
+                }, WALL_CLOCK_TIMEOUT);
 
-                streamData.stream = stream;
-                let outputSize = 0;
-                const MAX_OUTPUT_SIZE = 1024 * 1024;
-                let streamEnded = false;
+                exec.start({ hijack: true, stdin: true }, async (err: any, stream: any) => {
+                    if (err) {
+                        clearTimeout(timeoutTimer);
+                        logger.error(`Exec start error for session ${sessionId}: ${err.message}`);
+                        await this.redisStreamManager.publishOutput(sessionId, 'error', `Exec start error: ${err.message}`);
+                        await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
+                        return reject(err);
+                    }
 
-                stream.on('data', async (chunk: Buffer) => {
-                    if (streamEnded) return;
+                    streamData.stream = stream;
+                    streamData.buffer = Buffer.alloc(0);
+                    let outputSize = 0;
+                    const MAX_OUTPUT_SIZE = 1024 * 1024;
+                    let streamEnded = false;
 
-                    const output = this.demuxStream(chunk);
+                    stream.on('data', async (chunk: Buffer) => {
+                        if (streamEnded) return;
 
-                    // Check output size limit
-                    outputSize += output.stdout.length + output.stderr.length;
-                    if (outputSize > MAX_OUTPUT_SIZE) {
-                        streamEnded = true;
-                        if (!streamData.stderr.includes('[Output truncated]')) {
-                            streamData.stderr += '\n[Output truncated - exceeded limit]\n';
-                            await this.redisStreamManager.publishOutput(sessionId, 'stderr', '\n[Output truncated - exceeded limit]\n');
-                            await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
+                        // Add new chunk to existing buffer
+                        streamData.buffer = Buffer.concat([streamData.buffer!, chunk]);
+
+                        const { stdout, stderr, remainingBuffer } = this.demuxStream(streamData.buffer);
+                        streamData.buffer = remainingBuffer;
+
+                        // Check output size limit
+                        outputSize += stdout.length + stderr.length;
+                        if (outputSize > MAX_OUTPUT_SIZE) {
+                            streamEnded = true;
+                            if (!streamData.stderr.includes('[Output truncated]')) {
+                                streamData.stderr += '\n[Output truncated - exceeded limit]\n';
+                                await this.redisStreamManager.publishOutput(sessionId, 'stderr', '\n[Output truncated - exceeded limit]\n');
+                                await this.redisStreamManager.publishOutput(sessionId, 'exit', 1);
+                            }
+                            stream.destroy();
+                            return;
                         }
-                        stream.destroy();
-                        return;
-                    }
 
-                    if (output.stdout) {
-                        const cleanedStdout = this.cleanupFilePath(output.stdout);
-                        streamData.stdout += cleanedStdout;
-                        await this.redisStreamManager.publishOutput(sessionId, 'stdout', cleanedStdout);
-                    }
+                        if (stdout) {
+                            const cleanedStdout = this.cleanupFilePath(stdout);
+                            streamData.stdout += cleanedStdout;
+                            await this.redisStreamManager.publishOutput(sessionId, 'stdout', cleanedStdout);
+                        }
 
-                    if (output.stderr) {
-                        streamData.stderr += output.stderr;
-                        await this.redisStreamManager.publishOutput(sessionId, 'stderr', output.stderr);
-                    }
+                        if (stderr) {
+                            streamData.stderr += stderr;
+                            await this.redisStreamManager.publishOutput(sessionId, 'stderr', stderr);
+                        }
 
-                    streamData.dataReceived = true;
-                    logger.debug(`Session ${sessionId} output streamed to Redis`);
+                        if (stdout || stderr) {
+                            streamData.dataReceived = true;
+                            if (streamData.resolveDataWait) streamData.resolveDataWait();
+                        }
+                    });
 
-                    if (streamData.resolveDataWait) {
-                        streamData.resolveDataWait();
-                    }
-                });
+                    stream.on('end', async () => {
+                        clearTimeout(timeoutTimer);
+                        logger.debug(`Session ${sessionId} stream ended`);
+                        await this.redisStreamManager.publishOutput(sessionId, 'exit', 0);
+                        if (streamData.resolveDataWait) streamData.resolveDataWait();
+                        resolve();
+                    });
 
-                stream.on('end', async () => {
-                    clearTimeout(timeoutTimer);
-                    logger.debug(`Session ${sessionId} stream ended`);
-                    await this.redisStreamManager.publishOutput(sessionId, 'exit', 0);
-                    if (streamData.resolveDataWait) streamData.resolveDataWait();
-                });
-
-                stream.on('error', async (error: any) => {
-                    clearTimeout(timeoutTimer);
-                    logger.error(`Session ${sessionId} stream error: ${error.message}`);
-                    await this.redisStreamManager.publishOutput(sessionId, 'error', error.message);
+                    stream.on('error', async (error: any) => {
+                        clearTimeout(timeoutTimer);
+                        logger.error(`Session ${sessionId} stream error: ${error.message}`);
+                        await this.redisStreamManager.publishOutput(sessionId, 'error', error.message);
+                        resolve();
+                    });
                 });
             });
 
@@ -231,17 +242,19 @@ export class ExecutionService {
         return name;
     }
 
-    private demuxStream(chunk: Buffer): { stdout: string; stderr: string } {
+    private demuxStream(chunk: Buffer): { stdout: string; stderr: string; remainingBuffer: Buffer } {
         let stdout = '';
         let stderr = '';
         let offset = 0;
 
         while (offset < chunk.length) {
+            // Need at least 8 bytes for header
             if (offset + 8 > chunk.length) break;
 
             const streamType = chunk[offset];
             const size = chunk.readUInt32BE(offset + 4);
 
+            // Check if entire payload is present in this chunk
             if (offset + 8 + size > chunk.length) break;
 
             let data = chunk.slice(offset + 8, offset + 8 + size).toString();
@@ -257,7 +270,7 @@ export class ExecutionService {
             offset += 8 + size;
         }
 
-        return { stdout, stderr };
+        return { stdout, stderr, remainingBuffer: chunk.slice(offset) };
     }
 
     private stripAnsiCodes(text: string): string {
