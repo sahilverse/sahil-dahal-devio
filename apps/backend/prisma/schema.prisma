@@ -946,11 +946,12 @@ model CyberRoom {
   description String
   difficulty  Difficulty
 
-  imageUrl      String? @map("image_url")
-  estimatedTime Int?    @map("estimated_time")
-  pointsReward  Int     @default(0) @map("points_reward")
-  cipherReward  Int     @default(0) @map("cipher_reward")
-  imageId       String  @map("image_id")
+  imageUrl       String? @map("image_url")
+  estimatedTime  Int?    @map("estimated_time")
+  pointsReward   Int     @default(0) @map("points_reward")
+  cipherReward   Int     @default(0) @map("cipher_reward")
+  dockerImageId  String  @map("docker_image_id")
+  dockerfilePath String? @map("dockerfile_path")
 
   isPublished Boolean @default(false) @map("is_published")
 
