@@ -65,7 +65,7 @@ export class OAuthController {
         res.cookie("refresh_token", refreshToken, {
             httpOnly: true,
             secure: NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "lax",
             maxAge: refreshMaxAge,
         });
     }

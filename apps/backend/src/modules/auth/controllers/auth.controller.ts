@@ -29,7 +29,6 @@ export class AuthController {
             httpOnly: true,
             secure: NODE_ENV === "production",
             sameSite: "lax",
-            domain: NODE_ENV === "production" ? `.${PROD_DOMAIN}` : undefined,
             maxAge: refreshMaxAge,
         });
 
@@ -64,7 +63,6 @@ export class AuthController {
             httpOnly: true,
             secure: NODE_ENV === "production",
             sameSite: "lax",
-            domain: NODE_ENV === "production" ? `.${PROD_DOMAIN}` : undefined,
             maxAge: refreshMaxAge,
         });
 
