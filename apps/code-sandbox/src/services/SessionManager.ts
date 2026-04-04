@@ -127,37 +127,6 @@ export class SessionManager {
         try {
             await this.executionService.executeCode(container, code, session.language, sessionId, streamData);
 
-            await new Promise<void>((resolve) => {
-                let resolved = false;
-
-                // Max timeout 5s
-                const maxTimeout = setTimeout(() => {
-                    if (!resolved) {
-                        resolved = true;
-                        logger.debug(`Session ${sessionId} data wait timeout (5s)`);
-                        resolve();
-                    }
-                }, 5000);
-
-                // Initial fast check 500ms
-                const quickCheck = setTimeout(() => {
-                    if (!resolved && (streamData.dataReceived || streamData.stderr)) {
-                        resolved = true;
-                        clearTimeout(maxTimeout);
-                        resolve();
-                    }
-                }, 500);
-
-                streamData.resolveDataWait = () => {
-                    if (!resolved) {
-                        resolved = true;
-                        clearTimeout(maxTimeout);
-                        clearTimeout(quickCheck);
-                        resolve();
-                    }
-                };
-            });
-
             const newStdout = streamData.stdout.substring(prevStdoutLength);
             const newStderr = streamData.stderr.substring(prevStderrLength);
 

@@ -160,6 +160,7 @@ export class ExecutionService {
                         if (stdout || stderr) {
                             streamData.dataReceived = true;
                             if (streamData.resolveDataWait) streamData.resolveDataWait();
+                            resolve();
                         }
                     });
 
