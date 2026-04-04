@@ -41,12 +41,21 @@ FROM node-env AS builder
 COPY --from=installer /app/ .
 COPY --from=pruner /app/out/full/ .
 
-ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
-ENV DATABASE_URL=$DATABASE_URL
-
 # Re-generate Prisma Client for backend
 ARG APP_NAME
 ARG APP_PATH
+
+# Pass NEXT_PUBLIC environment variables to the builder (Crucial for Next.js)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_SOCKET_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_GITHUB_CLIENT_ID
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_GITHUB_CLIENT_ID=$NEXT_PUBLIC_GITHUB_CLIENT_ID
+
 RUN if [ "${APP_NAME}" = "@devio/backend" ]; then \
     cd apps/backend && npx prisma generate; \
     fi
