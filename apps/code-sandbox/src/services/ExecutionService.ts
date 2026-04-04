@@ -65,14 +65,14 @@ export class ExecutionService {
 
             if (language === 'java') {
                 const className = this.extractJavaClassName(code);
-                execCmd = ['bash', '-c', `stty -echo; javac ${className}.java && ulimit -t ${cpuTimeout} && java ${className}`];
+                execCmd = ['bash', '-c', `javac ${className}.java && ulimit -t ${cpuTimeout} && java ${className}`];
             } else if (config.compileCommand) {
                 const compileCmd = config.compileCommand.map((cmd: string) => cmd.replace('{filename}', filename)).join(' ');
                 const runCmd = config.runCommand.map((cmd: string) => cmd.replace('{filename}', filename)).join(' ');
-                execCmd = ['bash', '-c', `stty -echo; ${compileCmd} && ulimit -t ${cpuTimeout}; ${runCmd}`];
+                execCmd = ['bash', '-c', `${compileCmd} && ulimit -t ${cpuTimeout} && ${runCmd}`];
             } else {
                 const cmd = config.runCommand.map((cmd: string) => cmd.replace('{filename}', filename)).join(' ');
-                execCmd = ['bash', '-c', `stty -echo; ulimit -t ${cpuTimeout}; ${cmd}`];
+                execCmd = ['bash', '-c', `ulimit -t ${cpuTimeout} && ${cmd}`];
             }
 
             const exec = await container.exec({
@@ -82,7 +82,7 @@ export class ExecutionService {
                 AttachStdin: true,
                 User: 'sandboxuser',
                 WorkingDir: '/home/sandboxuser/tmp',
-                Tty: true
+                Tty: false
             });
 
             const WALL_CLOCK_TIMEOUT = 120 * 1000;

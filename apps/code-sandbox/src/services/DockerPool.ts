@@ -164,8 +164,8 @@ class DockerPool {
     private async cleanContainer(container: Docker.Container): Promise<void> {
         try {
             const exec = await container.exec({
-                Cmd: ['sh', '-c', 'rm -rf /home/sandboxuser/tmp/*'],
-                User: 'sandboxuser',
+                Cmd: ['sh', '-c', 'pkill -9 -u sandboxuser || true; rm -rf /home/sandboxuser/tmp/*'],
+                User: 'root',
                 WorkingDir: '/home/sandboxuser/tmp'
             });
 
