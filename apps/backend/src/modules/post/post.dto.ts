@@ -131,6 +131,8 @@ export class PostResponseDto {
     })
     isSaved?: boolean;
 
+    @Expose() isRecommended?: boolean;
+
     @Expose() createdAt!: Date;
     @Expose() updatedAt!: Date;
 

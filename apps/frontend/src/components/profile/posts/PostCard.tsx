@@ -16,7 +16,8 @@ import {
     Eye,
     HelpCircle,
     Coins,
-    CheckCircle2
+    CheckCircle2,
+    Compass
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

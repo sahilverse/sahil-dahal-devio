@@ -50,4 +50,5 @@ export interface PostResponseDto {
     visibility: "PUBLIC" | "PRIVATE";
     acceptedAnswerId?: string;
     canManage: boolean;
+    isRecommended?: boolean;
 }

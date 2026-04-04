@@ -200,16 +200,13 @@ export class PostService {
         let pinnedPosts: any[] = [];
         let excludeIds: string[] = [];
 
-        // 1. If it's the first page of a context view, get pinned posts
         if (!cursor && !onlySaved && (userId || communityId)) {
             pinnedPosts = await this.postRepository.findPinnedPosts(userId, communityId, currentUserId);
             excludeIds = pinnedPosts.map(p => p.id);
         }
 
-        // 2. Adjust limit if we have pins on the first page
         const fetchLimit = !cursor ? limit - pinnedPosts.length : limit;
 
-        // 3. Get regular posts
         const posts = await this.postRepository.findMany({
             cursor,
             limit: fetchLimit,
@@ -223,13 +220,35 @@ export class PostService {
             excludeIds
         });
 
-        // 4. Combine
-        const combinedPosts = !cursor ? [...pinnedPosts, ...posts] : posts;
+        let combinedPosts = !cursor ? [...pinnedPosts, ...posts] : posts;
+
+        if (sortBy === "BEST" && !userId && !communityId) {
+            const discoveryTarget = Math.max(2, Math.ceil(limit * 0.2));
+            const excludeIdsForDiscovery = combinedPosts.map(p => p.id);
+
+            const discoveredPosts = await this.postRepository.findMany({
+                limit: discoveryTarget,
+                sortBy: "HOT",
+                excludeIds: excludeIdsForDiscovery,
+                currentUserId
+            });
+
+            discoveredPosts.forEach((p: any) => {
+                p.isRecommended = true;
+            });
+
+            if (combinedPosts.length === 0) {
+                combinedPosts = discoveredPosts;
+            } else {
+                combinedPosts.push(...discoveredPosts);
+            }
+        }
 
         let nextCursor: string | null = null;
         if (combinedPosts.length > limit) {
-            const nextItem = combinedPosts.pop();
+            const nextItem = combinedPosts[limit];
             nextCursor = nextItem?.id || null;
+            combinedPosts = combinedPosts.slice(0, limit);
         }
 
         return {
