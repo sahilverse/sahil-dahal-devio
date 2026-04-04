@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
         port: '9000',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'minio.devio.live',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'minio.devio.live',
+        pathname: '/**',
+      },
     ],
   },
   async redirects() {
