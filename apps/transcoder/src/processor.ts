@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { FFMPEG_PATH } from "./config/constants";
+import { DISABLE_GPU, FFMPEG_PATH } from "./config/constants";
 import { logger } from "./utils/logger";
 
 const execAsync = promisify(exec);
@@ -30,18 +30,29 @@ const VARIANTS: VideoVariant[] = [
 
 /**
  * Detects if the system supports NVIDIA hardware acceleration (h264_nvenc).
- * Caches the result to avoid repeated detection.
+ * Verification includes both FFmpeg capability AND hardware device presence.
  */
 async function getBestEncoder(): Promise<string> {
+    if (DISABLE_GPU) {
+        logger.info("Manual Override: GPU disabled via environment variable. Using CPU (libx264).");
+        return "libx264";
+    }
+
     if (cachedEncoder) return cachedEncoder;
 
     try {
         const { stdout } = await execAsync(`${FFMPEG_PATH} -encoders`);
-        if (stdout.includes("h264_nvenc")) {
+        const hasEncoder = stdout.includes("h264_nvenc");
+        const hasDevice = fs.existsSync("/dev/nvidia0");
+
+        if (hasEncoder && hasDevice) {
             logger.info("Auto-detection: NVIDIA GPU (h264_nvenc) supported.");
             cachedEncoder = "h264_nvenc";
         } else {
-            logger.info("Auto-detection: NVIDIA GPU not found. Using CPU (libx264).");
+            if (hasEncoder && !hasDevice) {
+                logger.warn("Auto-detection: h264_nvenc is available in FFmpeg but /dev/nvidia0 was not found. GPU likely not passed to container.");
+            }
+            logger.info("Auto-detection: Falling back to CPU (libx264).");
             cachedEncoder = "libx264";
         }
     } catch (error) {
@@ -74,7 +85,7 @@ function probeVideo(inputPath: string): Promise<{ width: number; height: number;
 }
 
 /**
- * Transcodes a single variant using FFmpeg.
+ * Transcodes a single variant using FFmpeg (Software CPU).
  */
 function transcodeVariant(inputPath: string, outputDir: string, variant: VideoVariant): Promise<void> {
     const variantDir = path.join(outputDir, variant.name);
@@ -127,8 +138,31 @@ function transcodeVariant(inputPath: string, outputDir: string, variant: VideoVa
 }
 
 /**
- * Main processing function: executes a single, high-performance NVIDIA-accelerated
- * FFmpeg command to generate all HLS variants and the master playlist in one pass.
+ * Logic for sequential CPU transcoding of multiple variants.
+ */
+async function transcodeCPU(inputPath: string, outputDir: string, variants: VideoVariant[], duration: number): Promise<{ variants: string[]; duration: number }> {
+    logger.info(`Starting sequential CPU transcode for ${variants.length} variants`);
+    for (const variant of variants) {
+        logger.info(`Transcoding variant: ${variant.name} (Software)`);
+        await transcodeVariant(inputPath, outputDir, variant);
+    }
+
+    // Generate Master Playlist for CPU mode
+    const masterPlaylistPath = path.join(outputDir, "master.m3u8");
+    let masterContent = "#EXTM3U\n#EXT-X-VERSION:3\n";
+    variants.forEach((v) => {
+        const bandwidth = parseInt(v.videoBitrate.replace("k", "000"));
+        masterContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${v.width}x${v.height}\n`;
+        masterContent += `${v.name}/playlist.m3u8\n`;
+    });
+    fs.writeFileSync(masterPlaylistPath, masterContent);
+
+    logger.info("Sequential transcode and master playlist generation complete");
+    return { variants: variants.map((v) => v.name), duration };
+}
+
+/**
+ * Main processing function: Executes NVIDIA GPU transcode with an automatic CPU fallback bridge.
  */
 export async function processVideo(inputPath: string, outputDir: string): Promise<{ variants: string[]; duration: number }> {
     if (!fs.existsSync(outputDir)) {
@@ -148,94 +182,89 @@ export async function processVideo(inputPath: string, outputDir: string): Promis
     const encoder = await getBestEncoder();
 
     if (encoder === "libx264") {
-        logger.info(`Starting sequential CPU transcode for ${applicableVariants.length} variants`);
-        for (const variant of applicableVariants) {
-            logger.info(`Transcoding variant: ${variant.name} (Software)`);
-            await transcodeVariant(inputPath, outputDir, variant);
-        }
-
-        // Generate Master Playlist for CPU mode
-        const masterPlaylistPath = path.join(outputDir, "master.m3u8");
-        let masterContent = "#EXTM3U\n#EXT-X-VERSION:3\n";
-        applicableVariants.forEach((v) => {
-            const bandwidth = parseInt(v.videoBitrate.replace("k", "000"));
-            masterContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${v.width}x${v.height}\n`;
-            masterContent += `${v.name}/playlist.m3u8\n`;
-        });
-        fs.writeFileSync(masterPlaylistPath, masterContent);
-
-        logger.info("Sequential transcode and master playlist generation complete");
-        return { variants: applicableVariants.map((v) => v.name), duration };
+        return await transcodeCPU(inputPath, outputDir, applicableVariants, duration);
     }
 
-    // --- NVIDIA Hardware path (Single-Pass) ---
+    // --- NVIDIA Hardware path (Single-Pass) with Fallback ---
     logger.info(`Starting single-pass GPU transcode for ${applicableVariants.length} variants`);
-    return new Promise((resolve, reject) => {
-        const command = ffmpeg(inputPath);
+    try {
+        return await new Promise((resolve, reject) => {
+            const command = ffmpeg(inputPath);
 
-        // Split the decoded video into N streams
-        let filterComplex = `[0:v]split=${applicableVariants.length}`;
-        applicableVariants.forEach((_, i) => {
-            filterComplex += `[v${i}]`;
-        });
-        filterComplex += ";";
+            // Split the decoded video into N streams
+            let filterComplex = `[0:v]split=${applicableVariants.length}`;
+            applicableVariants.forEach((_, i) => {
+                filterComplex += `[v${i}]`;
+            });
+            filterComplex += ";";
 
-        // Add scaling for each stream
-        applicableVariants.forEach((v, i) => {
-            filterComplex += `[v${i}]scale=w=${v.width}:h=${v.height}:force_original_aspect_ratio=decrease,pad=${v.width}:${v.height}:(ow-iw)/2:(oh-ih)/2[vout${i}]`;
-            if (i < applicableVariants.length - 1) filterComplex += ";";
-        });
+            // Add scaling for each stream
+            applicableVariants.forEach((v, i) => {
+                filterComplex += `[v${i}]scale=w=${v.width}:h=${v.height}:force_original_aspect_ratio=decrease,pad=${v.width}:${v.height}:(ow-iw)/2:(oh-ih)/2[vout${i}]`;
+                if (i < applicableVariants.length - 1) filterComplex += ";";
+            });
 
-        const outputOptions: string[] = ["-filter_complex", filterComplex];
+            const outputOptions: string[] = ["-filter_complex", filterComplex];
 
-        applicableVariants.forEach((v, i) => {
+            applicableVariants.forEach((v, i) => {
+                outputOptions.push(
+                    "-map", `[vout${i}]`,
+                    `-c:v:${i}`, "h264_nvenc",
+                    `-b:v:${i}`, v.videoBitrate,
+                    `-maxrate:${i}`, v.maxrate,
+                    `-bufsize:${i}`, v.bufsize,
+                    "-preset", "p4",
+                    "-g", "48",
+                    "-keyint_min", "48",
+                    "-sc_threshold", "0"
+                );
+            });
+
+            applicableVariants.forEach((_, i) => {
+                outputOptions.push(
+                    "-map", "0:a",
+                    `-c:a:${i}`, "aac",
+                    `-b:a:${i}`, "128k",
+                    `-ar:${i}`, "48000"
+                );
+            });
+
+            const streamMap = applicableVariants.map((v, i) => `v:${i},a:${i},name:${v.name}`).join(" ");
             outputOptions.push(
-                "-map", `[vout${i}]`,
-                `-c:v:${i}`, "h264_nvenc",
-                `-b:v:${i}`, v.videoBitrate,
-                `-maxrate:${i}`, v.maxrate,
-                `-bufsize:${i}`, v.bufsize,
-                "-preset", "p4",
-                "-g", "48",
-                "-keyint_min", "48",
-                "-sc_threshold", "0"
+                "-f", "hls",
+                "-hls_time", "6",
+                "-hls_playlist_type", "vod",
+                "-master_pl_name", "master.m3u8",
+                "-var_stream_map", streamMap,
+                "-hls_segment_filename", path.join(outputDir, "%v", "segment_%03d.ts")
             );
+
+            command
+                .outputOptions(outputOptions)
+                .output(path.join(outputDir, "%v", "playlist.m3u8"))
+                .on("start", (cmd) => logger.debug(`FFmpeg command: ${cmd}`))
+                .on("progress", (progress) => {
+                    if (progress.percent) logger.info(`GPU Transcoding Progress: ${Math.round(progress.percent)}%`);
+                })
+                .on("end", () => {
+                    logger.info(`GPU transcode complete for all variants`);
+                    resolve({ variants: applicableVariants.map((v) => v.name), duration });
+                })
+                .on("error", (err) => {
+                    reject(err);
+                })
+                .run();
         });
+    } catch (gpuError: any) {
+        logger.error(`Critical GPU transcode failure: ${gpuError.message}`);
+        logger.warn("Automatic fallback initiated: Switching to CPU (Software) mode...");
 
-        applicableVariants.forEach((_, i) => {
-            outputOptions.push(
-                "-map", "0:a",
-                `-c:a:${i}`, "aac",
-                `-b:a:${i}`, "128k",
-                `-ar:${i}`, "48000"
-            );
-        });
+        // Reset output directory to avoid partial GPU file conflicts
+        if (fs.existsSync(outputDir)) {
+            fs.rmSync(outputDir, { recursive: true, force: true });
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
 
-        const streamMap = applicableVariants.map((v, i) => `v:${i},a:${i},name:${v.name}`).join(" ");
-        outputOptions.push(
-            "-f", "hls",
-            "-hls_time", "6",
-            "-hls_playlist_type", "vod",
-            "-master_pl_name", "master.m3u8",
-            "-var_stream_map", streamMap,
-            "-hls_segment_filename", path.join(outputDir, "%v", "segment_%03d.ts")
-        );
-
-        command
-            .outputOptions(outputOptions)
-            .output(path.join(outputDir, "%v", "playlist.m3u8"))
-            .on("start", (cmd) => logger.debug(`FFmpeg command: ${cmd}`))
-            .on("progress", (progress) => {
-                if (progress.percent) logger.info(`GPU Transcoding Progress: ${Math.round(progress.percent)}%`);
-            })
-            .on("end", () => {
-                logger.info(`GPU transcode complete for all variants`);
-                resolve({ variants: applicableVariants.map((v) => v.name), duration });
-            })
-            .on("error", (err) => {
-                logger.error(`GPU transcode failed: ${err.message}`);
-                reject(err);
-            })
-            .run();
-    });
+        return await transcodeCPU(inputPath, outputDir, applicableVariants, duration);
+    }
 }

@@ -10,6 +10,7 @@ export const S3_REGION = process.env.S3_REGION || "ap-south-1";
 
 // FFmpeg
 export const FFMPEG_PATH = process.env.FFMPEG_PATH || "ffmpeg";
+export const DISABLE_GPU = process.env.DISABLE_GPU === "true";
 
 // Queue
 export const VIDEO_TRANSCODE_QUEUE = "video-transcode";
