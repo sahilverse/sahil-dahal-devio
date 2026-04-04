@@ -44,7 +44,8 @@ COPY --from=pruner /app/out/full/ .
 ARG APP_NAME
 ARG APP_PATH
 RUN if [ "${APP_NAME}" = "@devio/backend" ]; then \
-    cd apps/backend && pnpm exec prisma generate; \
+    echo "Running Prisma Generate..." && \
+    cd apps/backend && npx prisma generate; \
     fi
 RUN turbo build --filter=${APP_NAME}
 
