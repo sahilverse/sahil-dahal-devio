@@ -188,21 +188,24 @@ export class ExecutionService {
     }
 
     private async writeFileToContainer(container: Docker.Container, filename: string, content: string): Promise<void> {
-        const escapedContent = content.replace(/'/g, `'"'"'`);
+        // Use Base64 encoding to prevent shell-character corruption (e.g. '%' in C)
+        const base64Content = Buffer.from(content).toString('base64');
+        
         const exec = await container.exec({
-            Cmd: ['sh', '-c', `printf '%s\\n' '${escapedContent}' > ${filename}`],
+            Cmd: ['sh', '-c', `echo "${base64Content}" | base64 -d > ${filename}`],
             User: 'sandboxuser',
             WorkingDir: '/home/sandboxuser/tmp'
         });
 
         await new Promise<void>((resolve, reject) => {
             let resolved = false;
+            // Increased timeout for large file writes or slow Docker I/O
             const timeoutHandle = setTimeout(() => {
                 if (!resolved) {
                     resolved = true;
                     resolve();
                 }
-            }, 500);
+            }, 1500);
 
             exec.start({}, (err: any, stream: any) => {
                 if (err) {
@@ -231,7 +234,7 @@ export class ExecutionService {
                         clearTimeout(timeoutHandle);
                         resolve();
                     }
-                }, 100);
+                }, 500);
             });
         });
     }

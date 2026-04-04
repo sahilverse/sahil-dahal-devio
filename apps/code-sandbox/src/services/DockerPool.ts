@@ -103,7 +103,7 @@ class DockerPool {
             Image: config.image,
             Cmd: ['sleep', 'infinity'],
             HostConfig: {
-                Memory: 256 * 1024 * 1024,
+                Memory: 512 * 1024 * 1024,
                 CpuPeriod: 100000,
                 CpuQuota: 50000,
                 NetworkMode: 'none',
