@@ -263,10 +263,6 @@ export class AuthService {
         const hashedPassword = await BcryptUtils.hashPassword(newPassword);
         await this.userRepository.updatePassword(user.id, hashedPassword);
 
-        // Invalidate other sessions after password change for security
-        // But keep current one? Usually better to invalidate all and re-login, 
-        // but for UX we might just invalidate others.
-        // For now, let's follow standard security and invalidate all.
         await this.authRepository.invalidateUserSessions(user.id);
     }
 

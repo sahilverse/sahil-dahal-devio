@@ -3,7 +3,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "../../../types";
 import { AuthService } from "../services/auth.service";
 import { asyncHandler, ResponseHandler, RequestUtil } from "../../../utils";
-import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV } from "../../../config/constants";
+import { JWT_REFRESH_EXPIRATION_DAYS, NODE_ENV, PROD_DOMAIN } from "../../../config/constants";
 import { StatusCodes } from "http-status-codes";
 import type { LoginServiceResponse } from "../auth.types";
 
@@ -29,6 +29,7 @@ export class AuthController {
             httpOnly: true,
             secure: NODE_ENV === "production",
             sameSite: "lax",
+            domain: NODE_ENV === "production" ? `.${PROD_DOMAIN}` : undefined,
             maxAge: refreshMaxAge,
         });
 
@@ -63,6 +64,7 @@ export class AuthController {
             httpOnly: true,
             secure: NODE_ENV === "production",
             sameSite: "lax",
+            domain: NODE_ENV === "production" ? `.${PROD_DOMAIN}` : undefined,
             maxAge: refreshMaxAge,
         });
 

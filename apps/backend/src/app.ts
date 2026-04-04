@@ -11,6 +11,8 @@ import { setupSwaggerDocs } from './docs/swagger';
 
 const app: express.Application = express();
 
+app.set("trust proxy", 1);
+
 // Middlewares
 app.use(cors({
     origin: CLIENT_URL,
