@@ -21,7 +21,7 @@ export function useManageExperience(username: string) {
         mutationFn: (payload: any) => UserService.addExperience(payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, newExperience: any) => {
                 const tempId = Math.random().toString();
                 return {
@@ -41,7 +41,7 @@ export function useManageExperience(username: string) {
             UserService.updateExperience(id, payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, { id, payload }: any) => ({
                 ...oldData,
                 experiences: oldData.experiences?.map((exp: any) =>
@@ -56,7 +56,7 @@ export function useManageExperience(username: string) {
         mutationFn: (id: string) => UserService.deleteExperience(id),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, id: string) => ({
                 ...oldData,
                 experiences: oldData.experiences?.filter((exp: any) => exp.id !== id) || [],

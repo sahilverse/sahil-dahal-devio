@@ -20,7 +20,7 @@ export function useManageSkills(username: string) {
         mutationFn: (name: string) => UserService.addSkill(name),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, newSkillName: string) => {
                 const tempId = Math.random().toString();
                 return {
@@ -39,7 +39,7 @@ export function useManageSkills(username: string) {
         mutationFn: (id: string) => UserService.removeSkill(id),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, id: string) => ({
                 ...oldData,
                 skills: oldData.skills?.filter((s: any) => s.id !== id) || [],

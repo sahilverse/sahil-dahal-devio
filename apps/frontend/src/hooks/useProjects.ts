@@ -11,7 +11,7 @@ export function useManageProjects(username: string) {
         mutationFn: (payload: any) => UserService.addProject(payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, newProject: any) => ({
                 ...oldData,
                 projects: [
@@ -28,7 +28,7 @@ export function useManageProjects(username: string) {
             UserService.updateProject(id, payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, { id, payload }: any) => ({
                 ...oldData,
                 projects: oldData.projects?.map((p: Project) =>
@@ -43,7 +43,7 @@ export function useManageProjects(username: string) {
         mutationFn: (id: string) => UserService.deleteProject(id),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, id: string) => ({
                 ...oldData,
                 projects: oldData.projects?.filter((p: Project) => p.id !== id) || [],

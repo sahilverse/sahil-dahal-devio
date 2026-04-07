@@ -10,7 +10,7 @@ export function useManageCertifications(username: string) {
         mutationFn: (payload: any) => UserService.addCertification(payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, newCertification: any) => {
                 const tempId = Math.random().toString();
                 return {
@@ -30,7 +30,7 @@ export function useManageCertifications(username: string) {
             UserService.updateCertification(id, payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, { id, payload }: any) => ({
                 ...oldData,
                 certifications: oldData.certifications?.map((cert: any) =>
@@ -45,7 +45,7 @@ export function useManageCertifications(username: string) {
         mutationFn: (id: string) => UserService.deleteCertification(id),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, id: string) => ({
                 ...oldData,
                 certifications: oldData.certifications?.filter((cert: any) => cert.id !== id) || [],

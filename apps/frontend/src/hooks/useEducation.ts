@@ -10,7 +10,7 @@ export const useManageEducation = (username: string) => {
         mutationFn: UserService.addEducation,
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, newEducation: any) => {
                 const tempId = Math.random().toString();
                 return {
@@ -29,7 +29,7 @@ export const useManageEducation = (username: string) => {
         mutationFn: ({ id, payload }: { id: string; payload: any }) => UserService.updateEducation(id, payload),
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, { id, payload }: any) => ({
                 ...oldData,
                 educations: oldData.educations?.map((edu: any) =>
@@ -44,7 +44,7 @@ export const useManageEducation = (username: string) => {
         mutationFn: UserService.deleteEducation,
         ...optimisticOptions(
             queryClient,
-            USER_QUERY_KEYS.profile(username),
+            USER_QUERY_KEYS.about(username),
             (oldData: any, id: string) => ({
                 ...oldData,
                 educations: oldData.educations?.filter((edu: any) => edu.id !== id) || [],
