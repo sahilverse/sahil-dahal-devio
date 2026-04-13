@@ -50,7 +50,7 @@ export class ResponseHandler {
         const refreshMaxAge = JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
 
         if (NODE_ENV === 'production') {
-            res.clearCookie('refresh_token', { domain: `api.${PROD_DOMAIN}` });
+            res.clearCookie('refresh_token', { domain: `.${PROD_DOMAIN}` });
         }
 
         res.cookie('refresh_token', refreshToken, {
@@ -66,9 +66,5 @@ export class ResponseHandler {
         res.clearCookie('refresh_token', {
             domain: NODE_ENV === 'production' ? `.${PROD_DOMAIN}` : undefined,
         });
-
-        if (NODE_ENV === 'production') {
-            res.clearCookie('refresh_token', { domain: `api.${PROD_DOMAIN}` });
-        }
     }
 }
