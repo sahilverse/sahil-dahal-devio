@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as tar from 'tar-stream';
 import { ApiError } from '../utils/ApiError';
+import { DockerService } from '../services/DockerService';
 
 const dockerMocks = vi.hoisted(() => ({
     listNetworks: vi.fn(),
@@ -29,7 +30,7 @@ vi.mock('../config/env', () => ({
 }));
 
 vi.mock('dockerode', () => {
-    const DockerMock = function() { return dockerMocks; };
+    const DockerMock = function () { return dockerMocks; };
     return { default: DockerMock };
 });
 vi.mock('@aws-sdk/client-s3');
@@ -38,7 +39,6 @@ vi.mock('tar-stream', () => ({
 }));
 vi.mock('../utils/logger');
 
-import { DockerService } from '../services/DockerService';
 
 describe('DockerService Unit Tests', () => {
     let dockerService: DockerService;
@@ -79,7 +79,7 @@ describe('DockerService Unit Tests', () => {
             })
         };
 
-        (S3Client as any).mockImplementation(function() { return mockS3Client; });
+        (S3Client as any).mockImplementation(function () { return mockS3Client; });
 
         dockerService = new DockerService();
     });
@@ -92,12 +92,12 @@ describe('DockerService Unit Tests', () => {
 
     describe('initializeNetwork', () => {
         it('should create a network if it does not exist', async () => {
-             await dockerService.initializeNetwork();
-             expect(dockerMocks.listNetworks).toHaveBeenCalled();
-             expect(dockerMocks.createNetwork).toHaveBeenCalledWith({
-                 Name: 'devio-lab-network',
-                 Driver: 'bridge'
-             });
+            await dockerService.initializeNetwork();
+            expect(dockerMocks.listNetworks).toHaveBeenCalled();
+            expect(dockerMocks.createNetwork).toHaveBeenCalledWith({
+                Name: 'devio-lab-network',
+                Driver: 'bridge'
+            });
         });
 
         it('should do nothing if network already exists', async () => {
@@ -111,7 +111,7 @@ describe('DockerService Unit Tests', () => {
     describe('buildImageFromMinio', () => {
         it('should fetch dockerfile from S3, pack it, and trigger Docker buildImage', async () => {
             await dockerService.buildImageFromMinio('test-image:latest', 'dockerfiles/Dockerfile');
-            
+
             expect(mockS3Client.send).toHaveBeenCalled();
             expect(tar.pack).toHaveBeenCalled();
             expect(dockerMocks.buildImage).toHaveBeenCalled();
@@ -151,7 +151,7 @@ describe('DockerService Unit Tests', () => {
 
         it('should return instance details with IP address upon successful creation', async () => {
             dockerMocks.listImages.mockResolvedValue([{ RepoTags: ['ubuntu:latest'] }]);
-            
+
             const result = await dockerService.provisionInstance('room-1', 'user-1', 'ubuntu:latest');
 
             expect(result).toHaveProperty('instanceId', 'test-container');

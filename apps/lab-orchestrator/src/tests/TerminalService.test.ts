@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { TerminalService } from '../services/TerminalService';
 
 const mocks = vi.hoisted(() => ({
     getContainer: vi.fn()
@@ -18,7 +19,6 @@ vi.mock('dockerode', () => {
 });
 vi.mock('../utils/logger');
 
-import { TerminalService } from '../services/TerminalService';
 
 describe('TerminalService Unit Tests', () => {
     let mockContainer: any;
