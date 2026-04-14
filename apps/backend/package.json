@@ -9,7 +9,7 @@
     "start": "node dist/index.mjs",
     "lint": "eslint --max-warnings 0 'src/**/*.ts'",
     "check-types": "tsc --noEmit",
-    "test": "vitest  --reporter=verbose"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
