@@ -58,7 +58,7 @@ describe("CompilerService Unit Tests", () => {
             const result = await compilerService.getLanguages();
 
             expect(mockAxios.get).toHaveBeenCalledWith("/languages");
-            expect(result.languages).toHaveLength(1);
+            expect(result.languages).toHaveLength(5);
             expect(result.languages[0]).toBe("python");
         });
 
