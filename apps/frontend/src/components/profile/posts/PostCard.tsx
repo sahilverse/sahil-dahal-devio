@@ -287,7 +287,7 @@ export default function PostCard({ post, isOwner, showComments: externalShowComm
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-500 border border-violet-500/20 text-[11px] font-bold uppercase tracking-wider">
                         <HelpCircle className="h-3 w-3" /> Question
                     </span>
-                    {post.bountyAmount && post.bountyAmount > 0 && (
+                    {(post.bountyAmount || 0) > 0 && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[11px] font-bold uppercase tracking-wider">
                             <Coins className="h-3 w-3" /> {post.bountyAmount} Bounty
                         </span>
