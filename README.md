@@ -15,7 +15,6 @@ This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https:
 - **`backend`** - Node.js/Express REST API with Prisma ORM
 - **`frontend`** - Next.js 16 React application for the web interface
 - **`code-sandbox`** - Docker-based code execution service supporting multiple programming languages
-- **`judge0`** - Code judging and evaluation service integration
 - **`lab-orchestrator`** - Docker based virtual lab sessions orchestrator (Spins up the virtual machines for CTF)
 - **`transcoder`** - Video transcoder for adaptive streaming. 
 
@@ -167,7 +166,8 @@ devio/
 │   ├── backend/               # Express API server
 │   ├── frontend/              # Next.js frontend
 │   ├── code-sandbox/          # Docker execution service
-│   └── judge0/                # Judge0 configuration
+│   └── lab-orchestrator/      # Virtual Lab Service
+|   └── transcoder/            # Video Transcoding Service
 ├── packages/
 │   ├── boilerplate-generator/ # Code template generation
 │   ├── eslint-config/         # Shared ESLint config
