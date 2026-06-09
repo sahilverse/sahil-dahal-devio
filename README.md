@@ -16,6 +16,8 @@ This is a [Turborepo](https://turborepo.com/)-based monorepo using [pnpm](https:
 - **`frontend`** - Next.js 16 React application for the web interface
 - **`code-sandbox`** - Docker-based code execution service supporting multiple programming languages
 - **`judge0`** - Code judging and evaluation service integration
+- **`lab-orchestrator`** - Docker based virtual lab sessions orchestrator (Spins up the virtual machines for CTF)
+- **`transcoder`** - Video transcoder for adaptive streaming. 
 
 ### Shared Packages
 
